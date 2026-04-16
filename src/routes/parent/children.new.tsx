@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { createChild } from "@/server/create-child";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/parent/children/new")({
   component: NewChild,
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/parent/children/new")({
 
 function NewChild() {
   const navigate = useNavigate();
+  const { session } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,7 +26,13 @@ function NewChild() {
     setLoading(true);
 
     try {
-      await createChild({ data: { email, password, displayName } });
+      if (!session?.access_token) {
+        throw new Error("לא מחובר");
+      }
+      await createChild({
+        data: { email, password, displayName },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
       navigate({ to: "/parent/children" });
     } catch (err: any) {
       setError(err?.message || "שגיאה ביצירת ילד");
