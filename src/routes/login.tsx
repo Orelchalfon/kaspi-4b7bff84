@@ -30,6 +30,7 @@ function LoginPage() {
       return;
     }
 
+    // Let index page handle role-based redirect once auth state propagates
     navigate({ to: "/" });
   };
 
