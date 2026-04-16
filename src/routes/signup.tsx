@@ -24,17 +24,27 @@ function SignupPage() {
     setLoading(true);
 
     // Sign up the user
+    console.log("[signup] starting signUp...");
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: { emailRedirectTo: window.location.origin },
     });
+    console.log("[signup] signUp returned", { user: !!authData?.user, session: !!authData?.session, error: authError?.message });
 
     if (authError || !authData.user) {
       setError(authError?.message || "שגיאה בהרשמה");
       setLoading(false);
       return;
     }
+
+    // If no session returned, the email may already exist or needs confirmation
+    if (!authData.session) {
+      setError("לא ניתן ליצור חשבון עם אימייל זה. נסו אימייל אחר או התחברו.");
+      setLoading(false);
+      return;
+    }
+    console.log("[signup] session confirmed, creating household...");
 
     const userId = authData.user.id;
 
