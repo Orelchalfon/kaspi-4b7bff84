@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 
@@ -10,22 +11,21 @@ function ChildLayout() {
   const { isAuthenticated, isLoading, role, signOut } = useAuth();
   const navigate = useNavigate();
 
-  if (isLoading) {
+  useEffect(() => {
+    if (isLoading) return;
+    if (!isAuthenticated) {
+      navigate({ to: "/login" });
+    } else if (role !== null && role !== "child") {
+      navigate({ to: "/" });
+    }
+  }, [isLoading, isAuthenticated, role, navigate]);
+
+  if (isLoading || !isAuthenticated || role !== "child") {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="animate-pulse text-muted-foreground">טוען...</div>
       </div>
     );
-  }
-
-  if (!isAuthenticated) {
-    navigate({ to: "/login" });
-    return null;
-  }
-
-  if (role !== "child") {
-    navigate({ to: "/" });
-    return null;
   }
 
   return (
