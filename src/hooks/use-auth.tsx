@@ -13,6 +13,7 @@ interface AuthState {
   householdId: string | null;
   childProfileId: string | null;
   signOut: () => Promise<void>;
+  refreshRole: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -93,6 +94,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setChildProfileId(null);
   };
 
+  const refreshRole = async () => {
+    if (user) await fetchRole(user.id);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -104,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         householdId,
         childProfileId,
         signOut,
+        refreshRole,
       }}
     >
       {children}

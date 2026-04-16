@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/signup")({
 
 function SignupPage() {
   const navigate = useNavigate();
+  const { refreshRole } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [householdName, setHouseholdName] = useState("");
@@ -72,6 +74,9 @@ function SignupPage() {
       return;
     }
 
+    // Refresh role in auth context BEFORE navigating, otherwise the parent
+    // layout guard sees role=null and bounces back to "/"
+    await refreshRole();
     navigate({ to: "/parent/dashboard" });
   };
 
