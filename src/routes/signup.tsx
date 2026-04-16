@@ -36,6 +36,13 @@ function SignupPage() {
       return;
     }
 
+    // If no session returned, the email may already exist or needs confirmation
+    if (!authData.session) {
+      setError("לא ניתן ליצור חשבון עם אימייל זה. נסו אימייל אחר או התחברו.");
+      setLoading(false);
+      return;
+    }
+
     const userId = authData.user.id;
 
     // Create household
