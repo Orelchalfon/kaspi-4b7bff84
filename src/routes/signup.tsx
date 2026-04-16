@@ -24,11 +24,13 @@ function SignupPage() {
     setLoading(true);
 
     // Sign up the user
+    console.log("[signup] starting signUp...");
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: { emailRedirectTo: window.location.origin },
     });
+    console.log("[signup] signUp returned", { user: !!authData?.user, session: !!authData?.session, error: authError?.message });
 
     if (authError || !authData.user) {
       setError(authError?.message || "שגיאה בהרשמה");
@@ -42,6 +44,7 @@ function SignupPage() {
       setLoading(false);
       return;
     }
+    console.log("[signup] session confirmed, creating household...");
 
     const userId = authData.user.id;
 
