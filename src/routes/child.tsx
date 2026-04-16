@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-rout
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 
-export const Route = createFileRoute("/_child")({
+export const Route = createFileRoute("/child")({
   component: ChildLayout,
 });
 

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 
-export const Route = createFileRoute("/_child/wallet")({
+export const Route = createFileRoute("/child/wallet")({
   component: ChildWallet,
 });
 

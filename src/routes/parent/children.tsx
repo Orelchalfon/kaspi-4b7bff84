@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_parent/children")({
+export const Route = createFileRoute("/parent/children")({
   component: ChildrenLayout,
 });
 

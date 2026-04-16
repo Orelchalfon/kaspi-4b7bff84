@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export const Route = createFileRoute("/_parent/tasks/new")({
+export const Route = createFileRoute("/parent/tasks/new")({
   component: NewTask,
 });
 

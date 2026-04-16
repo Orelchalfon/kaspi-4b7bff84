@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-export const Route = createFileRoute("/_parent/children/")({
+export const Route = createFileRoute("/parent/children/")({
   component: ChildrenList,
 });
 

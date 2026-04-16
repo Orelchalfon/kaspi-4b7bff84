@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-export const Route = createFileRoute("/_child/tasks/$taskId")({
+export const Route = createFileRoute("/child/tasks/$taskId")({
   component: ChildTaskDetail,
 });
 
