@@ -147,4 +147,10 @@
     color: var(--color-foreground);
     font-family: "Rubik", "Heebo", system-ui, sans-serif;
   }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a[href] {
+    cursor: pointer;
+  }
 }
