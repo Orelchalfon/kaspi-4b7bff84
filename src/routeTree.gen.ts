@@ -9,38 +9,240 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as ParentRouteImport } from './routes/parent'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ChildRouteImport } from './routes/child'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ParentTransactionsRouteImport } from './routes/parent/transactions'
+import { Route as ParentDashboardRouteImport } from './routes/parent/dashboard'
+import { Route as ParentChildrenRouteImport } from './routes/parent/children'
+import { Route as ChildWalletRouteImport } from './routes/child/wallet'
+import { Route as ChildDashboardRouteImport } from './routes/child/dashboard'
+import { Route as ParentChildrenIndexRouteImport } from './routes/parent/children.index'
+import { Route as ParentTasksNewRouteImport } from './routes/parent/tasks.new'
+import { Route as ParentTasksTaskIdRouteImport } from './routes/parent/tasks.$taskId'
+import { Route as ParentChildrenNewRouteImport } from './routes/parent/children.new'
+import { Route as ChildTasksTaskIdRouteImport } from './routes/child/tasks.$taskId'
 
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ParentRoute = ParentRouteImport.update({
+  id: '/parent',
+  path: '/parent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChildRoute = ChildRouteImport.update({
+  id: '/child',
+  path: '/child',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ParentTransactionsRoute = ParentTransactionsRouteImport.update({
+  id: '/transactions',
+  path: '/transactions',
+  getParentRoute: () => ParentRoute,
+} as any)
+const ParentDashboardRoute = ParentDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => ParentRoute,
+} as any)
+const ParentChildrenRoute = ParentChildrenRouteImport.update({
+  id: '/children',
+  path: '/children',
+  getParentRoute: () => ParentRoute,
+} as any)
+const ChildWalletRoute = ChildWalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => ChildRoute,
+} as any)
+const ChildDashboardRoute = ChildDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => ChildRoute,
+} as any)
+const ParentChildrenIndexRoute = ParentChildrenIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ParentChildrenRoute,
+} as any)
+const ParentTasksNewRoute = ParentTasksNewRouteImport.update({
+  id: '/tasks/new',
+  path: '/tasks/new',
+  getParentRoute: () => ParentRoute,
+} as any)
+const ParentTasksTaskIdRoute = ParentTasksTaskIdRouteImport.update({
+  id: '/tasks/$taskId',
+  path: '/tasks/$taskId',
+  getParentRoute: () => ParentRoute,
+} as any)
+const ParentChildrenNewRoute = ParentChildrenNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => ParentChildrenRoute,
+} as any)
+const ChildTasksTaskIdRoute = ChildTasksTaskIdRouteImport.update({
+  id: '/tasks/$taskId',
+  path: '/tasks/$taskId',
+  getParentRoute: () => ChildRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/child': typeof ChildRouteWithChildren
+  '/login': typeof LoginRoute
+  '/parent': typeof ParentRouteWithChildren
+  '/signup': typeof SignupRoute
+  '/child/dashboard': typeof ChildDashboardRoute
+  '/child/wallet': typeof ChildWalletRoute
+  '/parent/children': typeof ParentChildrenRouteWithChildren
+  '/parent/dashboard': typeof ParentDashboardRoute
+  '/parent/transactions': typeof ParentTransactionsRoute
+  '/child/tasks/$taskId': typeof ChildTasksTaskIdRoute
+  '/parent/children/new': typeof ParentChildrenNewRoute
+  '/parent/tasks/$taskId': typeof ParentTasksTaskIdRoute
+  '/parent/tasks/new': typeof ParentTasksNewRoute
+  '/parent/children/': typeof ParentChildrenIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/child': typeof ChildRouteWithChildren
+  '/login': typeof LoginRoute
+  '/parent': typeof ParentRouteWithChildren
+  '/signup': typeof SignupRoute
+  '/child/dashboard': typeof ChildDashboardRoute
+  '/child/wallet': typeof ChildWalletRoute
+  '/parent/dashboard': typeof ParentDashboardRoute
+  '/parent/transactions': typeof ParentTransactionsRoute
+  '/child/tasks/$taskId': typeof ChildTasksTaskIdRoute
+  '/parent/children/new': typeof ParentChildrenNewRoute
+  '/parent/tasks/$taskId': typeof ParentTasksTaskIdRoute
+  '/parent/tasks/new': typeof ParentTasksNewRoute
+  '/parent/children': typeof ParentChildrenIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/child': typeof ChildRouteWithChildren
+  '/login': typeof LoginRoute
+  '/parent': typeof ParentRouteWithChildren
+  '/signup': typeof SignupRoute
+  '/child/dashboard': typeof ChildDashboardRoute
+  '/child/wallet': typeof ChildWalletRoute
+  '/parent/children': typeof ParentChildrenRouteWithChildren
+  '/parent/dashboard': typeof ParentDashboardRoute
+  '/parent/transactions': typeof ParentTransactionsRoute
+  '/child/tasks/$taskId': typeof ChildTasksTaskIdRoute
+  '/parent/children/new': typeof ParentChildrenNewRoute
+  '/parent/tasks/$taskId': typeof ParentTasksTaskIdRoute
+  '/parent/tasks/new': typeof ParentTasksNewRoute
+  '/parent/children/': typeof ParentChildrenIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/child'
+    | '/login'
+    | '/parent'
+    | '/signup'
+    | '/child/dashboard'
+    | '/child/wallet'
+    | '/parent/children'
+    | '/parent/dashboard'
+    | '/parent/transactions'
+    | '/child/tasks/$taskId'
+    | '/parent/children/new'
+    | '/parent/tasks/$taskId'
+    | '/parent/tasks/new'
+    | '/parent/children/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/child'
+    | '/login'
+    | '/parent'
+    | '/signup'
+    | '/child/dashboard'
+    | '/child/wallet'
+    | '/parent/dashboard'
+    | '/parent/transactions'
+    | '/child/tasks/$taskId'
+    | '/parent/children/new'
+    | '/parent/tasks/$taskId'
+    | '/parent/tasks/new'
+    | '/parent/children'
+  id:
+    | '__root__'
+    | '/'
+    | '/child'
+    | '/login'
+    | '/parent'
+    | '/signup'
+    | '/child/dashboard'
+    | '/child/wallet'
+    | '/parent/children'
+    | '/parent/dashboard'
+    | '/parent/transactions'
+    | '/child/tasks/$taskId'
+    | '/parent/children/new'
+    | '/parent/tasks/$taskId'
+    | '/parent/tasks/new'
+    | '/parent/children/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ChildRoute: typeof ChildRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  ParentRoute: typeof ParentRouteWithChildren
+  SignupRoute: typeof SignupRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/parent': {
+      id: '/parent'
+      path: '/parent'
+      fullPath: '/parent'
+      preLoaderRoute: typeof ParentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/child': {
+      id: '/child'
+      path: '/child'
+      fullPath: '/child'
+      preLoaderRoute: typeof ChildRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +250,132 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/parent/transactions': {
+      id: '/parent/transactions'
+      path: '/transactions'
+      fullPath: '/parent/transactions'
+      preLoaderRoute: typeof ParentTransactionsRouteImport
+      parentRoute: typeof ParentRoute
+    }
+    '/parent/dashboard': {
+      id: '/parent/dashboard'
+      path: '/dashboard'
+      fullPath: '/parent/dashboard'
+      preLoaderRoute: typeof ParentDashboardRouteImport
+      parentRoute: typeof ParentRoute
+    }
+    '/parent/children': {
+      id: '/parent/children'
+      path: '/children'
+      fullPath: '/parent/children'
+      preLoaderRoute: typeof ParentChildrenRouteImport
+      parentRoute: typeof ParentRoute
+    }
+    '/child/wallet': {
+      id: '/child/wallet'
+      path: '/wallet'
+      fullPath: '/child/wallet'
+      preLoaderRoute: typeof ChildWalletRouteImport
+      parentRoute: typeof ChildRoute
+    }
+    '/child/dashboard': {
+      id: '/child/dashboard'
+      path: '/dashboard'
+      fullPath: '/child/dashboard'
+      preLoaderRoute: typeof ChildDashboardRouteImport
+      parentRoute: typeof ChildRoute
+    }
+    '/parent/children/': {
+      id: '/parent/children/'
+      path: '/'
+      fullPath: '/parent/children/'
+      preLoaderRoute: typeof ParentChildrenIndexRouteImport
+      parentRoute: typeof ParentChildrenRoute
+    }
+    '/parent/tasks/new': {
+      id: '/parent/tasks/new'
+      path: '/tasks/new'
+      fullPath: '/parent/tasks/new'
+      preLoaderRoute: typeof ParentTasksNewRouteImport
+      parentRoute: typeof ParentRoute
+    }
+    '/parent/tasks/$taskId': {
+      id: '/parent/tasks/$taskId'
+      path: '/tasks/$taskId'
+      fullPath: '/parent/tasks/$taskId'
+      preLoaderRoute: typeof ParentTasksTaskIdRouteImport
+      parentRoute: typeof ParentRoute
+    }
+    '/parent/children/new': {
+      id: '/parent/children/new'
+      path: '/new'
+      fullPath: '/parent/children/new'
+      preLoaderRoute: typeof ParentChildrenNewRouteImport
+      parentRoute: typeof ParentChildrenRoute
+    }
+    '/child/tasks/$taskId': {
+      id: '/child/tasks/$taskId'
+      path: '/tasks/$taskId'
+      fullPath: '/child/tasks/$taskId'
+      preLoaderRoute: typeof ChildTasksTaskIdRouteImport
+      parentRoute: typeof ChildRoute
+    }
   }
 }
 
+interface ChildRouteChildren {
+  ChildDashboardRoute: typeof ChildDashboardRoute
+  ChildWalletRoute: typeof ChildWalletRoute
+  ChildTasksTaskIdRoute: typeof ChildTasksTaskIdRoute
+}
+
+const ChildRouteChildren: ChildRouteChildren = {
+  ChildDashboardRoute: ChildDashboardRoute,
+  ChildWalletRoute: ChildWalletRoute,
+  ChildTasksTaskIdRoute: ChildTasksTaskIdRoute,
+}
+
+const ChildRouteWithChildren = ChildRoute._addFileChildren(ChildRouteChildren)
+
+interface ParentChildrenRouteChildren {
+  ParentChildrenNewRoute: typeof ParentChildrenNewRoute
+  ParentChildrenIndexRoute: typeof ParentChildrenIndexRoute
+}
+
+const ParentChildrenRouteChildren: ParentChildrenRouteChildren = {
+  ParentChildrenNewRoute: ParentChildrenNewRoute,
+  ParentChildrenIndexRoute: ParentChildrenIndexRoute,
+}
+
+const ParentChildrenRouteWithChildren = ParentChildrenRoute._addFileChildren(
+  ParentChildrenRouteChildren,
+)
+
+interface ParentRouteChildren {
+  ParentChildrenRoute: typeof ParentChildrenRouteWithChildren
+  ParentDashboardRoute: typeof ParentDashboardRoute
+  ParentTransactionsRoute: typeof ParentTransactionsRoute
+  ParentTasksTaskIdRoute: typeof ParentTasksTaskIdRoute
+  ParentTasksNewRoute: typeof ParentTasksNewRoute
+}
+
+const ParentRouteChildren: ParentRouteChildren = {
+  ParentChildrenRoute: ParentChildrenRouteWithChildren,
+  ParentDashboardRoute: ParentDashboardRoute,
+  ParentTransactionsRoute: ParentTransactionsRoute,
+  ParentTasksTaskIdRoute: ParentTasksTaskIdRoute,
+  ParentTasksNewRoute: ParentTasksNewRoute,
+}
+
+const ParentRouteWithChildren =
+  ParentRoute._addFileChildren(ParentRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ChildRoute: ChildRouteWithChildren,
+  LoginRoute: LoginRoute,
+  ParentRoute: ParentRouteWithChildren,
+  SignupRoute: SignupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
