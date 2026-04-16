@@ -76,7 +76,7 @@ function SignupPage() {
 
     // Refresh role in auth context BEFORE navigating, otherwise the parent
     // layout guard sees role=null and bounces back to "/"
-    await refreshRole();
+    await refreshRole(userId);
     navigate({ to: "/parent/dashboard" });
   };
 
