@@ -232,7 +232,7 @@ function ParentDashboard() {
                       : "hover:bg-accent/40",
                   )}
                 >
-                  <div className="flex items-center justify-between p-4 rounded-3xl">
+                  <div className="flex items-center justify-between p-4 rounded-3xl bg-secondary/50">
                     <div className="flex items-center gap-3">
                       <ChildAvatar name={child.display_name} size="md" verified={isActive} />
                       <div>
