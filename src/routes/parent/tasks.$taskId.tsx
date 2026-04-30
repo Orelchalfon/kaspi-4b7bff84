@@ -32,6 +32,7 @@ function ParentTaskDetail() {
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(false);
   const [error, setError] = useState("");
+  const [proofUrl, setProofUrl] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -49,6 +50,13 @@ function ParentTaskDetail() {
           .eq("id", t.child_profile_id)
           .single();
         setChildName(cp?.display_name || "");
+
+        if (t.proof_image_path) {
+          const { data: signed } = await supabase.storage
+            .from("task-proofs")
+            .createSignedUrl(t.proof_image_path, 3600);
+          setProofUrl(signed?.signedUrl ?? null);
+        }
       }
       setLoading(false);
     }
@@ -127,6 +135,25 @@ function ParentTaskDetail() {
             <span className="text-muted-foreground">סטטוס:</span>
             <StatusBadge status={task.status} />
           </div>
+
+          {proofUrl && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium">תמונת הוכחה:</p>
+              <a href={proofUrl} target="_blank" rel="noopener noreferrer">
+                <img
+                  src={proofUrl}
+                  alt="תמונת הוכחה לביצוע המשימה"
+                  className="w-full rounded-lg border object-cover"
+                />
+              </a>
+            </div>
+          )}
+
+          {task.status === "submitted" && !task.proof_image_path && (
+            <div className="rounded-md bg-warning/10 p-3 text-xs text-warning-foreground">
+              לא צורפה תמונת הוכחה למשימה זו.
+            </div>
+          )}
 
           {error && (
             <div role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">

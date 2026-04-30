@@ -82,6 +82,7 @@ export type Database = {
           description: string | null
           household_id: string
           id: string
+          proof_image_path: string | null
           reward_amount: number
           status: Database["public"]["Enums"]["task_status"]
           submitted_at: string | null
@@ -96,6 +97,7 @@ export type Database = {
           description?: string | null
           household_id: string
           id?: string
+          proof_image_path?: string | null
           reward_amount: number
           status?: Database["public"]["Enums"]["task_status"]
           submitted_at?: string | null
@@ -110,6 +112,7 @@ export type Database = {
           description?: string | null
           household_id?: string
           id?: string
+          proof_image_path?: string | null
           reward_amount?: number
           status?: Database["public"]["Enums"]["task_status"]
           submitted_at?: string | null
