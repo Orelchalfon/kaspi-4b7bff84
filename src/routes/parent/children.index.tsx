@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Users } from "lucide-react";
 import { ListSkeleton } from "@/components/loading-skeletons";
+import { ChildAvatar } from "@/components/child-avatar";
 
 export const Route = createFileRoute("/parent/children/")({
   component: ChildrenList,
@@ -73,9 +74,7 @@ function ChildrenList() {
             <Card key={child.id}>
               <CardContent className="flex items-center justify-between py-4">
                 <span className="flex items-center gap-2 font-medium">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                    {child.display_name.charAt(0)}
-                  </span>
+                  <ChildAvatar name={child.display_name} size="md" />
                   {child.display_name}
                 </span>
               </CardContent>
