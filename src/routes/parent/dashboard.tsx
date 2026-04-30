@@ -213,7 +213,7 @@ function ParentDashboard() {
                   aria-pressed={isActive}
                   className={cn("rounded-xl border  text-start transition-all", "focus-visible:outline-none  ")}
                 >
-                  <div className="flex items-center justify-between p-4">
+                  <div className="flex items-center justify-center p-4 bg-transparent">
                     <div className="flex items-center gap-3">
                       <span
                         className={cn(
