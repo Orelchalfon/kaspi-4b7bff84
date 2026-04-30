@@ -39,10 +39,8 @@ export const createChild = createServerFn({ method: "POST" })
       });
 
     if (createErr || !created.user) {
-      throw new Response(
-        `Failed to create child account: ${createErr?.message ?? "unknown"}`,
-        { status: 400 },
-      );
+      console.error("Child account creation failed:", createErr);
+      throw new Response("Failed to create child account", { status: 400 });
     }
 
     const childUserId = created.user.id;
@@ -59,9 +57,8 @@ export const createChild = createServerFn({ method: "POST" })
     if (roleInsertErr) {
       // rollback the auth user
       await supabaseAdmin.auth.admin.deleteUser(childUserId);
-      throw new Response(`Failed to set child role: ${roleInsertErr.message}`, {
-        status: 500,
-      });
+      console.error("Child role insert failed:", roleInsertErr);
+      throw new Response("Failed to set child role", { status: 500 });
     }
 
     // 3. Insert the child profile
@@ -75,10 +72,8 @@ export const createChild = createServerFn({ method: "POST" })
 
     if (profileErr) {
       await supabaseAdmin.auth.admin.deleteUser(childUserId);
-      throw new Response(
-        `Failed to create child profile: ${profileErr.message}`,
-        { status: 500 },
-      );
+      console.error("Child profile creation failed:", profileErr);
+      throw new Response("Failed to create child profile", { status: 500 });
     }
 
     return { success: true, childUserId };
