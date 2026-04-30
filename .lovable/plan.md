@@ -1,82 +1,90 @@
+ns: לחזק את האבטחה בלי להחליף ספק auth — Supabase Auth כבר עושה bcrypt על סיסמאות ולא חושף אותן.
 
-## מה נבנה
+## רקע קצר (חשוב להבהיר)
 
-לפי הבקשה, דשבורד ההורה (`/parent/dashboard`) יוצג מחדש עם המבנה הבא:
+לפני שצוללים — שתי נקודות לתיקון תפיסה:
 
-1. **רשימת ילדים עם יתרה** — כרטיסים לחיצים, אחד לכל ילד.
-2. **לחיצה על ילד** = בחירת ילד פעיל (ללא ניווט לעמוד אחר). הילד הראשון נבחר אוטומטית כברירת מחדל.
-3. **פרטי הילד הנבחר** — מתחת לרשימה, אזור עם:
-   - שם + יתרה גדולה
-   - **טבלת תנועות** של הילד (תאריך, משימה, סכום)
-   - **טבלת משימות בתור** — משימות שהוקצו לו או ממתינות לאישור (assigned + submitted), עם סטטוס וכפתור "אישור" למשימות במצב submitted.
+1. **סיסמאות כבר מגובבות (hashed).** Supabase Auth (Lovable Cloud) שומר סיסמאות עם bcrypt בטבלה פנימית `auth.users.encrypted_password`. הקוד שלנו אף פעם לא נוגע בסיסמה הגולמית — `supabase.auth.signUp` שולח אותה דרך TLS לשרת והוא מבצע את ה-hash. אין צורך (וגם לא בריא) לעשות hash בצד הלקוח.
+2. **Clerk לא נתמך טוב ב-Lovable preview** (`@clerk/tanstack-react-start/server` מפנה ל-localhost ושובר את ה-handshake). אנחנו נשארים עם Lovable Cloud Auth — זה הפתרון הסטנדרטי, מאובטח, ועובד מצוין.
 
-## פריסה (Desktop ≥ sm)
+לפי ההחלטה שלך, נתמקד ב-**חיזוקי אבטחה ותיקוני RLS + אימות מייל**.
 
-```text
-┌─────────────────────────────────────────────────────────┐
-│ לוח בקרה              [+ ילד חדש] [+ משימה]            │
-├─────────────────────────────────────────────────────────┤
-│ ילדים                                                    │
-│ ┌──────────┐ ┌──────────┐ ┌──────────┐                  │
-│ │ דניאל ✓  │ │ נועה     │ │ יואב     │  ← לחיצים        │
-│ │ 45 🪙    │ │ 12 🪙    │ │ 0 🪙     │                  │
-│ └──────────┘ └──────────┘ └──────────┘                  │
-├─────────────────────────────────────────────────────────┤
-│ דניאל — יתרה: 45 🪙                                     │
-│                                                          │
-│ משימות בתור                                              │
-│ ┌─────────────────────────────────────────────────────┐ │
-│ │ משימה        │ תגמול │ סטטוס      │ פעולה          │ │
-│ │ פינוי שולחן  │ 5     │ ממתין לאישור│ [אשר] [דחה]    │ │
-│ │ סידור חדר    │ 10    │ הוקצתה     │ —              │ │
-│ └─────────────────────────────────────────────────────┘ │
-│                                                          │
-│ תנועות אחרונות                                           │
-│ ┌─────────────────────────────────────────────────────┐ │
-│ │ תאריך       │ משימה        │ סכום                  │ │
-│ │ 30/04/2026  │ פינוי כלים   │ +5                    │ │
-│ └─────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────┘
-```
+## מה ייעשה
 
-במובייל הכרטיסים נערמים אנכית והטבלאות גוללות אופקית (קיים כבר ב-`Table`).
+### 1. הפעלת אימות מייל (Email verification)
+- כיבוי `auto-confirm` בהגדרות ה-auth — משתמש חדש לא יוכל להיכנס עד שילחץ על קישור במייל.
+- הקפאת תהליך ההרשמה ב-`signup.tsx`: אחרי `signUp` נציג מסך "שלחנו לך מייל אימות" במקום להוביל ישר ל-dashboard.
+- הוספת מסך/route `/auth/callback` שמטפל בקישור החזרה מהמייל ומפנה לפי תפקיד.
+- הפעלת **HIBP (Have I Been Pwned)** — חוסם סיסמאות שדלפו בעבר.
 
-## אינטראקציה
+> שים לב: יצירת **חשבון ילד** ע"י הורה תמשיך להיות auto-confirmed (אנחנו יוצרים אותם דרך service-role admin client) — להורה אין צורך לאמת מייל בשביל הילד שלו.
 
-- כרטיס ילד נבחר מקבל רינג/רקע מובלט (`ring-2 ring-primary` + `bg-accent`).
-- כל כרטיס הוא `<button>` עם `aria-pressed` לנגישות.
-- ברירת מחדל: ה-ילד הראשון (לפי סדר `display_name` עולה) נבחר אוטומטית בעת הטעינה.
-- אם אין ילדים — מציגים את ה-empty state הקיים בלבד.
-- כפתור "אשר" בטבלת המשימות קורא ל-RPC `approve_task` הקיים, מציג toast ומרענן נתונים.
+### 2. תיקוני RLS שחסרים בסכמה
+תוספת policies לטבלאות שכרגע "נעולות" לחלוטין מבחינת כתיבה/עדכון, ולכן השרת לא יכול לעשות פעולות לגיטימיות בלי לעקוף RLS:
+
+| טבלה | חוסר נוכחי | מה נוסיף |
+|------|-----------|----------|
+| `households` | אין UPDATE/DELETE policy | UPDATE לבעלי תפקיד parent באותו household בלבד |
+| `child_profiles` | אין UPDATE policy | UPDATE לפרטי ילד (display_name) — parent בלבד |
+| `tasks` | יש UPDATE רק להורים, אין DELETE | DELETE להורים בתוך ה-household |
+| `transactions` | אין INSERT policy בכלל | משאירים סגור — רק RPC `approve_task` (SECURITY DEFINER) כותב, וזה הנכון |
+| `user_roles` | אין UPDATE/DELETE | DELETE להורה (להסיר ילד מהמשפחה), בלי יכולת לשנות role של עצמך |
+
+### 3. הקשחות נוספות
+- **Storage `task-proofs`**: ודא שה-policies מאפשרות SELECT רק לחברי ה-household של המשימה (ולא לכל מאומת).
+- **`approve_task` RPC**: כבר בודק parent + household — נוסיף בדיקה מפורשת שה-`proof_image_path` קיים לפני אישור (אסור לאשר משימה ללא הוכחה).
+- **Session security**: על דפי login/signup נוודא `autocomplete` תקין (כבר קיים), ונוסיף `rel="noopener"` לקישורים חיצוניים אם יהיו.
+- **Logging**: הסרת `console.error` שמדפיס מידע רגיש מ-`signup.tsx` ושאר נתיבי auth.
+- **לוגיקת signup race**: כיום אם `signUp` מצליח אבל יצירת ה-household נכשלת, נשאר משתמש "יתום" ב-auth ללא role. נטפל ע"י ניסיון cleanup או העברת כל הזרימה ל-server function אטומי (`createServerFn`) שמשתמש ב-admin client ועושה rollback ב-try/catch.
+
+### 4. מה **לא** נשנה ולמה
+- **לא** מעבירים ל-Clerk (לא תואם ל-Lovable preview).
+- **לא** עושים hash בצד הלקוח (סיסמאות כבר מגובבות בשרת — hash בלקוח רק שובר את אבטחת ה-bcrypt של Supabase).
+- **לא** משנים את הסכמה הבסיסית של הטבלאות.
 
 ## פרטים טכניים
 
-קובץ יחיד שמשתנה: `src/routes/parent/dashboard.tsx`.
+### קבצים שייערכו
+- `src/routes/signup.tsx` — flow חדש: אחרי signup מציגים מסך "אמת את המייל". מעבר ל-server function אטומי ליצירת household+role.
+- `src/server/signup-parent.ts` (חדש) — `createServerFn` שמבצע signup + יצירת household + role בעסקה אחת עם rollback.
+- `src/routes/auth.callback.tsx` (חדש) — מטפל ב-`?type=signup` מהמייל ומפנה לפי תפקיד.
+- `src/routes/login.tsx` — הודעת שגיאה ייעודית כש-`email_not_confirmed`.
 
-- שאילתות (Supabase, RLS-aware):
-  - `child_profiles` (id, display_name) של ה-household.
-  - `transactions` של ה-household → צבירה ל-balance per child + רשימה לכל ילד.
-  - `tasks` של ה-household עם `status in ('assigned','submitted')`.
-- State:
-  - `selectedChildId: string | null` — נקבע ל-`children[0].id` בסיום הטעינה.
-- נגזרות (memo):
-  - `selectedTransactions = transactions.filter(child_profile_id === selectedChildId)`
-  - `selectedTasks = tasks.filter(child_profile_id === selectedChildId)`
-- שימוש ברכיבים קיימים: `Card`, `Table*`, `CoinAmount`, `StatusBadge`, `Button`, `DashboardSkeleton`.
-- אישור משימה: `await supabase.rpc("approve_task", { _task_id })` → toast → רענון מקומי של tasks/transactions.
-- דחייה: `update tasks set status='rejected'` (כמו ב-`parent/tasks.$taskId`).
+### מיגרציית SQL (תקציר)
+```sql
+-- households
+CREATE POLICY "Parents can update own household" ON households FOR UPDATE
+  USING (id = get_user_household_id(auth.uid()) AND has_role(auth.uid(),'parent'));
 
-## מה יוסר
+-- child_profiles  
+CREATE POLICY "Parents can update children" ON child_profiles FOR UPDATE
+  USING (household_id = get_user_household_id(auth.uid()) AND has_role(auth.uid(),'parent'));
 
-- הסעיף הנוכחי "משימות ממתינות לאישור" המוצג גלובלית — מוטמע כעת בתוך טבלת המשימות של הילד הנבחר (לא נאבד פונקציונליות; נראה כמספר על תג ה-badge של הילד).
-- במקום זאת, על כרטיס כל ילד יוצג badge קטן עם מספר המשימות הממתינות לאישור שלו (אם > 0).
+-- tasks: add DELETE for parents
+CREATE POLICY "Parents can delete tasks" ON tasks FOR DELETE
+  USING (household_id = get_user_household_id(auth.uid()) AND has_role(auth.uid(),'parent'));
 
-## מה לא משתנה
+-- user_roles: parents can remove children (not themselves)
+CREATE POLICY "Parents can remove children" ON user_roles FOR DELETE
+  USING (
+    household_id = get_user_household_id(auth.uid())
+    AND has_role(auth.uid(),'parent')
+    AND user_id != auth.uid()
+    AND role = 'child'
+  );
 
-- שאר העמודים (`/parent/children`, `/parent/transactions`, `/parent/tasks/*`, צד ילד) — נשארים כמו שהם.
-- סכמת ה-DB, RPC, ו-RLS — אין שינוי.
-- ניווט ה-header — אין שינוי.
+-- approve_task: enforce proof_image_path required
+-- (תוספת בתוך ה-RPC הקיים)
+```
 
-## בדיקות
+### הגדרות Auth
+- כיבוי auto-confirm.
+- הפעלת HIBP password protection.
+- הגדרת site URL ו-redirect URLs לכלול את `/auth/callback`.
 
-הבדיקות הקיימות (`tests/e2e/*`) ממשיכות לכסות את לוגיקת ה-DB. אין צורך בבדיקות חדשות לשינוי UI הזה, אלא אם תרצה — אז אפשר להוסיף בדיקת רינדור קלה ל-component (Vitest + Testing Library). אציין לפני שאוסיף.
+## בדיקות אחרי
+1. הרשמת הורה חדש → מקבל מייל → לא יכול להתחבר עד שמאמת → אחרי קליק במייל מועבר ל-dashboard.
+2. ניסיון להירשם עם סיסמה דלופה (`Password123!`) → נחסם ע"י HIBP.
+3. ילד מנסה להגיש משימה ללא תמונה → נדחה.
+4. הורה מנסה לעדכן household של משפחה אחרת → נדחה ע"י RLS.
+5. סריקת אבטחה (security scan) — אפס error-level findings.
