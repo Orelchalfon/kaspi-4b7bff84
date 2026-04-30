@@ -3,6 +3,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Coins, Sparkles } from "lucide-react";
+import { CoinAmount } from "@/components/coin-amount";
+import { StatusBadge } from "@/components/status-badge";
+import { DashboardSkeleton } from "@/components/loading-skeletons";
 
 export const Route = createFileRoute("/child/dashboard")({
   component: ChildDashboard,
@@ -40,30 +44,19 @@ function ChildDashboard() {
   }, [childProfileId]);
 
   if (loading) {
-    return <div className="animate-pulse text-muted-foreground">טוען...</div>;
+    return <DashboardSkeleton />;
   }
-
-  const statusLabels: Record<string, string> = {
-    assigned: "ממתינה",
-    submitted: "הוגשה",
-    approved: "אושרה ✅",
-    rejected: "נדחתה ❌",
-  };
-
-  const statusColors: Record<string, string> = {
-    assigned: "bg-secondary text-secondary-foreground",
-    submitted: "bg-warning/20 text-warning-foreground",
-    approved: "bg-success/20 text-success",
-    rejected: "bg-destructive/20 text-destructive",
-  };
 
   return (
     <div className="space-y-6">
       {/* Balance card */}
-      <Card className="bg-primary text-primary-foreground">
+      <Card className="bg-primary text-primary-foreground" aria-label={`היתרה שלי: ${balance} מטבעות`}>
         <CardContent className="py-6 text-center">
           <p className="text-sm opacity-80">היתרה שלי</p>
-          <p className="mt-1 text-4xl font-bold">🪙 {balance}</p>
+          <p className="mt-1 flex items-center justify-center gap-2 text-4xl font-bold tabular-nums">
+            <Coins className="h-8 w-8 text-coin" aria-hidden />
+            <span>{balance}</span>
+          </p>
         </CardContent>
       </Card>
 
@@ -72,8 +65,9 @@ function ChildDashboard() {
         <h2 className="mb-3 text-lg font-semibold">המשימות שלי</h2>
         {tasks.length === 0 ? (
           <Card>
-            <CardContent className="py-8 text-center text-muted-foreground">
-              אין משימות עדיין. ההורים יוסיפו בקרוב!
+            <CardContent className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground">
+              <Sparkles className="h-8 w-8 opacity-50" aria-hidden />
+              <p>אין משימות עדיין. ההורים יוסיפו בקרוב!</p>
             </CardContent>
           </Card>
         ) : (
@@ -81,16 +75,14 @@ function ChildDashboard() {
             {tasks.map((task) => (
               <Link key={task.id} to="/child/tasks/$taskId" params={{ taskId: task.id }}>
                 <Card className="cursor-pointer transition-colors hover:bg-accent/50">
-                  <CardContent className="flex items-center justify-between py-3">
+                  <CardContent className="flex min-h-16 items-center justify-between py-4">
                     <div>
-                      <p className="font-medium">{task.title}</p>
-                      <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[task.status]}`}>
-                        {statusLabels[task.status]}
-                      </span>
+                      <p className="text-base font-medium">{task.title}</p>
+                      <div className="mt-1.5">
+                        <StatusBadge status={task.status} />
+                      </div>
                     </div>
-                    <span className="flex items-center gap-1 font-bold text-coin-foreground">
-                      🪙 {task.reward_amount}
-                    </span>
+                    <CoinAmount value={task.reward_amount} size="lg" />
                   </CardContent>
                 </Card>
               </Link>

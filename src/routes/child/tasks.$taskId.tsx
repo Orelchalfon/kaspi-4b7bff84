@@ -1,8 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { PartyPopper } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { CoinAmount } from "@/components/coin-amount";
+import { StatusBadge } from "@/components/status-badge";
+import { DetailSkeleton } from "@/components/loading-skeletons";
 
 export const Route = createFileRoute("/child/tasks/$taskId")({
   component: ChildTaskDetail,
@@ -45,23 +50,17 @@ function ChildTaskDetail() {
       return;
     }
 
+    toast.success("המשימה נשלחה לאישור!");
     navigate({ to: "/child/dashboard" });
   };
 
   if (loading) {
-    return <div className="animate-pulse text-muted-foreground">טוען...</div>;
+    return <DetailSkeleton />;
   }
 
   if (!task) {
     return <div className="text-muted-foreground">המשימה לא נמצאה</div>;
   }
-
-  const statusLabels: Record<string, string> = {
-    assigned: "ממתינה לביצוע",
-    submitted: "הוגשה — ממתינה לאישור",
-    approved: "אושרה ✅",
-    rejected: "נדחתה ❌",
-  };
 
   return (
     <div className="mx-auto max-w-sm">
@@ -75,26 +74,27 @@ function ChildTaskDetail() {
           )}
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">תגמול:</span>
-            <span className="font-bold text-coin-foreground">🪙 {task.reward_amount}</span>
+            <CoinAmount value={task.reward_amount} />
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">סטטוס:</span>
-            <span className="font-medium">{statusLabels[task.status] || task.status}</span>
+            <StatusBadge status={task.status} />
           </div>
 
           {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+            <div role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
               {error}
             </div>
           )}
 
           {task.status === "assigned" && (
             <Button
-              className="w-full"
+              className="min-h-12 w-full text-base"
               onClick={handleSubmit}
               disabled={submitting}
             >
-              {submitting ? "שולח..." : "סיימתי! הגש משימה 🎉"}
+              <PartyPopper className="h-5 w-5" aria-hidden />
+              <span className="ms-2">{submitting ? "שולח..." : "סיימתי!"}</span>
             </Button>
           )}
         </CardContent>

@@ -2,8 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Plus, UserPlus, Inbox } from "lucide-react";
+import { CoinAmount } from "@/components/coin-amount";
+import { DashboardSkeleton } from "@/components/loading-skeletons";
 
 export const Route = createFileRoute("/parent/dashboard")({
   component: ParentDashboard,
@@ -81,7 +84,7 @@ function ParentDashboard() {
   }, [householdId]);
 
   if (loading) {
-    return <div className="animate-pulse text-muted-foreground">טוען...</div>;
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -90,10 +93,16 @@ function ParentDashboard() {
         <h1 className="text-2xl font-bold">לוח בקרה</h1>
         <div className="flex gap-2">
           <Link to="/parent/children/new">
-            <Button size="sm">+ ילד חדש</Button>
+            <Button size="sm" className="min-h-10">
+              <UserPlus className="h-4 w-4" aria-hidden />
+              <span className="ms-1.5">ילד חדש</span>
+            </Button>
           </Link>
           <Link to="/parent/tasks/new">
-            <Button size="sm" variant="outline">+ משימה</Button>
+            <Button size="sm" variant="outline" className="min-h-10">
+              <Plus className="h-4 w-4" aria-hidden />
+              <span className="ms-1.5">משימה</span>
+            </Button>
           </Link>
         </div>
       </div>
@@ -116,9 +125,7 @@ function ParentDashboard() {
               <Card key={child.id}>
                 <CardContent className="flex items-center justify-between py-4">
                   <span className="font-medium">{child.display_name}</span>
-                  <span className="flex items-center gap-1 text-lg font-bold text-coin-foreground">
-                    🪙 {child.balance}
-                  </span>
+                  <CoinAmount value={child.balance} size="lg" />
                 </CardContent>
               </Card>
             ))}
@@ -128,18 +135,22 @@ function ParentDashboard() {
 
       {/* Pending tasks */}
       <section>
-        <h2 className="mb-3 text-lg font-semibold">
+        <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold">
           משימות ממתינות לאישור
           {pendingTasks.length > 0 && (
-            <span className="ms-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-warning text-xs font-bold text-warning-foreground">
+            <span
+              aria-label={`${pendingTasks.length} ממתינות`}
+              className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-warning px-1.5 text-xs font-bold tabular-nums text-warning-foreground"
+            >
               {pendingTasks.length}
             </span>
           )}
         </h2>
         {pendingTasks.length === 0 ? (
           <Card>
-            <CardContent className="py-8 text-center text-muted-foreground">
-              אין משימות ממתינות לאישור כרגע.
+            <CardContent className="flex flex-col items-center gap-2 py-8 text-center text-muted-foreground">
+              <Inbox className="h-8 w-8 opacity-50" aria-hidden />
+              <p>אין משימות ממתינות לאישור כרגע.</p>
             </CardContent>
           </Card>
         ) : (
@@ -152,9 +163,7 @@ function ParentDashboard() {
                       <p className="font-medium">{task.title}</p>
                       <p className="text-sm text-muted-foreground">{task.child_name}</p>
                     </div>
-                    <span className="flex items-center gap-1 font-bold text-coin-foreground">
-                      🪙 {task.reward_amount}
-                    </span>
+                    <CoinAmount value={task.reward_amount} />
                   </CardContent>
                 </Card>
               </Link>

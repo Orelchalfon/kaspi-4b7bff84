@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { UserPlus, Users } from "lucide-react";
+import { ListSkeleton } from "@/components/loading-skeletons";
 
 export const Route = createFileRoute("/parent/children/")({
   component: ChildrenList,
@@ -33,7 +35,14 @@ function ChildrenList() {
   }, [householdId]);
 
   if (loading) {
-    return <div className="animate-pulse text-muted-foreground">טוען...</div>;
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">ילדים</h1>
+        </div>
+        <ListSkeleton rows={3} />
+      </div>
+    );
   }
 
   return (
@@ -41,16 +50,20 @@ function ChildrenList() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">ילדים</h1>
         <Link to="/parent/children/new">
-          <Button size="sm">+ ילד חדש</Button>
+          <Button size="sm" className="min-h-10">
+            <UserPlus className="h-4 w-4" aria-hidden />
+            <span className="ms-1.5">ילד חדש</span>
+          </Button>
         </Link>
       </div>
 
       {children.length === 0 ? (
         <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
+          <CardContent className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground">
+            <Users className="h-10 w-10 opacity-40" aria-hidden />
             <p>עדיין לא הוספתם ילדים.</p>
             <Link to="/parent/children/new">
-              <Button variant="link" className="mt-2">הוסיפו ילד ראשון →</Button>
+              <Button variant="link" className="mt-1">הוסיפו ילד ראשון</Button>
             </Link>
           </CardContent>
         </Card>
@@ -59,7 +72,12 @@ function ChildrenList() {
           {children.map((child) => (
             <Card key={child.id}>
               <CardContent className="flex items-center justify-between py-4">
-                <span className="font-medium">{child.display_name}</span>
+                <span className="flex items-center gap-2 font-medium">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                    {child.display_name.charAt(0)}
+                  </span>
+                  {child.display_name}
+                </span>
               </CardContent>
             </Card>
           ))}

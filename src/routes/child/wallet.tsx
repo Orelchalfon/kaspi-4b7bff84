@@ -3,6 +3,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Coins, ArrowDownLeft, Receipt } from "lucide-react";
+import { CoinAmount } from "@/components/coin-amount";
+import { ListSkeleton } from "@/components/loading-skeletons";
 
 export const Route = createFileRoute("/child/wallet")({
   component: ChildWallet,
@@ -34,15 +37,23 @@ function ChildWallet() {
   }, [childProfileId]);
 
   if (loading) {
-    return <div className="animate-pulse text-muted-foreground">טוען...</div>;
+    return (
+      <div className="space-y-6">
+        <Card className="bg-primary/10"><CardContent className="h-24" /></Card>
+        <ListSkeleton rows={3} />
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      <Card className="bg-primary text-primary-foreground">
+      <Card className="bg-primary text-primary-foreground" aria-label={`היתרה שלי: ${balance} מטבעות`}>
         <CardContent className="py-6 text-center">
           <p className="text-sm opacity-80">היתרה שלי</p>
-          <p className="mt-1 text-4xl font-bold">🪙 {balance}</p>
+          <p className="mt-1 flex items-center justify-center gap-2 text-4xl font-bold tabular-nums">
+            <Coins className="h-8 w-8 text-coin" aria-hidden />
+            <span>{balance}</span>
+          </p>
         </CardContent>
       </Card>
 
@@ -50,8 +61,9 @@ function ChildWallet() {
         <h2 className="mb-3 text-lg font-semibold">היסטוריית תנועות</h2>
         {transactions.length === 0 ? (
           <Card>
-            <CardContent className="py-8 text-center text-muted-foreground">
-              אין תנועות עדיין. השלימו משימות כדי לצבור מטבעות!
+            <CardContent className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground">
+              <Receipt className="h-10 w-10 opacity-40" aria-hidden />
+              <p>אין תנועות עדיין. השלימו משימות כדי לצבור מטבעות!</p>
             </CardContent>
           </Card>
         ) : (
@@ -59,12 +71,15 @@ function ChildWallet() {
             {transactions.map((tx) => (
               <Card key={tx.id}>
                 <CardContent className="flex items-center justify-between py-3">
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(tx.created_at).toLocaleDateString("he-IL")}
-                  </p>
-                  <span className="flex items-center gap-1 font-bold text-success">
-                    +{tx.amount} 🪙
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-success/10 text-success">
+                      <ArrowDownLeft className="h-4 w-4" aria-hidden />
+                    </span>
+                    <p className="text-xs tabular-nums text-muted-foreground">
+                      {new Date(tx.created_at).toLocaleDateString("he-IL")}
+                    </p>
+                  </div>
+                  <CoinAmount value={tx.amount} signed tone="success" />
                 </CardContent>
               </Card>
             ))}
