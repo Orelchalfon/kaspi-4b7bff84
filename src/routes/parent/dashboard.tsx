@@ -184,6 +184,32 @@ function ParentDashboard() {
     setActing(null);
   };
 
+  const handleSavePct = async () => {
+    if (!householdId) return;
+    const n = Number(pctInput);
+    if (!Number.isFinite(n) || n < 0 || n > 100 || !Number.isInteger(n)) {
+      toast.error("אחוז חייב להיות מספר שלם בין 0 ל-100");
+      return;
+    }
+    setSavingPct(true);
+    const userId = (await supabase.auth.getUser()).data.user?.id;
+    if (!userId) {
+      setSavingPct(false);
+      return;
+    }
+    const { error } = await supabase.from("household_settings").upsert(
+      { household_id: householdId, savings_percentage: n, updated_by: userId, updated_at: new Date().toISOString() },
+      { onConflict: "household_id" },
+    );
+    setSavingPct(false);
+    if (error) {
+      toast.error("שגיאה בשמירה");
+      return;
+    }
+    toast.success("אחוז החיסכון עודכן");
+    setSavingsPct(n);
+  };
+
   if (loading) {
     return <DashboardSkeleton />;
   }
