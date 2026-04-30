@@ -234,6 +234,47 @@ function ParentDashboard() {
         </div>
       </div>
 
+      {/* Auto-savings percentage */}
+      <Card>
+        <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <PiggyBank className="h-5 w-5" aria-hidden />
+            </span>
+            <div>
+              <p className="font-semibold">אחוז חיסכון אוטומטי</p>
+              <p className="text-xs text-muted-foreground">
+                כל אישור משימה יעביר אחוז זה מהתגמול לחיסכון של הילד
+                {savingsPct > 0 ? ` (כרגע ${savingsPct}%)` : ""}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-end gap-2">
+            <div className="space-y-1">
+              <Label htmlFor="pct" className="text-xs">אחוז (0-100)</Label>
+              <Input
+                id="pct"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={100}
+                value={pctInput}
+                onChange={(e) => setPctInput(e.target.value)}
+                className="w-24 tabular-nums"
+              />
+            </div>
+            <Button
+              size="sm"
+              className="min-h-10"
+              onClick={handleSavePct}
+              disabled={savingPct || pctInput === String(savingsPct)}
+            >
+              {savingPct ? "שומר..." : "שמור"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Children selector */}
       <section aria-label="ילדים">
         <h2 className="mb-3 text-lg font-semibold">ילדים</h2>
