@@ -27,6 +27,7 @@ import { Plus, UserPlus, Inbox, Receipt, Check, X } from "lucide-react";
 import { CoinAmount } from "@/components/coin-amount";
 import { StatusBadge } from "@/components/status-badge";
 import { DashboardSkeleton } from "@/components/loading-skeletons";
+import { ChildAvatar } from "@/components/child-avatar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -213,7 +214,7 @@ function ParentDashboard() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="flex flex-wrap gap-3">
             {children.map((child) => {
               const isActive = child.id === selectedChildId;
               const pending = pendingByChild[child.id] ?? 0;
@@ -224,7 +225,7 @@ function ParentDashboard() {
                   onClick={() => setSelectedChildId(child.id)}
                   aria-pressed={isActive}
                   className={cn(
-                    "group rounded-xl border bg-card text-start transition-all",
+                    "group flex-1 basis-full rounded-xl border bg-card text-start transition-all sm:flex-none sm:basis-[260px]",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     isActive
                       ? "border-primary bg-accent ring-2 ring-primary"
@@ -233,17 +234,7 @@ function ParentDashboard() {
                 >
                   <div className="flex items-center justify-between p-4 rounded-3xl">
                     <div className="flex items-center gap-3">
-                      <span
-                        className={cn(
-                          "flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold",
-                          isActive
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-primary/10 text-primary",
-                        )}
-                        aria-hidden
-                      >
-                        {child.display_name.charAt(0)}
-                      </span>
+                      <ChildAvatar name={child.display_name} size="md" verified={isActive} />
                       <div>
                         <p className="font-semibold">{child.display_name}</p>
                         {pending > 0 && (
