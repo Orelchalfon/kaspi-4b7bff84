@@ -218,7 +218,9 @@ function ParentDashboard() {
                       <span
                         className={cn(
                           "flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold",
-                          isActive ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary",
+                          isActive
+                            ? "bg-primary text-primary-foreground border border-zinc-200"
+                            : "bg-primary/10 text-primary",
                         )}
                         aria-hidden
                       >
