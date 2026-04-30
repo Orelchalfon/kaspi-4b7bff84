@@ -4,14 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,7 +20,6 @@ import { Plus, UserPlus, Inbox, Receipt, Check, X } from "lucide-react";
 import { CoinAmount } from "@/components/coin-amount";
 import { StatusBadge } from "@/components/status-badge";
 import { DashboardSkeleton } from "@/components/loading-skeletons";
-import { ChildAvatar } from "@/components/child-avatar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -93,14 +85,9 @@ function ParentDashboard() {
     setTasks(taskList);
 
     // Fetch titles for tasks referenced by transactions (for the tx table label)
-    const txTaskIds = Array.from(
-      new Set(txList.map((t) => t.task_id).filter((x): x is string => !!x)),
-    );
+    const txTaskIds = Array.from(new Set(txList.map((t) => t.task_id).filter((x): x is string => !!x)));
     if (txTaskIds.length > 0) {
-      const { data: titlesData } = await supabase
-        .from("tasks")
-        .select("id, title")
-        .in("id", txTaskIds);
+      const { data: titlesData } = await supabase.from("tasks").select("id, title").in("id", txTaskIds);
       const map: Record<string, string> = {};
       (titlesData || []).forEach((t: any) => (map[t.id] = t.title));
       setTaskTitles(map);
@@ -214,7 +201,7 @@ function ParentDashboard() {
             </CardContent>
           </Card>
         ) : (
-          <div className="flex flex-wrap gap-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {children.map((child) => {
               const isActive = child.id === selectedChildId;
               const pending = pendingByChild[child.id] ?? 0;
@@ -225,16 +212,22 @@ function ParentDashboard() {
                   onClick={() => setSelectedChildId(child.id)}
                   aria-pressed={isActive}
                   className={cn(
-                    "group flex-1 basis-full rounded-xl border bg-card text-start transition-all sm:flex-none sm:basis-[260px]",
+                    "rounded-xl border bg-card text-start transition-all",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    isActive
-                      ? "border-primary bg-accent ring-2 ring-primary"
-                      : "hover:bg-accent/40",
+                    isActive ? "border-primary bg-accent ring-2 ring-primary" : "hover:bg-accent/40",
                   )}
                 >
-                  <div className="flex items-center justify-between p-4 rounded-3xl bg-secondary/50">
+                  <div className="flex items-center justify-between p-4">
                     <div className="flex items-center gap-3">
-                      <ChildAvatar name={child.display_name} size="md" verified={isActive} />
+                      <span
+                        className={cn(
+                          "flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold",
+                          isActive ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary",
+                        )}
+                        aria-hidden
+                      >
+                        {child.display_name.charAt(0)}
+                      </span>
                       <div>
                         <p className="font-semibold">{child.display_name}</p>
                         {pending > 0 && (
@@ -339,9 +332,7 @@ function ParentDashboard() {
                                   <AlertDialogContent dir="rtl">
                                     <AlertDialogHeader>
                                       <AlertDialogTitle>לדחות את המשימה?</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        פעולה זו לא תזכה את הילד במטבעות.
-                                      </AlertDialogDescription>
+                                      <AlertDialogDescription>פעולה זו לא תזכה את הילד במטבעות.</AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                       <AlertDialogCancel>ביטול</AlertDialogCancel>
@@ -395,9 +386,7 @@ function ParentDashboard() {
                           <TableCell className="tabular-nums text-muted-foreground">
                             {new Date(tx.created_at).toLocaleDateString("he-IL")}
                           </TableCell>
-                          <TableCell>
-                            {tx.task_id ? (taskTitles[tx.task_id] ?? "משימה") : "—"}
-                          </TableCell>
+                          <TableCell>{tx.task_id ? (taskTitles[tx.task_id] ?? "משימה") : "—"}</TableCell>
                           <TableCell>
                             <CoinAmount value={tx.amount} signed tone="success" />
                           </TableCell>
