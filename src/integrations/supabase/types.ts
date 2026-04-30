@@ -245,6 +245,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      submit_task: {
+        Args: { _proof_image_path: string; _task_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "parent" | "child"

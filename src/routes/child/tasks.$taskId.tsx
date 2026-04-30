@@ -88,16 +88,12 @@ function ChildTaskDetail() {
       return;
     }
 
-    const { error: uError } = await supabase
-      .from("tasks")
-      .update({
-        status: "submitted",
-        submitted_at: new Date().toISOString(),
-        proof_image_path: path,
-      })
-      .eq("id", taskId);
+    const { data: rpcData, error: uError } = await supabase.rpc("submit_task", {
+      _task_id: taskId,
+      _proof_image_path: path,
+    });
 
-    if (uError) {
+    if (uError || (rpcData as any)?.error) {
       setError("שגיאה בהגשת המשימה");
       setSubmitting(false);
       return;
