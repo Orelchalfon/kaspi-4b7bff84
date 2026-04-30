@@ -32,17 +32,11 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Kaspi" },
-      { name: "description", content: "מערכת פיננסית למשפחות הכוללת 
- הורים מגדירים משימות, ילדים צוברים מטבעות
-ילדים לומדים לחסוך כסף בעזרת מטלות הבית" },
+      { name: "description", content: "מערכת פיננסית למשפחות - הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך כסף בעזרת מטלות הבית" },
       { property: "og:title", content: "Kaspi" },
       { name: "twitter:title", content: "Kaspi" },
-      { property: "og:description", content: "מערכת פיננסית למשפחות הכוללת 
- הורים מגדירים משימות, ילדים צוברים מטבעות
-ילדים לומדים לחסוך כסף בעזרת מטלות הבית" },
-      { name: "twitter:description", content: "מערכת פיננסית למשפחות הכוללת 
- הורים מגדירים משימות, ילדים צוברים מטבעות
-ילדים לומדים לחסוך כסף בעזרת מטלות הבית" },
+      { property: "og:description", content: "מערכת פיננסית למשפחות - הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך כסף בעזרת מטלות הבית" },
+      { name: "twitter:description", content: "מערכת פיננסית למשפחות - הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך כסף בעזרת מטלות הבית" },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/60b718b7-4bc7-420d-9e27-8898ba9a56d4/id-preview-6c1e960f--2e61ed90-5829-4525-936e-0937c917252a.lovable.app-1777573398986.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/60b718b7-4bc7-420d-9e27-8898ba9a56d4/id-preview-6c1e960f--2e61ed90-5829-4525-936e-0937c917252a.lovable.app-1777573398986.png" },
       { name: "twitter:card", content: "summary_large_image" },
