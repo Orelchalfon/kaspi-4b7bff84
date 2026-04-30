@@ -49,6 +49,92 @@ export type Database = {
           },
         ]
       }
+      goals: {
+        Row: {
+          child_profile_id: string
+          created_at: string
+          created_by: string
+          cycle_amount: number
+          cycle_period: string
+          household_id: string
+          id: string
+          status: string
+          target_amount: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          child_profile_id: string
+          created_at?: string
+          created_by: string
+          cycle_amount: number
+          cycle_period: string
+          household_id: string
+          id?: string
+          status?: string
+          target_amount: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          child_profile_id?: string
+          created_at?: string
+          created_by?: string
+          cycle_amount?: number
+          cycle_period?: string
+          household_id?: string
+          id?: string
+          status?: string
+          target_amount?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goals_child_profile_id_fkey"
+            columns: ["child_profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goals_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      household_settings: {
+        Row: {
+          household_id: string
+          savings_percentage: number
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          household_id: string
+          savings_percentage?: number
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          household_id?: string
+          savings_percentage?: number
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "household_settings_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: true
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       households: {
         Row: {
           created_at: string
@@ -142,6 +228,7 @@ export type Database = {
           child_profile_id: string
           created_at: string
           created_by: string
+          goal_id: string | null
           household_id: string
           id: string
           idempotency_key: string
@@ -153,6 +240,7 @@ export type Database = {
           child_profile_id: string
           created_at?: string
           created_by: string
+          goal_id?: string | null
           household_id: string
           id?: string
           idempotency_key: string
@@ -164,6 +252,7 @@ export type Database = {
           child_profile_id?: string
           created_at?: string
           created_by?: string
+          goal_id?: string | null
           household_id?: string
           id?: string
           idempotency_key?: string
@@ -176,6 +265,13 @@ export type Database = {
             columns: ["child_profile_id"]
             isOneToOne: false
             referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
             referencedColumns: ["id"]
           },
           {
@@ -229,6 +325,10 @@ export type Database = {
     }
     Functions: {
       approve_task: { Args: { _task_id: string }; Returns: Json }
+      deposit_to_goal: {
+        Args: { _amount: number; _goal_id: string }
+        Returns: Json
+      }
       get_user_household_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -253,7 +353,12 @@ export type Database = {
     Enums: {
       app_role: "parent" | "child"
       task_status: "assigned" | "submitted" | "approved" | "rejected"
-      transaction_type: "reward_credit" | "manual_adjustment"
+      transaction_type:
+        | "reward_credit"
+        | "manual_adjustment"
+        | "savings_credit"
+        | "wallet_debit"
+        | "goal_credit"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -383,7 +488,13 @@ export const Constants = {
     Enums: {
       app_role: ["parent", "child"],
       task_status: ["assigned", "submitted", "approved", "rejected"],
-      transaction_type: ["reward_credit", "manual_adjustment"],
+      transaction_type: [
+        "reward_credit",
+        "manual_adjustment",
+        "savings_credit",
+        "wallet_debit",
+        "goal_credit",
+      ],
     },
   },
 } as const
