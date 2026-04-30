@@ -211,30 +211,30 @@ function ParentDashboard() {
                   type="button"
                   onClick={() => setSelectedChildId(child.id)}
                   aria-pressed={isActive}
-                  className={cn(
-                    "rounded-xl border bg-card text-start transition-all",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    isActive ? "border-primary bg-accent ring-2 ring-primary" : "hover:bg-accent/40",
-                  )}
+                  className={cn("rounded-xl border  text-start transition-all", "focus-visible:outline-none  ")}
                 >
-                  <div className="flex items-center justify-center p-4">
-                    <span
-                      className={cn(
-                        "relative flex h-12 w-12 items-center justify-center rounded-full text-base font-bold",
-                        isActive ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary",
-                      )}
-                      aria-label={child.display_name}
-                    >
-                      {child.display_name.charAt(0)}
-                      {pending > 0 && (
-                        <span
-                          className="absolute -end-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-warning px-1 text-[10px] font-bold tabular-nums text-warning-foreground"
-                          aria-label={`${pending} משימות ממתינות לאישור`}
-                        >
-                          {pending}
-                        </span>
-                      )}
-                    </span>
+                  <div className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={cn(
+                          "flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold",
+                          isActive ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary",
+                        )}
+                        aria-hidden
+                      >
+                        {child.display_name.charAt(0)}
+                      </span>
+                      <div>
+                        {pending > 0 && (
+                          <span
+                            className="mt-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-warning px-1.5 text-[11px] font-bold tabular-nums text-warning-foreground"
+                            aria-label={`${pending} משימות ממתינות לאישור`}
+                          >
+                            {pending} ממתינות
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </button>
               );
