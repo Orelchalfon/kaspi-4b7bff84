@@ -25,9 +25,14 @@ function ChildDashboard() {
       // Balance from ledger
       const { data: txData } = await supabase
         .from("transactions")
-        .select("amount")
+        .select("amount, type")
         .eq("child_profile_id", childProfileId!);
-      setBalance((txData || []).reduce((sum, t) => sum + t.amount, 0));
+      const WALLET_TYPES = ["reward_credit", "manual_adjustment", "wallet_debit", "goal_credit"];
+      setBalance(
+        (txData || [])
+          .filter((t: any) => WALLET_TYPES.includes(t.type))
+          .reduce((sum: number, t: any) => sum + t.amount, 0),
+      );
 
       // My tasks
       const { data: taskData } = await supabase
