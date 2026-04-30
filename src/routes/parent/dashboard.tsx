@@ -16,7 +16,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, UserPlus, Inbox, Receipt, Check, X } from "lucide-react";
+import { Plus, UserPlus, Inbox, Receipt, Check, X, PiggyBank } from "lucide-react";
 import { CoinAmount } from "@/components/coin-amount";
 import { StatusBadge } from "@/components/status-badge";
 import { DashboardSkeleton } from "@/components/loading-skeletons";
@@ -24,7 +24,6 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PiggyBank } from "lucide-react";
 
 export const Route = createFileRoute("/parent/dashboard")({
   component: ParentDashboard,
