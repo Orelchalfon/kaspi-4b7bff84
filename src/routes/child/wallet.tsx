@@ -11,6 +11,8 @@ export const Route = createFileRoute("/child/wallet")({
   component: ChildWallet,
 });
 
+const WALLET_TYPES = ["reward_credit", "manual_adjustment", "wallet_debit", "goal_credit"];
+
 function ChildWallet() {
   const { childProfileId } = useAuth();
   const [balance, setBalance] = useState(0);
@@ -28,8 +30,9 @@ function ChildWallet() {
         .order("created_at", { ascending: false });
 
       const txs = txData || [];
-      setTransactions(txs);
-      setBalance(txs.reduce((sum, t) => sum + t.amount, 0));
+      const walletTxs = txs.filter((t: any) => WALLET_TYPES.includes(t.type));
+      setTransactions(walletTxs);
+      setBalance(walletTxs.reduce((sum: number, t: any) => sum + t.amount, 0));
       setLoading(false);
     }
 

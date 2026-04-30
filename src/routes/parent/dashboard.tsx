@@ -16,12 +16,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, UserPlus, Inbox, Receipt, Check, X } from "lucide-react";
+import { Plus, UserPlus, Inbox, Receipt, Check, X, PiggyBank } from "lucide-react";
 import { CoinAmount } from "@/components/coin-amount";
 import { StatusBadge } from "@/components/status-badge";
 import { DashboardSkeleton } from "@/components/loading-skeletons";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/parent/dashboard")({
   component: ParentDashboard,
@@ -37,6 +39,7 @@ interface TxRow {
   amount: number;
   task_id: string | null;
   created_at: string;
+  type: string;
 }
 interface TaskRow {
   id: string;
@@ -56,9 +59,12 @@ function ParentDashboard() {
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState<string | null>(null);
+  const [savingsPct, setSavingsPct] = useState<number>(0);
+  const [pctInput, setPctInput] = useState<string>("0");
+  const [savingPct, setSavingPct] = useState(false);
 
   async function loadAll(hhId: string) {
-    const [{ data: cData }, { data: txData }, { data: tData }] = await Promise.all([
+    const [{ data: cData }, { data: txData }, { data: tData }, { data: sData }] = await Promise.all([
       supabase
         .from("child_profiles")
         .select("id, display_name")
@@ -66,7 +72,7 @@ function ParentDashboard() {
         .order("display_name", { ascending: true }),
       supabase
         .from("transactions")
-        .select("id, child_profile_id, amount, task_id, created_at")
+        .select("id, child_profile_id, amount, task_id, created_at, type")
         .eq("household_id", hhId)
         .order("created_at", { ascending: false }),
       supabase
@@ -75,6 +81,11 @@ function ParentDashboard() {
         .eq("household_id", hhId)
         .in("status", ["assigned", "submitted"])
         .order("created_at", { ascending: false }),
+      supabase
+        .from("household_settings")
+        .select("savings_percentage")
+        .eq("household_id", hhId)
+        .maybeSingle(),
     ]);
 
     const childList = cData || [];
@@ -83,6 +94,9 @@ function ParentDashboard() {
     setChildren(childList);
     setTransactions(txList);
     setTasks(taskList);
+    const pct = sData?.savings_percentage ?? 0;
+    setSavingsPct(pct);
+    setPctInput(String(pct));
 
     // Fetch titles for tasks referenced by transactions (for the tx table label)
     const txTaskIds = Array.from(new Set(txList.map((t) => t.task_id).filter((x): x is string => !!x)));
@@ -105,9 +119,11 @@ function ParentDashboard() {
   }, [householdId]);
 
   const balances = useMemo(() => {
+    const WALLET_TYPES = ["reward_credit", "manual_adjustment", "wallet_debit", "goal_credit"];
     const m: Record<string, number> = {};
     for (const c of children) m[c.id] = 0;
     for (const tx of transactions) {
+      if (!WALLET_TYPES.includes(tx.type)) continue;
       m[tx.child_profile_id] = (m[tx.child_profile_id] ?? 0) + tx.amount;
     }
     return m;
@@ -125,7 +141,12 @@ function ParentDashboard() {
 
   const selectedChild = children.find((c) => c.id === selectedChildId) ?? null;
   const childTransactions = useMemo(
-    () => transactions.filter((t) => t.child_profile_id === selectedChildId),
+    () =>
+      transactions.filter(
+        (t) =>
+          t.child_profile_id === selectedChildId &&
+          (t.type === "reward_credit" || t.type === "manual_adjustment"),
+      ),
     [transactions, selectedChildId],
   );
   const childTasks = useMemo(
@@ -162,6 +183,32 @@ function ParentDashboard() {
     setActing(null);
   };
 
+  const handleSavePct = async () => {
+    if (!householdId) return;
+    const n = Number(pctInput);
+    if (!Number.isFinite(n) || n < 0 || n > 100 || !Number.isInteger(n)) {
+      toast.error("אחוז חייב להיות מספר שלם בין 0 ל-100");
+      return;
+    }
+    setSavingPct(true);
+    const userId = (await supabase.auth.getUser()).data.user?.id;
+    if (!userId) {
+      setSavingPct(false);
+      return;
+    }
+    const { error } = await supabase.from("household_settings").upsert(
+      { household_id: householdId, savings_percentage: n, updated_by: userId, updated_at: new Date().toISOString() },
+      { onConflict: "household_id" },
+    );
+    setSavingPct(false);
+    if (error) {
+      toast.error("שגיאה בשמירה");
+      return;
+    }
+    toast.success("אחוז החיסכון עודכן");
+    setSavingsPct(n);
+  };
+
   if (loading) {
     return <DashboardSkeleton />;
   }
@@ -185,6 +232,47 @@ function ParentDashboard() {
           </Link>
         </div>
       </div>
+
+      {/* Auto-savings percentage */}
+      <Card>
+        <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <PiggyBank className="h-5 w-5" aria-hidden />
+            </span>
+            <div>
+              <p className="font-semibold">אחוז חיסכון אוטומטי</p>
+              <p className="text-xs text-muted-foreground">
+                כל אישור משימה יעביר אחוז זה מהתגמול לחיסכון של הילד
+                {savingsPct > 0 ? ` (כרגע ${savingsPct}%)` : ""}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-end gap-2">
+            <div className="space-y-1">
+              <Label htmlFor="pct" className="text-xs">אחוז (0-100)</Label>
+              <Input
+                id="pct"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={100}
+                value={pctInput}
+                onChange={(e) => setPctInput(e.target.value)}
+                className="w-24 tabular-nums"
+              />
+            </div>
+            <Button
+              size="sm"
+              className="min-h-10"
+              onClick={handleSavePct}
+              disabled={savingPct || pctInput === String(savingsPct)}
+            >
+              {savingPct ? "שומר..." : "שמור"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Children selector */}
       <section aria-label="ילדים">
