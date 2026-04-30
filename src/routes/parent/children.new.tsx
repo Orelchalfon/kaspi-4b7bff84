@@ -1,5 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
+import { toast } from "sonner";
+import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +19,7 @@ function NewChild() {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -33,6 +36,7 @@ function NewChild() {
         data: { email, password, displayName },
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
+      toast.success(`הילד ${displayName} נוסף בהצלחה`);
       navigate({ to: "/parent/children" });
     } catch (err: any) {
       setError(err?.message || "שגיאה ביצירת ילד");
@@ -48,9 +52,9 @@ function NewChild() {
           <CardDescription>צרו חשבון לילד כדי שיוכל להתחבר ולבצע משימות</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             {error && (
-              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              <div role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
                 {error}
               </div>
             )}
@@ -62,6 +66,7 @@ function NewChild() {
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="יוסי"
                 required
+                autoComplete="off"
               />
             </div>
             <div className="space-y-2">
@@ -69,6 +74,8 @@ function NewChild() {
               <Input
                 id="email"
                 type="email"
+                inputMode="email"
+                autoComplete="off"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="child@example.com"
@@ -78,18 +85,31 @@ function NewChild() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">סיסמה לילד</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="לפחות 6 תווים"
-                required
-                minLength={6}
-                dir="ltr"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="לפחות 6 תווים"
+                  required
+                  minLength={6}
+                  dir="ltr"
+                  className="pe-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "הסתר סיסמה" : "הצג סיסמה"}
+                  className="absolute end-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">הילד ישתמש בפרטים אלה להתחברות</p>
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="min-h-11 w-full" disabled={loading}>
               {loading ? "יוצר..." : "צור חשבון ילד"}
             </Button>
           </form>

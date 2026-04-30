@@ -2,6 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect, type FormEvent } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,6 +63,7 @@ function NewTask() {
       return;
     }
 
+    toast.success("המשימה נוצרה בהצלחה");
     navigate({ to: "/parent/dashboard" });
   };
 
@@ -68,14 +71,15 @@ function NewTask() {
     return (
       <div className="mx-auto max-w-sm">
         <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
+          <CardContent className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground">
+            <Users className="h-10 w-10 opacity-40" aria-hidden />
             <p>צריך להוסיף ילד לפני יצירת משימה.</p>
             <Button
               variant="link"
               onClick={() => navigate({ to: "/parent/children/new" })}
-              className="mt-2"
+              className="mt-1"
             >
-              הוסיפו ילד →
+              הוסיפו ילד
             </Button>
           </CardContent>
         </Card>
@@ -90,9 +94,9 @@ function NewTask() {
           <CardTitle>משימה חדשה</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             {error && (
-              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              <div role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
                 {error}
               </div>
             )}
@@ -102,7 +106,7 @@ function NewTask() {
                 id="child"
                 value={childId}
                 onChange={(e) => setChildId(e.target.value)}
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 required
               >
                 {children.map((c) => (
@@ -120,6 +124,7 @@ function NewTask() {
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="לסדר את החדר"
                 required
+                autoComplete="off"
               />
             </div>
             <div className="space-y-2">
@@ -132,19 +137,22 @@ function NewTask() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="reward">תגמול (🪙 מטבעות)</Label>
+              <Label htmlFor="reward">תגמול במטבעות</Label>
               <Input
                 id="reward"
                 type="number"
                 min="1"
+                inputMode="numeric"
                 value={reward}
                 onChange={(e) => setReward(e.target.value)}
                 placeholder="10"
                 required
                 dir="ltr"
+                className="tabular-nums"
               />
+              <p className="text-xs text-muted-foreground">כמה מטבעות הילד יקבל אחרי שהמשימה תאושר</p>
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="min-h-11 w-full" disabled={loading}>
               {loading ? "יוצר..." : "צור משימה"}
             </Button>
           </form>
