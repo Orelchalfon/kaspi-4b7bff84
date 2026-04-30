@@ -1,83 +1,105 @@
+## Goal
 
-# KidCoin MVP — Task → Approval → Reward Ledger
+The CLI `npx skills add ...` doesn't work in Lovable — skills are platform-provided, not pluggable from npm. But the **UI/UX Pro Max** skill (github.com/nextlevelbuilder/ui-ux-pro-max-skill, 72.5k ⭐) is just a markdown ruleset. I'll embed its rules into project memory so I follow them automatically on every UI change going forward, then do an audit + refactor pass on the existing screens.
 
-## Stack
-- **TanStack Start** (SSR, file-based routing, server functions)
-- **Supabase Auth** (email/password, built-in)
-- **Supabase Postgres** (RLS, RPC for financial operations)
-- **Tailwind CSS** (RTL-first with `dir="rtl"`)
-- **TanStack Query** (data fetching/caching)
-- **Zod** (validation)
-- **Hebrew + RTL** from day 1 (hardcoded Hebrew UI, RTL layout)
+## Deliverables
 
-## Core Loop (MVP scope only)
-1. Parent signs up → creates household
-2. Parent creates child (child gets login credentials)
-3. Parent creates task with reward amount
-4. Child logs in → sees assigned tasks → submits task
-5. Parent reviews → approves/rejects
-6. Approval creates immutable transaction via RPC (never direct balance writes)
-7. Child sees updated balance (derived from transaction ledger)
+1. **`mem://design/uxui-pro-max`** — distilled ruleset (10 categories, priority-ordered) saved to project memory.
+2. **`mem://index.md`** — Core gets one line: *"Follow UI/UX Pro Max rules on every UI change → mem://design/uxui-pro-max"* + reference link to the file.
+3. **Audit + refactor pass** on existing screens (login, signup, parent dashboard, parent children/tasks/transactions, child dashboard/wallet/task detail, layouts).
 
-## Database Schema
+## The ruleset (priority order)
 
-**Tables:**
-- `households` — id, name, created_by (user_id)
-- `user_roles` — user_id, role (parent/child), household_id
-- `child_profiles` — id, user_id, household_id, display_name
-- `tasks` — id, household_id, child_profile_id, created_by, title, description, reward_amount, status (assigned/submitted/approved/rejected), submitted_at, approved_at
-- `transactions` — id, household_id, child_profile_id, task_id, type (reward_credit), amount, created_at, created_by, idempotency_key (unique on task_id+type)
+| # | Category | Priority |
+|---|---|---|
+| 1 | Accessibility (contrast 4.5:1, focus rings, aria-labels, keyboard nav, reduced-motion) | CRITICAL |
+| 2 | Touch & interaction (≥44px targets, 8px gaps, loading states, press feedback) | CRITICAL |
+| 3 | Performance (CLS<0.1, lazy loading, skeleton >300ms) | HIGH |
+| 4 | Style consistency (SVG icons not emoji, one primary CTA per screen, consistent elevation) | HIGH |
+| 5 | Layout & responsive (mobile-first, 4/8pt spacing, no horizontal scroll, min-h-dvh) | HIGH |
+| 6 | Typography & color (≥16px body, line-height 1.5, semantic tokens only, tabular nums for $) | MEDIUM |
+| 7 | Animation (150–300ms, transform/opacity only, motion has meaning, respect reduced-motion) | MEDIUM |
+| 8 | Forms & feedback (visible labels, inline error below field, validate on blur, success feedback) | MEDIUM |
+| 9 | Navigation (predictable back, ≤5 bottom-nav items, deep links) | HIGH |
+| 10 | Charts/data (legends, tooltips, never color-only) | LOW |
 
-**Key rules:**
-- RLS scoped by household on every table
-- Balance = `SUM(amount) FROM transactions WHERE child_profile_id = X`
-- Task approval via Supabase RPC (atomic: verify→insert transaction→update task status)
-- Unique constraint on transactions(task_id, type) prevents double-credit
+Plus KidCoin-specific addenda: RTL-correct logical properties (start/end not left/right), Hebrew typography (Rubik base 16px, line-height 1.6), coin balance always tabular, child UI larger touch targets (≥48px), playful but not childish (no comic fonts, no random emojis as icons).
 
-## Routes
+## Audit findings (current state)
 
-```
-(public)
-  /                → Landing / redirect to dashboard
-  /login           → Supabase Auth login
-  /signup          → Supabase Auth signup
+Screens reviewed: `login.tsx`, `signup.tsx`, `parent.tsx`, `parent/dashboard.tsx`, `parent/children.*`, `parent/tasks.*`, `parent/transactions.tsx`, `child.tsx`, `child/dashboard.tsx`, `child/tasks.$taskId.tsx`, `child/wallet.tsx`.
 
-(parent — protected)
-  /parent/dashboard    → Overview: children, pending tasks
-  /parent/children     → List children
-  /parent/children/new → Create child account
-  /parent/tasks/new    → Create task with reward
-  /parent/tasks/:id    → Review/approve/reject task
-  /parent/transactions → View all transactions
+Issues to fix:
 
-(child — protected)
-  /child/dashboard     → My tasks summary + balance
-  /child/tasks/:id     → View task details, submit
-  /child/wallet        → Transaction history + balance
-```
+- **Emoji as icons everywhere** (🪙, ✅, ❌, +) — violates `no-emoji-icons`. Replace with Lucide icons; keep 🪙 only as a brand/coin glyph in hero spots, not as functional UI.
+- **Loading state is just `טוען...`** — violates `progressive-loading`. Replace with skeleton screens on dashboards and lists.
+- **No success feedback on submit** (login, signup, child create, task create, approve) — violates `success-feedback` & `submit-feedback`. Add toast confirmations (Sonner is already installed).
+- **No empty-state CTAs in some places** (transactions, child wallet) — partial coverage.
+- **No inline form validation** — only generic error at top. Move errors below fields, validate on blur.
+- **No password show/hide toggle** on login/signup — violates `password-toggle`.
+- **No autocomplete attrs** on email/password — violates `autofill-support`.
+- **`min-h-screen` used** — violates `viewport-units`. Switch to `min-h-dvh` for mobile correctness.
+- **Cards used as links wrap `<Card>` inside `<Link>`** — accessible but produces nested-interactive markup; refactor to use Card with proper role + onClick or a styled Link.
+- **Header nav uses `cursor-pointer` only via global rule** — fine, but no active-route visual weight beyond bg color; add weight/underline for clarity.
+- **Coin balance numbers** not tabular — small visual jitter when amounts change. Add `tabular-nums`.
+- **No skip-to-content link** in layouts — a11y miss.
+- **Destructive actions** (reject task) currently look the same as approve — needs danger color + confirmation dialog.
+- **Focus rings**: relying on default; verify visible in both themes (especially child dashboard purple card).
 
-## Key UX Details
-- **RTL layout**: `<html lang="he" dir="rtl">`, all Tailwind utilities use logical properties (start/end instead of left/right)
-- **Role-based routing**: `_parent` and `_child` layout routes with `beforeLoad` guards checking user role
-- **Parent dashboard**: Shows children list, pending submissions count, quick actions
-- **Child dashboard**: Shows assigned tasks, current balance (from ledger), recent activity
-- **Task approval flow**: Parent sees submission → taps approve → RPC creates transaction atomically → UI updates
-- **Empty states**: Meaningful Hebrew text for no children, no tasks, no transactions
+## Plan of execution
 
-## Build Phases
+### Step 1 — Save the ruleset to memory (2 files)
+- Write `mem://design/uxui-pro-max` with full distilled rules + KidCoin addenda + a "self-check before finishing any UI change" checklist.
+- Update `mem://index.md`: add Core line + Memories entry.
 
-**Phase 1**: App shell — Supabase Auth (login/signup), role detection, RTL layout, route guards
-**Phase 2**: Database schema + RLS + RPC for approval
-**Phase 3**: Household + child creation flow (parent)
-**Phase 4**: Task creation (parent) + task list/submission (child)
-**Phase 5**: Approval flow + transaction ledger + balance view
-**Phase 6**: Dashboard polish, loading/error/empty states
+### Step 2 — Foundation refactors
+- Add `<Toaster />` (Sonner) to root layout if not mounted; create a tiny `useToast` wrapper.
+- Add a skip-to-content link + `<main id="main">` in parent.tsx and child.tsx layouts.
+- Swap `min-h-screen` → `min-h-dvh` everywhere.
+- Build a small `<Skeleton>`-based `<DashboardSkeleton />` and `<ListSkeleton />` for reuse.
+- Add a `<CoinAmount value={n} />` component with Lucide `Coins` icon + tabular nums.
+- Add a `<StatusBadge status="..." />` with icon + text (not color-only).
 
-## NOT in this MVP
-- Admin dashboard
-- Quizzes / educational modules
-- Notifications
-- Savings goals
-- Recurring tasks
-- Card/payment integrations
-- Analytics
+### Step 3 — Auth screens (login, signup)
+- Password show/hide toggle (Lucide `Eye`/`EyeOff`).
+- `autocomplete="email"` / `current-password` / `new-password`.
+- Inline error below the offending field; success toast on signup before navigate.
+- Replace 🪙 hero with a real branded mark (small Lucide `Coins` in a colored circle).
+
+### Step 4 — Parent screens
+- `parent/dashboard.tsx`: skeleton state, replace emoji counts/badges with Lucide icons + StatusBadge, primary CTA "+ ילד חדש" emphasized, secondary "+ משימה" subordinate.
+- `parent/children.new.tsx`: inline validation, success toast → navigate.
+- `parent/tasks.new.tsx`: same treatment + helper text on reward field.
+- `parent/tasks.$taskId.tsx`: confirmation dialog before reject; danger styling on reject; success toast on approve; show approval in real-time.
+- `parent/transactions.tsx`: empty state with action; tabular nums for amounts.
+
+### Step 5 — Child screens
+- `child/dashboard.tsx`: balance card a11y (aria-label "היתרה שלי, X מטבעות"), bigger touch targets (≥48px), skeleton, StatusBadge with icon.
+- `child/tasks.$taskId.tsx`: clear single primary CTA "סיימתי!", success toast → return.
+- `child/wallet.tsx`: tabular nums, transaction icons, empty state.
+
+### Step 6 — Layout polish
+- Active nav link gets bold + underline (not just bg).
+- Visible focus ring on all interactive elements (primary color, 2px).
+- Verify dark mode contrast (we have it defined but don't expose a toggle yet — out of scope unless you want it).
+
+### Step 7 — Self-verification
+After refactors, run through the 10-rule checklist on each refactored screen and report any items intentionally deferred.
+
+## Out of scope (not doing unless asked)
+
+- Adding a dark-mode toggle UI (tokens exist, no switcher).
+- Replacing the entire color palette (current tokens are fine).
+- Animation/motion library (Framer Motion) — using Tailwind transitions only.
+- Mobile bottom nav (current top header is acceptable for the screen count).
+
+## Technical notes
+
+- All new icons: `lucide-react` (already installed).
+- All new toasts: `sonner` (already installed via shadcn).
+- Memory paths use `mem://` namespace; the index file is replaced wholesale on update — I'll preserve all current entries and add new ones.
+- No DB changes, no new dependencies, no edge functions touched.
+
+## What you'll see after approval
+
+I'll execute Steps 1–7 in order. You'll get: memory written, then a wave of file edits across ~12 route/layout files plus 2–3 small new shared components. Then I'll summarize what changed and what to test.
