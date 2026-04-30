@@ -33,6 +33,7 @@ function ParentTaskDetail() {
   const [acting, setActing] = useState(false);
   const [error, setError] = useState("");
   const [proofUrl, setProofUrl] = useState<string | null>(null);
+  const [proofError, setProofError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -52,9 +53,13 @@ function ParentTaskDetail() {
         setChildName(cp?.display_name || "");
 
         if (t.proof_image_path) {
-          const { data: signed } = await supabase.storage
+          const { data: signed, error: signErr } = await supabase.storage
             .from("task-proofs")
             .createSignedUrl(t.proof_image_path, 3600);
+          if (signErr) {
+            console.error("createSignedUrl failed", signErr);
+            setProofError("לא ניתן לטעון את התמונה. ייתכן שהקובץ נמחק או שאין הרשאה.");
+          }
           setProofUrl(signed?.signedUrl ?? null);
         }
       }
@@ -146,6 +151,12 @@ function ParentTaskDetail() {
                   className="w-full rounded-lg border object-cover"
                 />
               </a>
+            </div>
+          )}
+
+          {proofError && !proofUrl && (
+            <div role="alert" className="rounded-md bg-warning/10 p-3 text-xs text-warning-foreground">
+              {proofError}
             </div>
           )}
 
