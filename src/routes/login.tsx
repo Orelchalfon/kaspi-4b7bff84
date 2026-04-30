@@ -28,9 +28,13 @@ function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      setError("אימייל או סיסמה שגויים");
+      const msg = error.message?.toLowerCase() ?? "";
+      if (msg.includes("email not confirmed") || msg.includes("not confirmed")) {
+        setError("המייל עוד לא אומת. בדקו את תיבת הדואר ולחצו על הקישור.");
+      } else {
+        setError("אימייל או סיסמה שגויים");
+      }
       setLoading(false);
-      // Auto-focus first invalid field
       requestAnimationFrame(() => document.getElementById("password")?.focus());
       return;
     }

@@ -1,9 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
-import { Coins, Eye, EyeOff } from "lucide-react";
+import { Coins, Eye, EyeOff, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,71 +14,72 @@ export const Route = createFileRoute("/signup")({
 
 function SignupPage() {
   const navigate = useNavigate();
-  const { refreshRole } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [householdName, setHouseholdName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    // Sign up the user
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: window.location.origin },
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        data: { household_name: householdName },
+      },
     });
 
     if (authError || !authData.user) {
-      setError(authError?.message || "שגיאה בהרשמה");
+      const msg = authError?.message ?? "";
+      if (msg.toLowerCase().includes("password") && msg.toLowerCase().includes("pwned")) {
+        setError("הסיסמה הזו נמצאת ברשימת סיסמאות שדלפו. בחרו סיסמה אחרת.");
+      } else if (msg.toLowerCase().includes("already")) {
+        setError("כתובת המייל כבר רשומה. נסו להתחבר.");
+      } else {
+        setError("שגיאה בהרשמה. נסו שוב.");
+      }
       setLoading(false);
       return;
     }
 
-    // If no session returned, the email may already exist or needs confirmation
-    if (!authData.session) {
-      setError("לא ניתן ליצור חשבון עם אימייל זה. נסו אימייל אחר או התחברו.");
-      setLoading(false);
-      return;
-    }
-
-    const userId = authData.user.id;
-
-    // Create household
-    const { data: household, error: hError } = await supabase
-      .from("households")
-      .insert({ name: householdName, created_by: userId })
-      .select("id")
-      .single();
-
-    if (hError || !household) {
-      setError("שגיאה ביצירת משק בית");
-      setLoading(false);
-      return;
-    }
-
-    // Assign parent role
-    const { error: rError } = await supabase
-      .from("user_roles")
-      .insert({ user_id: userId, role: "parent", household_id: household.id });
-
-    if (rError) {
-      setError("שגיאה בהגדרת תפקיד");
-      setLoading(false);
-      return;
-    }
-
-    // Refresh role in auth context BEFORE navigating, otherwise the parent
-    // layout guard sees role=null and bounces back to "/"
-    await refreshRole(userId);
-    toast.success("ברוכים הבאים ל-KidCoin!");
-    navigate({ to: "/parent/dashboard" });
+    // Email-confirm flow: no session yet. Show "check your email" screen.
+    toast.success("נשלח מייל אימות לכתובת שהזנת");
+    setEmailSent(true);
+    setLoading(false);
   };
+
+  if (emailSent) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-background px-4">
+        <Card className="w-full max-w-sm">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <Mail className="h-7 w-7" aria-hidden />
+            </div>
+            <CardTitle className="text-2xl">בדקו את המייל</CardTitle>
+            <CardDescription>
+              שלחנו קישור אימות אל <span dir="ltr" className="font-medium">{email}</span>. לחצו על הקישור כדי להפעיל את החשבון.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-center text-sm text-muted-foreground">
+              לא רואים את המייל? בדקו בתיקיית הספאם.
+            </p>
+            <Button variant="outline" className="min-h-11 w-full" onClick={() => { setEmailSent(false); navigate({ to: "/login" }); }}>
+              חזרה להתחברות
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background px-4">
