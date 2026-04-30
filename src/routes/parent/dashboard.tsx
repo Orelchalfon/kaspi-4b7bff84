@@ -213,11 +213,11 @@ function ParentDashboard() {
                   aria-pressed={isActive}
                   className={cn("text-start transition-all", "focus-visible:outline-none")}
                 >
-                  <div className="flex items-center justify-center p-4">
-                    <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center ">
+                    <div className="flex items-center ">
                       <span
                         className={cn(
-                          "flex h-20 w-20 items-center justify-center rounded-full text-sm font-bold",
+                          "flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold",
                           isActive ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary",
                         )}
                         aria-hidden
