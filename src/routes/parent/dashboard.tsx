@@ -229,7 +229,6 @@ function ParentDashboard() {
                         {child.display_name.charAt(0)}
                       </span>
                       <div>
-                        <p className="font-semibold">{child.display_name}</p>
                         {pending > 0 && (
                           <span
                             className="mt-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-warning px-1.5 text-[11px] font-bold tabular-nums text-warning-foreground"
@@ -240,7 +239,6 @@ function ParentDashboard() {
                         )}
                       </div>
                     </div>
-                    <CoinAmount value={balances[child.id] ?? 0} size="lg" />
                   </div>
                 </button>
               );
