@@ -19,6 +19,7 @@ import { Route as ParentDashboardRouteImport } from './routes/parent/dashboard'
 import { Route as ParentChildrenRouteImport } from './routes/parent/children'
 import { Route as ChildWalletRouteImport } from './routes/child/wallet'
 import { Route as ChildDashboardRouteImport } from './routes/child/dashboard'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ParentChildrenIndexRouteImport } from './routes/parent/children.index'
 import { Route as ParentTasksNewRouteImport } from './routes/parent/tasks.new'
 import { Route as ParentTasksTaskIdRouteImport } from './routes/parent/tasks.$taskId'
@@ -75,6 +76,11 @@ const ChildDashboardRoute = ChildDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => ChildRoute,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ParentChildrenIndexRoute = ParentChildrenIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/parent': typeof ParentRouteWithChildren
   '/signup': typeof SignupRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/child/dashboard': typeof ChildDashboardRoute
   '/child/wallet': typeof ChildWalletRoute
   '/parent/children': typeof ParentChildrenRouteWithChildren
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/parent': typeof ParentRouteWithChildren
   '/signup': typeof SignupRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/child/dashboard': typeof ChildDashboardRoute
   '/child/wallet': typeof ChildWalletRoute
   '/parent/dashboard': typeof ParentDashboardRoute
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/parent': typeof ParentRouteWithChildren
   '/signup': typeof SignupRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/child/dashboard': typeof ChildDashboardRoute
   '/child/wallet': typeof ChildWalletRoute
   '/parent/children': typeof ParentChildrenRouteWithChildren
@@ -160,6 +169,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/parent'
     | '/signup'
+    | '/auth/callback'
     | '/child/dashboard'
     | '/child/wallet'
     | '/parent/children'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/parent'
     | '/signup'
+    | '/auth/callback'
     | '/child/dashboard'
     | '/child/wallet'
     | '/parent/dashboard'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/parent'
     | '/signup'
+    | '/auth/callback'
     | '/child/dashboard'
     | '/child/wallet'
     | '/parent/children'
@@ -211,6 +223,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ParentRoute: typeof ParentRouteWithChildren
   SignupRoute: typeof SignupRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -284,6 +297,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/child/dashboard'
       preLoaderRoute: typeof ChildDashboardRouteImport
       parentRoute: typeof ChildRoute
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/parent/children/': {
       id: '/parent/children/'
@@ -376,6 +396,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ParentRoute: ParentRouteWithChildren,
   SignupRoute: SignupRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
