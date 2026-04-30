@@ -211,7 +211,7 @@ function ParentDashboard() {
                   type="button"
                   onClick={() => setSelectedChildId(child.id)}
                   aria-pressed={isActive}
-                  className={cn("rounded-xl border  text-start transition-all", "focus-visible:outline-none  ")}
+                  className={cn("text-start transition-all", "focus-visible:outline-none")}
                 >
                   <div className="flex items-center justify-center p-4 bg-transparent px-0 py-0">
                     <div className="flex items-center gap-3">
