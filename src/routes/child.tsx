@@ -60,6 +60,13 @@ function ChildLayout() {
             >
               ארנק
             </Link>
+            <Link
+              to="/child/savings"
+              className="min-h-12 rounded-md px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              activeProps={{ className: "bg-accent font-semibold text-primary" }}
+            >
+              חיסכון
+            </Link>
           </nav>
           <Button variant="ghost" size="sm" onClick={signOut} aria-label="יציאה">
             <LogOut className="h-4 w-4" aria-hidden />

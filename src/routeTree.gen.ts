@@ -18,6 +18,7 @@ import { Route as ParentTransactionsRouteImport } from './routes/parent/transact
 import { Route as ParentDashboardRouteImport } from './routes/parent/dashboard'
 import { Route as ParentChildrenRouteImport } from './routes/parent/children'
 import { Route as ChildWalletRouteImport } from './routes/child/wallet'
+import { Route as ChildSavingsRouteImport } from './routes/child/savings'
 import { Route as ChildDashboardRouteImport } from './routes/child/dashboard'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ParentChildrenIndexRouteImport } from './routes/parent/children.index'
@@ -71,6 +72,11 @@ const ChildWalletRoute = ChildWalletRouteImport.update({
   path: '/wallet',
   getParentRoute: () => ChildRoute,
 } as any)
+const ChildSavingsRoute = ChildSavingsRouteImport.update({
+  id: '/savings',
+  path: '/savings',
+  getParentRoute: () => ChildRoute,
+} as any)
 const ChildDashboardRoute = ChildDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/child/dashboard': typeof ChildDashboardRoute
+  '/child/savings': typeof ChildSavingsRoute
   '/child/wallet': typeof ChildWalletRoute
   '/parent/children': typeof ParentChildrenRouteWithChildren
   '/parent/dashboard': typeof ParentDashboardRoute
@@ -133,6 +140,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/child/dashboard': typeof ChildDashboardRoute
+  '/child/savings': typeof ChildSavingsRoute
   '/child/wallet': typeof ChildWalletRoute
   '/parent/dashboard': typeof ParentDashboardRoute
   '/parent/transactions': typeof ParentTransactionsRoute
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/child/dashboard': typeof ChildDashboardRoute
+  '/child/savings': typeof ChildSavingsRoute
   '/child/wallet': typeof ChildWalletRoute
   '/parent/children': typeof ParentChildrenRouteWithChildren
   '/parent/dashboard': typeof ParentDashboardRoute
@@ -171,6 +180,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/auth/callback'
     | '/child/dashboard'
+    | '/child/savings'
     | '/child/wallet'
     | '/parent/children'
     | '/parent/dashboard'
@@ -189,6 +199,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/auth/callback'
     | '/child/dashboard'
+    | '/child/savings'
     | '/child/wallet'
     | '/parent/dashboard'
     | '/parent/transactions'
@@ -206,6 +217,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/auth/callback'
     | '/child/dashboard'
+    | '/child/savings'
     | '/child/wallet'
     | '/parent/children'
     | '/parent/dashboard'
@@ -291,6 +303,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChildWalletRouteImport
       parentRoute: typeof ChildRoute
     }
+    '/child/savings': {
+      id: '/child/savings'
+      path: '/savings'
+      fullPath: '/child/savings'
+      preLoaderRoute: typeof ChildSavingsRouteImport
+      parentRoute: typeof ChildRoute
+    }
     '/child/dashboard': {
       id: '/child/dashboard'
       path: '/dashboard'
@@ -345,12 +364,14 @@ declare module '@tanstack/react-router' {
 
 interface ChildRouteChildren {
   ChildDashboardRoute: typeof ChildDashboardRoute
+  ChildSavingsRoute: typeof ChildSavingsRoute
   ChildWalletRoute: typeof ChildWalletRoute
   ChildTasksTaskIdRoute: typeof ChildTasksTaskIdRoute
 }
 
 const ChildRouteChildren: ChildRouteChildren = {
   ChildDashboardRoute: ChildDashboardRoute,
+  ChildSavingsRoute: ChildSavingsRoute,
   ChildWalletRoute: ChildWalletRoute,
   ChildTasksTaskIdRoute: ChildTasksTaskIdRoute,
 }
