@@ -22,6 +22,9 @@ import { StatusBadge } from "@/components/status-badge";
 import { DashboardSkeleton } from "@/components/loading-skeletons";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { PiggyBank } from "lucide-react";
 
 export const Route = createFileRoute("/parent/dashboard")({
   component: ParentDashboard,
@@ -37,6 +40,7 @@ interface TxRow {
   amount: number;
   task_id: string | null;
   created_at: string;
+  type: string;
 }
 interface TaskRow {
   id: string;
@@ -56,9 +60,12 @@ function ParentDashboard() {
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState<string | null>(null);
+  const [savingsPct, setSavingsPct] = useState<number>(0);
+  const [pctInput, setPctInput] = useState<string>("0");
+  const [savingPct, setSavingPct] = useState(false);
 
   async function loadAll(hhId: string) {
-    const [{ data: cData }, { data: txData }, { data: tData }] = await Promise.all([
+    const [{ data: cData }, { data: txData }, { data: tData }, { data: sData }] = await Promise.all([
       supabase
         .from("child_profiles")
         .select("id, display_name")
@@ -66,7 +73,7 @@ function ParentDashboard() {
         .order("display_name", { ascending: true }),
       supabase
         .from("transactions")
-        .select("id, child_profile_id, amount, task_id, created_at")
+        .select("id, child_profile_id, amount, task_id, created_at, type")
         .eq("household_id", hhId)
         .order("created_at", { ascending: false }),
       supabase
@@ -75,6 +82,11 @@ function ParentDashboard() {
         .eq("household_id", hhId)
         .in("status", ["assigned", "submitted"])
         .order("created_at", { ascending: false }),
+      supabase
+        .from("household_settings")
+        .select("savings_percentage")
+        .eq("household_id", hhId)
+        .maybeSingle(),
     ]);
 
     const childList = cData || [];
@@ -83,6 +95,9 @@ function ParentDashboard() {
     setChildren(childList);
     setTransactions(txList);
     setTasks(taskList);
+    const pct = sData?.savings_percentage ?? 0;
+    setSavingsPct(pct);
+    setPctInput(String(pct));
 
     // Fetch titles for tasks referenced by transactions (for the tx table label)
     const txTaskIds = Array.from(new Set(txList.map((t) => t.task_id).filter((x): x is string => !!x)));
@@ -105,9 +120,11 @@ function ParentDashboard() {
   }, [householdId]);
 
   const balances = useMemo(() => {
+    const WALLET_TYPES = ["reward_credit", "manual_adjustment", "wallet_debit", "goal_credit"];
     const m: Record<string, number> = {};
     for (const c of children) m[c.id] = 0;
     for (const tx of transactions) {
+      if (!WALLET_TYPES.includes(tx.type)) continue;
       m[tx.child_profile_id] = (m[tx.child_profile_id] ?? 0) + tx.amount;
     }
     return m;
@@ -125,7 +142,12 @@ function ParentDashboard() {
 
   const selectedChild = children.find((c) => c.id === selectedChildId) ?? null;
   const childTransactions = useMemo(
-    () => transactions.filter((t) => t.child_profile_id === selectedChildId),
+    () =>
+      transactions.filter(
+        (t) =>
+          t.child_profile_id === selectedChildId &&
+          (t.type === "reward_credit" || t.type === "manual_adjustment"),
+      ),
     [transactions, selectedChildId],
   );
   const childTasks = useMemo(
