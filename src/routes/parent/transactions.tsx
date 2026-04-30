@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Receipt, ArrowDownLeft } from "lucide-react";
+import { Receipt } from "lucide-react";
 import { CoinAmount } from "@/components/coin-amount";
 import { ListSkeleton } from "@/components/loading-skeletons";
+import { ChildAvatar } from "@/components/child-avatar";
 
 export const Route = createFileRoute("/parent/transactions")({
   component: ParentTransactions,
@@ -69,26 +70,61 @@ function ParentTransactions() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-2">
-          {transactions.map((tx) => (
-            <Card key={tx.id}>
-              <CardContent className="flex items-center justify-between py-3">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-success/10 text-success">
-                    <ArrowDownLeft className="h-4 w-4" aria-hidden />
-                  </span>
-                  <div>
-                    <p className="font-medium">{children[tx.child_profile_id] || "ילד"}</p>
-                    <p className="text-xs tabular-nums text-muted-foreground">
-                      {new Date(tx.created_at).toLocaleDateString("he-IL")}
-                    </p>
+        <>
+          <div className="space-y-2">
+            {transactions.map((tx) => {
+              const name = children[tx.child_profile_id] || "ילד";
+              return (
+                <Card key={tx.id}>
+                  <CardContent className="flex items-center justify-between py-3">
+                    <div className="flex items-center gap-3">
+                      <ChildAvatar name={name} size="sm" />
+                      <div>
+                        <p className="font-medium">{name}</p>
+                        <p className="text-xs tabular-nums text-muted-foreground">
+                          {new Date(tx.created_at).toLocaleDateString("he-IL")}
+                        </p>
+                      </div>
+                    </div>
+                    <CoinAmount value={tx.amount} signed tone="success" />
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Per-child totals + grand total */}
+          <Card className="bg-muted/40">
+            <CardContent className="space-y-2 py-4">
+              <p className="text-sm font-semibold text-muted-foreground">סיכום לפי ילד</p>
+              {Object.entries(
+                transactions.reduce<Record<string, number>>((acc, tx) => {
+                  acc[tx.child_profile_id] = (acc[tx.child_profile_id] || 0) + tx.amount;
+                  return acc;
+                }, {}),
+              ).map(([cpId, total]) => {
+                const name = children[cpId] || "ילד";
+                return (
+                  <div key={cpId} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ChildAvatar name={name} size="sm" />
+                      <span className="font-medium">{name}</span>
+                    </div>
+                    <CoinAmount value={total} tone="success" />
                   </div>
-                </div>
-                <CoinAmount value={tx.amount} signed tone="success" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                );
+              })}
+              <div className="mt-2 flex items-center justify-between border-t pt-2">
+                <span className="font-bold">סה״כ</span>
+                <CoinAmount
+                  value={transactions.reduce((sum, t) => sum + t.amount, 0)}
+                  size="lg"
+                  tone="success"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   );
