@@ -31,22 +31,40 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Kaspi" },
-      { name: "description", content: "מערכת פיננסית למשפחות - הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך כסף בעזרת מטלות הבית" },
-      { property: "og:title", content: "Kaspi" },
-      { name: "twitter:title", content: "Kaspi" },
-      { property: "og:description", content: "מערכת פיננסית למשפחות - הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך כסף בעזרת מטלות הבית" },
-      { name: "twitter:description", content: "מערכת פיננסית למשפחות - הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך כסף בעזרת מטלות הבית" },
+      { title: "KidCoin — מערכת תגמולים למשפחות" },
+      { name: "description", content: "KidCoin היא מערכת תגמולים למשפחות: הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך בעזרת מטלות הבית." },
+      { property: "og:site_name", content: "KidCoin" },
+      { property: "og:type", content: "website" },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/60b718b7-4bc7-420d-9e27-8898ba9a56d4/id-preview-6c1e960f--2e61ed90-5829-4525-936e-0937c917252a.lovable.app-1777573398986.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/60b718b7-4bc7-420d-9e27-8898ba9a56d4/id-preview-6c1e960f--2e61ed90-5829-4525-936e-0937c917252a.lovable.app-1777573398986.png" },
       { name: "twitter:card", content: "summary_large_image" },
-      { property: "og:type", content: "website" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "KidCoin",
+          url: "https://kaspi.lovable.app",
+          inLanguage: "he",
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "KidCoin",
+          url: "https://kaspi.lovable.app",
+        }),
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -71,7 +89,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <AuthProvider>
-      <Outlet />
+      <main><Outlet /></main>
       <Toaster richColors closeButton position="top-center" dir="rtl" />
     </AuthProvider>
   );

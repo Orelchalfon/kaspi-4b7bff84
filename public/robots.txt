@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /parent/
+Disallow: /child/
+Disallow: /auth/
+Disallow: /login
+Disallow: /signup
+
+Sitemap: https://kaspi.lovable.app/sitemap.xml
