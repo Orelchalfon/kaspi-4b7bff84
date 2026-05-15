@@ -299,6 +299,7 @@ function ParentDashboard() {
                   type="button"
                   onClick={() => setSelectedChildId(child.id)}
                   aria-pressed={isActive}
+                  aria-label={`בחר את ${child.display_name}`}
                   className={cn("text-start transition-all w-[60px] mx-auto", "focus-visible:outline-none")}
                 >
                   <div className="flex items-center justify-center ">
