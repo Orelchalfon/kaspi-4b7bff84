@@ -4,6 +4,18 @@ import { useEffect } from "react";
 import { Coins } from "lucide-react";
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "KidCoin — מערכת תגמולים למשפחות" },
+      { name: "description", content: "KidCoin עוזרת למשפחות להפוך מטלות בית לתגמולים: הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך." },
+      { property: "og:title", content: "KidCoin — מערכת תגמולים למשפחות" },
+      { property: "og:description", content: "הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך כסף." },
+      { property: "og:url", content: "https://kaspi.lovable.app/" },
+      { name: "twitter:title", content: "KidCoin — מערכת תגמולים למשפחות" },
+      { name: "twitter:description", content: "הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך כסף." },
+    ],
+    links: [{ rel: "canonical", href: "https://kaspi.lovable.app/" }],
+  }),
   component: Index,
 });
 
@@ -43,7 +55,7 @@ function Index() {
           <Coins className="h-10 w-10" aria-hidden />
         </div>
         <h1 className="text-4xl font-bold tracking-tight text-foreground">
-          KidCoin
+          KidCoin — מערכת תגמולים למשפחות
         </h1>
         <p className="mt-3 text-lg text-muted-foreground">
           מערכת תגמולים למשפחות — הורים מגדירים משימות, ילדים צוברים מטבעות
