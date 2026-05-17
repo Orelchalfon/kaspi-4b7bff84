@@ -15,10 +15,10 @@ export const Route = createFileRoute("/login")({
       { name: "description", content: "התחברו לחשבון KidCoin שלכם כדי לנהל משימות, מטבעות וחיסכון של המשפחה." },
       { property: "og:title", content: "התחברות — KidCoin" },
       { property: "og:description", content: "התחברו לחשבון KidCoin שלכם." },
-      { property: "og:url", content: "https://kaspi.lovable.app/login" },
+      { property: "og:url", content: "https://kidcoin.app/login" },
       { name: "robots", content: "noindex" },
     ],
-    links: [{ rel: "canonical", href: "https://kaspi.lovable.app/login" }],
+    links: [{ rel: "canonical", href: "https://kidcoin.app/login" }],
   }),
   component: LoginPage,
 });
@@ -30,6 +30,28 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetSending, setResetSending] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      setError("הזינו אימייל ואז לחצו על 'שכחתי סיסמה'");
+      requestAnimationFrame(() => document.getElementById("email")?.focus());
+      return;
+    }
+    setError("");
+    setResetSending(true);
+    const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback`,
+    });
+    setResetSending(false);
+    if (resetErr) {
+      setError("שגיאה בשליחת מייל איפוס. נסו שוב.");
+      return;
+    }
+    setResetSent(true);
+    toast.success("נשלח מייל לאיפוס סיסמה");
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -40,10 +62,20 @@ function LoginPage() {
 
     if (error) {
       const msg = error.message?.toLowerCase() ?? "";
+      console.error("[login] Supabase auth error:", error.message, error.status);
       if (msg.includes("email not confirmed") || msg.includes("not confirmed")) {
         setError("המייל עוד לא אומת. בדקו את תיבת הדואר ולחצו על הקישור.");
-      } else {
+      } else if (msg.includes("invalid login credentials") || msg.includes("invalid credentials")) {
         setError("אימייל או סיסמה שגויים");
+      } else if (msg.includes("too many requests") || error.status === 429) {
+        setError("יותר מדי ניסיונות התחברות. נסו שוב בעוד כמה דקות.");
+      } else {
+        // Show real error in dev so we can debug; generic in prod
+        setError(
+          import.meta.env.DEV
+            ? `שגיאה: ${error.message}`
+            : "שגיאה בהתחברות. נסו שוב."
+        );
       }
       setLoading(false);
       requestAnimationFrame(() => document.getElementById("password")?.focus());
@@ -112,10 +144,25 @@ function LoginPage() {
                   {error}
                 </p>
               )}
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={resetSending || resetSent}
+                  className="text-xs font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded disabled:opacity-60 disabled:no-underline"
+                >
+                  {resetSent ? "נשלח ✓" : resetSending ? "שולח..." : "שכחתי סיסמה"}
+                </button>
+              </div>
             </div>
             <Button type="submit" className="min-h-11 w-full" disabled={loading}>
               {loading ? "מתחבר..." : "התחברות"}
             </Button>
+            {resetSent && (
+              <p role="status" className="text-center text-xs text-muted-foreground">
+                שלחנו קישור לאיפוס סיסמה ל-<span dir="ltr" className="font-medium">{email}</span>. בדקו את תיבת הדואר (וגם בספאם).
+              </p>
+            )}
           </form>
           <p className="mt-4 text-center text-sm text-muted-foreground">
             אין לכם חשבון?{" "}

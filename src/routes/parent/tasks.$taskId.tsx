@@ -24,44 +24,40 @@ export const Route = createFileRoute("/parent/tasks/$taskId")({
   component: ParentTaskDetail,
 });
 
+interface TaskRow {
+  id: string;
+  title: string;
+  description: string | null;
+  reward_amount: number;
+  status: string;
+  child_id: string;
+}
+
 function ParentTaskDetail() {
   const { taskId } = Route.useParams();
   const navigate = useNavigate();
-  const [task, setTask] = useState<any>(null);
+  const [task, setTask] = useState<TaskRow | null>(null);
   const [childName, setChildName] = useState("");
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(false);
   const [error, setError] = useState("");
-  const [proofUrl, setProofUrl] = useState<string | null>(null);
-  const [proofError, setProofError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
       const { data: t } = await supabase
         .from("tasks")
-        .select("*")
+        .select("id, title, description, reward_amount, status, child_id")
         .eq("id", taskId)
         .single();
 
       if (t) {
-        setTask(t);
+        setTask(t as TaskRow);
         const { data: cp } = await supabase
           .from("child_profiles")
           .select("display_name")
-          .eq("id", t.child_profile_id)
+          .eq("id", t.child_id)
           .single();
         setChildName(cp?.display_name || "");
-
-        if (t.proof_image_path) {
-          const { data: signed, error: signErr } = await supabase.storage
-            .from("task-proofs")
-            .createSignedUrl(t.proof_image_path, 3600);
-          if (signErr) {
-            console.error("createSignedUrl failed", signErr);
-            setProofError("לא ניתן לטעון את התמונה. ייתכן שהקובץ נמחק או שאין הרשאה.");
-          }
-          setProofUrl(signed?.signedUrl ?? null);
-        }
       }
       setLoading(false);
     }
@@ -71,19 +67,13 @@ function ParentTaskDetail() {
   const handleApprove = async () => {
     setActing(true);
     setError("");
-    const { data, error: rpcError } = await supabase.rpc("approve_task", {
-      _task_id: taskId,
+    const { error: rpcError } = await supabase.rpc("approve_task_and_pay", {
+      p_task_id: taskId,
     });
 
     if (rpcError) {
-      setError("שגיאה באישור המשימה");
-      setActing(false);
-      return;
-    }
-
-    const result = data as any;
-    if (result?.error) {
-      setError(result.error);
+      console.error("[approve_task_and_pay]", rpcError);
+      setError(import.meta.env.DEV ? `שגיאה: ${rpcError.message}` : "שגיאה באישור המשימה");
       setActing(false);
       return;
     }
@@ -97,11 +87,12 @@ function ParentTaskDetail() {
     setError("");
     const { error: uError } = await supabase
       .from("tasks")
-      .update({ status: "rejected", updated_at: new Date().toISOString() })
+      .update({ status: "rejected", reviewed_at: new Date().toISOString() })
       .eq("id", taskId);
 
     if (uError) {
-      setError("שגיאה בדחיית המשימה");
+      console.error("[reject task]", uError);
+      setError(import.meta.env.DEV ? `שגיאה: ${uError.message}` : "שגיאה בדחיית המשימה");
       setActing(false);
       return;
     }
@@ -140,31 +131,6 @@ function ParentTaskDetail() {
             <span className="text-muted-foreground">סטטוס:</span>
             <StatusBadge status={task.status} />
           </div>
-
-          {proofUrl && (
-            <div className="space-y-2">
-              <p className="text-sm font-medium">תמונת הוכחה:</p>
-              <a href={proofUrl} target="_blank" rel="noopener noreferrer">
-                <img
-                  src={proofUrl}
-                  alt="תמונת הוכחה לביצוע המשימה"
-                  className="w-full rounded-lg border object-cover"
-                />
-              </a>
-            </div>
-          )}
-
-          {proofError && !proofUrl && (
-            <div role="alert" className="rounded-md bg-warning/10 p-3 text-xs text-warning-foreground">
-              {proofError}
-            </div>
-          )}
-
-          {task.status === "submitted" && !task.proof_image_path && (
-            <div className="rounded-md bg-warning/10 p-3 text-xs text-warning-foreground">
-              לא צורפה תמונת הוכחה למשימה זו.
-            </div>
-          )}
 
           {error && (
             <div role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">

@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { bootstrapParent } from "@/server/bootstrap-parent";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Coins } from "lucide-react";
@@ -20,7 +19,6 @@ function AuthCallback() {
     let cancelled = false;
 
     async function run() {
-      // Wait briefly for Supabase to parse the URL hash and persist the session.
       const { data: sessionData } = await supabase.auth.getSession();
       const session = sessionData.session;
       if (!session) {
@@ -30,19 +28,13 @@ function AuthCallback() {
         return;
       }
 
-      const householdName =
-        (session.user.user_metadata?.household_name as string | undefined) ?? "המשפחה שלי";
-
       try {
-        const result = await bootstrapParent({ data: { householdName } });
+        // DB trigger handle_new_user already created household + user_roles
+        // during auth.signUp. We just need to load the role into context.
         await refreshRole(session.user.id);
         if (cancelled) return;
         toast.success("ברוכים הבאים ל-Kaspi!");
-        if (result.role === "parent") {
-          navigate({ to: "/parent/dashboard" });
-        } else {
-          navigate({ to: "/child/dashboard" });
-        }
+        navigate({ to: "/parent/dashboard" });
       } catch (e) {
         console.error(e);
         if (!cancelled) setError("שגיאה בהשלמת ההרשמה. צרו קשר עם התמיכה.");

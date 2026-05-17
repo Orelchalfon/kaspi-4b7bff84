@@ -11,12 +11,17 @@ export const Route = createFileRoute("/child/wallet")({
   component: ChildWallet,
 });
 
-const WALLET_TYPES = ["reward_credit", "manual_adjustment", "wallet_debit", "goal_credit"];
+interface TxRow {
+  id: string;
+  amount: number;
+  type: string;
+  created_at: string | null;
+}
 
 function ChildWallet() {
   const { childProfileId } = useAuth();
   const [balance, setBalance] = useState(0);
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<TxRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,14 +30,13 @@ function ChildWallet() {
     async function load() {
       const { data: txData } = await supabase
         .from("transactions")
-        .select("*")
-        .eq("child_profile_id", childProfileId!)
+        .select("id, amount, type, created_at")
+        .eq("child_id", childProfileId!)
         .order("created_at", { ascending: false });
 
-      const txs = txData || [];
-      const walletTxs = txs.filter((t: any) => WALLET_TYPES.includes(t.type));
-      setTransactions(walletTxs);
-      setBalance(walletTxs.reduce((sum: number, t: any) => sum + t.amount, 0));
+      const txs = (txData || []) as TxRow[];
+      setTransactions(txs);
+      setBalance(txs.reduce((sum, t) => sum + t.amount, 0));
       setLoading(false);
     }
 
@@ -79,7 +83,7 @@ function ChildWallet() {
                       <ArrowDownLeft className="h-4 w-4" aria-hidden />
                     </span>
                     <p className="text-xs tabular-nums text-muted-foreground">
-                      {new Date(tx.created_at).toLocaleDateString("he-IL")}
+                      {tx.created_at ? new Date(tx.created_at).toLocaleDateString("he-IL") : "—"}
                     </p>
                   </div>
                   <CoinAmount value={tx.amount} signed tone="success" />

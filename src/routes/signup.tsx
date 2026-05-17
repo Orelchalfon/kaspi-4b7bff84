@@ -15,10 +15,10 @@ export const Route = createFileRoute("/signup")({
       { name: "description", content: "פתחו חשבון הורה ב-KidCoin והתחילו לנהל משימות, מטבעות וחיסכון של הילדים." },
       { property: "og:title", content: "הרשמה — KidCoin" },
       { property: "og:description", content: "פתחו חשבון הורה חדש ב-KidCoin." },
-      { property: "og:url", content: "https://kaspi.lovable.app/signup" },
+      { property: "og:url", content: "https://kidcoin.app/signup" },
       { name: "robots", content: "noindex" },
     ],
-    links: [{ rel: "canonical", href: "https://kaspi.lovable.app/signup" }],
+    links: [{ rel: "canonical", href: "https://kidcoin.app/signup" }],
   }),
   component: SignupPage,
 });

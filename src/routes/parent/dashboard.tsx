@@ -35,10 +35,10 @@ interface ChildRow {
 }
 interface TxRow {
   id: string;
-  child_profile_id: string;
+  child_id: string;
   amount: number;
-  task_id: string | null;
-  created_at: string;
+  reference_task_id: string | null;
+  created_at: string | null;
   type: string;
 }
 interface TaskRow {
@@ -46,8 +46,8 @@ interface TaskRow {
   title: string;
   reward_amount: number;
   status: string;
-  child_profile_id: string;
-  created_at: string;
+  child_id: string;
+  created_at: string | null;
 }
 
 function ParentDashboard() {
@@ -72,12 +72,12 @@ function ParentDashboard() {
         .order("display_name", { ascending: true }),
       supabase
         .from("transactions")
-        .select("id, child_profile_id, amount, task_id, created_at, type")
+        .select("id, child_id, amount, reference_task_id, created_at, type")
         .eq("household_id", hhId)
         .order("created_at", { ascending: false }),
       supabase
         .from("tasks")
-        .select("id, title, reward_amount, status, child_profile_id, created_at")
+        .select("id, title, reward_amount, status, child_id, created_at")
         .eq("household_id", hhId)
         .in("status", ["assigned", "submitted"])
         .order("created_at", { ascending: false }),
@@ -98,12 +98,11 @@ function ParentDashboard() {
     setSavingsPct(pct);
     setPctInput(String(pct));
 
-    // Fetch titles for tasks referenced by transactions (for the tx table label)
-    const txTaskIds = Array.from(new Set(txList.map((t) => t.task_id).filter((x): x is string => !!x)));
+    const txTaskIds = Array.from(new Set(txList.map((t) => t.reference_task_id).filter((x): x is string => !!x)));
     if (txTaskIds.length > 0) {
       const { data: titlesData } = await supabase.from("tasks").select("id, title").in("id", txTaskIds);
       const map: Record<string, string> = {};
-      (titlesData || []).forEach((t: any) => (map[t.id] = t.title));
+      (titlesData || []).forEach((t: { id: string; title: string }) => (map[t.id] = t.title));
       setTaskTitles(map);
     } else {
       setTaskTitles({});
@@ -118,13 +117,12 @@ function ParentDashboard() {
     loadAll(householdId).finally(() => setLoading(false));
   }, [householdId]);
 
+  // Wallet balance = task_reward + manual_adjustment + goal_allocation (allocation is negative)
   const balances = useMemo(() => {
-    const WALLET_TYPES = ["reward_credit", "manual_adjustment", "wallet_debit", "goal_credit"];
     const m: Record<string, number> = {};
     for (const c of children) m[c.id] = 0;
     for (const tx of transactions) {
-      if (!WALLET_TYPES.includes(tx.type)) continue;
-      m[tx.child_profile_id] = (m[tx.child_profile_id] ?? 0) + tx.amount;
+      m[tx.child_id] = (m[tx.child_id] ?? 0) + tx.amount;
     }
     return m;
   }, [children, transactions]);
@@ -133,7 +131,7 @@ function ParentDashboard() {
     const m: Record<string, number> = {};
     for (const t of tasks) {
       if (t.status === "submitted") {
-        m[t.child_profile_id] = (m[t.child_profile_id] ?? 0) + 1;
+        m[t.child_id] = (m[t.child_id] ?? 0) + 1;
       }
     }
     return m;
@@ -144,23 +142,22 @@ function ParentDashboard() {
     () =>
       transactions.filter(
         (t) =>
-          t.child_profile_id === selectedChildId &&
-          (t.type === "reward_credit" || t.type === "manual_adjustment"),
+          t.child_id === selectedChildId &&
+          (t.type === "task_reward" || t.type === "manual_adjustment"),
       ),
     [transactions, selectedChildId],
   );
   const childTasks = useMemo(
-    () => tasks.filter((t) => t.child_profile_id === selectedChildId),
+    () => tasks.filter((t) => t.child_id === selectedChildId),
     [tasks, selectedChildId],
   );
 
   const handleApprove = async (taskId: string) => {
     setActing(taskId);
-    const { data, error } = await supabase.rpc("approve_task", { _task_id: taskId });
+    const { error } = await supabase.rpc("approve_task_and_pay", { p_task_id: taskId });
     if (error) {
-      toast.error("שגיאה באישור המשימה");
-    } else if ((data as any)?.error) {
-      toast.error((data as any).error);
+      console.error("[approve_task_and_pay]", error);
+      toast.error(import.meta.env.DEV ? `שגיאה: ${error.message}` : "שגיאה באישור המשימה");
     } else {
       toast.success("המשימה אושרה והמטבעות זוכו");
       if (householdId) await loadAll(householdId);
@@ -172,10 +169,11 @@ function ParentDashboard() {
     setActing(taskId);
     const { error } = await supabase
       .from("tasks")
-      .update({ status: "rejected", updated_at: new Date().toISOString() })
+      .update({ status: "rejected", reviewed_at: new Date().toISOString() })
       .eq("id", taskId);
     if (error) {
-      toast.error("שגיאה בדחיית המשימה");
+      console.error("[reject task]", error);
+      toast.error(import.meta.env.DEV ? `שגיאה: ${error.message}` : "שגיאה בדחיית המשימה");
     } else {
       toast.success("המשימה נדחתה");
       if (householdId) await loadAll(householdId);
@@ -191,18 +189,14 @@ function ParentDashboard() {
       return;
     }
     setSavingPct(true);
-    const userId = (await supabase.auth.getUser()).data.user?.id;
-    if (!userId) {
-      setSavingPct(false);
-      return;
-    }
     const { error } = await supabase.from("household_settings").upsert(
-      { household_id: householdId, savings_percentage: n, updated_by: userId, updated_at: new Date().toISOString() },
+      { household_id: householdId, savings_percentage: n },
       { onConflict: "household_id" },
     );
     setSavingPct(false);
     if (error) {
-      toast.error("שגיאה בשמירה");
+      console.error("[savings_percentage]", error);
+      toast.error(import.meta.env.DEV ? `שגיאה: ${error.message}` : "שגיאה בשמירה");
       return;
     }
     toast.success("אחוז החיסכון עודכן");
@@ -233,7 +227,6 @@ function ParentDashboard() {
         </div>
       </div>
 
-      {/* Auto-savings percentage */}
       <Card>
         <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex items-start gap-3">
@@ -274,7 +267,6 @@ function ParentDashboard() {
         </CardContent>
       </Card>
 
-      {/* Children selector */}
       <section aria-label="ילדים">
         <h2 className="mb-3 text-lg font-semibold">ילדים</h2>
         {children.length === 0 ? (
@@ -332,7 +324,6 @@ function ParentDashboard() {
         )}
       </section>
 
-      {/* Selected child details */}
       {selectedChild && (
         <section aria-label={`פרטי ${selectedChild.display_name}`} className="space-y-6">
           <div className="flex items-center justify-between border-t pt-6">
@@ -343,7 +334,6 @@ function ParentDashboard() {
             </div>
           </div>
 
-          {/* Tasks queue */}
           <div>
             <h3 className="mb-3 text-base font-semibold">משימות בתור</h3>
             {childTasks.length === 0 ? (
@@ -442,7 +432,6 @@ function ParentDashboard() {
             )}
           </div>
 
-          {/* Transactions */}
           <div>
             <h3 className="mb-3 text-base font-semibold">תנועות</h3>
             {childTransactions.length === 0 ? (
@@ -467,9 +456,9 @@ function ParentDashboard() {
                       {childTransactions.map((tx) => (
                         <TableRow key={tx.id}>
                           <TableCell className="tabular-nums text-muted-foreground">
-                            {new Date(tx.created_at).toLocaleDateString("he-IL")}
+                            {tx.created_at ? new Date(tx.created_at).toLocaleDateString("he-IL") : "—"}
                           </TableCell>
-                          <TableCell>{tx.task_id ? (taskTitles[tx.task_id] ?? "משימה") : "—"}</TableCell>
+                          <TableCell>{tx.reference_task_id ? (taskTitles[tx.reference_task_id] ?? "משימה") : "—"}</TableCell>
                           <TableCell>
                             <CoinAmount value={tx.amount} signed tone="success" />
                           </TableCell>

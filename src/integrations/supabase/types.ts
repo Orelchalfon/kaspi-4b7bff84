@@ -7,36 +7,34 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
       child_profiles: {
         Row: {
-          created_at: string
+          created_at: string | null
+          current_balance: number | null
           display_name: string
           household_id: string
           id: string
-          updated_at: string
           user_id: string
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
+          current_balance?: number | null
           display_name: string
           household_id: string
           id?: string
-          updated_at?: string
           user_id: string
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
+          current_balance?: number | null
           display_name?: string
           household_id?: string
           id?: string
-          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -49,81 +47,24 @@ export type Database = {
           },
         ]
       }
-      goals: {
-        Row: {
-          child_profile_id: string
-          created_at: string
-          created_by: string
-          cycle_amount: number
-          cycle_period: string
-          household_id: string
-          id: string
-          status: string
-          target_amount: number
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          child_profile_id: string
-          created_at?: string
-          created_by: string
-          cycle_amount: number
-          cycle_period: string
-          household_id: string
-          id?: string
-          status?: string
-          target_amount: number
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          child_profile_id?: string
-          created_at?: string
-          created_by?: string
-          cycle_amount?: number
-          cycle_period?: string
-          household_id?: string
-          id?: string
-          status?: string
-          target_amount?: number
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "goals_child_profile_id_fkey"
-            columns: ["child_profile_id"]
-            isOneToOne: false
-            referencedRelation: "child_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "goals_household_id_fkey"
-            columns: ["household_id"]
-            isOneToOne: false
-            referencedRelation: "households"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       household_settings: {
         Row: {
+          created_at: string | null
           household_id: string
+          id: string
           savings_percentage: number
-          updated_at: string
-          updated_by: string
         }
         Insert: {
+          created_at?: string | null
           household_id: string
+          id?: string
           savings_percentage?: number
-          updated_at?: string
-          updated_by: string
         }
         Update: {
+          created_at?: string | null
           household_id?: string
+          id?: string
           savings_percentage?: number
-          updated_at?: string
-          updated_by?: string
         }
         Relationships: [
           {
@@ -137,78 +78,66 @@ export type Database = {
       }
       households: {
         Row: {
-          created_at: string
-          created_by: string
+          created_at: string | null
           id: string
           name: string
-          updated_at: string
         }
         Insert: {
-          created_at?: string
-          created_by: string
+          created_at?: string | null
           id?: string
           name: string
-          updated_at?: string
         }
         Update: {
-          created_at?: string
-          created_by?: string
+          created_at?: string | null
           id?: string
           name?: string
-          updated_at?: string
         }
         Relationships: []
       }
       tasks: {
         Row: {
-          approved_at: string | null
-          child_profile_id: string
-          created_at: string
-          created_by: string
+          child_id: string
+          created_at: string | null
+          created_by_parent_id: string
           description: string | null
           household_id: string
           id: string
-          proof_image_path: string | null
+          reviewed_at: string | null
           reward_amount: number
-          status: Database["public"]["Enums"]["task_status"]
+          status: string
           submitted_at: string | null
           title: string
-          updated_at: string
         }
         Insert: {
-          approved_at?: string | null
-          child_profile_id: string
-          created_at?: string
-          created_by: string
+          child_id: string
+          created_at?: string | null
+          created_by_parent_id: string
           description?: string | null
           household_id: string
           id?: string
-          proof_image_path?: string | null
+          reviewed_at?: string | null
           reward_amount: number
-          status?: Database["public"]["Enums"]["task_status"]
+          status?: string
           submitted_at?: string | null
           title: string
-          updated_at?: string
         }
         Update: {
-          approved_at?: string | null
-          child_profile_id?: string
-          created_at?: string
-          created_by?: string
+          child_id?: string
+          created_at?: string | null
+          created_by_parent_id?: string
           description?: string | null
           household_id?: string
           id?: string
-          proof_image_path?: string | null
+          reviewed_at?: string | null
           reward_amount?: number
-          status?: Database["public"]["Enums"]["task_status"]
+          status?: string
           submitted_at?: string | null
           title?: string
-          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "tasks_child_profile_id_fkey"
-            columns: ["child_profile_id"]
+            foreignKeyName: "tasks_child_id_fkey"
+            columns: ["child_id"]
             isOneToOne: false
             referencedRelation: "child_profiles"
             referencedColumns: ["id"]
@@ -225,53 +154,37 @@ export type Database = {
       transactions: {
         Row: {
           amount: number
-          child_profile_id: string
-          created_at: string
-          created_by: string
-          goal_id: string | null
+          child_id: string
+          created_at: string | null
           household_id: string
           id: string
-          idempotency_key: string
-          task_id: string | null
-          type: Database["public"]["Enums"]["transaction_type"]
+          reference_task_id: string | null
+          type: string
         }
         Insert: {
           amount: number
-          child_profile_id: string
-          created_at?: string
-          created_by: string
-          goal_id?: string | null
+          child_id: string
+          created_at?: string | null
           household_id: string
           id?: string
-          idempotency_key: string
-          task_id?: string | null
-          type: Database["public"]["Enums"]["transaction_type"]
+          reference_task_id?: string | null
+          type: string
         }
         Update: {
           amount?: number
-          child_profile_id?: string
-          created_at?: string
-          created_by?: string
-          goal_id?: string | null
+          child_id?: string
+          created_at?: string | null
           household_id?: string
           id?: string
-          idempotency_key?: string
-          task_id?: string | null
-          type?: Database["public"]["Enums"]["transaction_type"]
+          reference_task_id?: string | null
+          type?: string
         }
         Relationships: [
           {
-            foreignKeyName: "transactions_child_profile_id_fkey"
-            columns: ["child_profile_id"]
+            foreignKeyName: "transactions_child_id_fkey"
+            columns: ["child_id"]
             isOneToOne: false
             referencedRelation: "child_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transactions_goal_id_fkey"
-            columns: ["goal_id"]
-            isOneToOne: false
-            referencedRelation: "goals"
             referencedColumns: ["id"]
           },
           {
@@ -282,8 +195,8 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "transactions_task_id_fkey"
-            columns: ["task_id"]
+            foreignKeyName: "transactions_reference_task_id_fkey"
+            columns: ["reference_task_id"]
             isOneToOne: false
             referencedRelation: "tasks"
             referencedColumns: ["id"]
@@ -292,21 +205,24 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          created_at: string | null
           household_id: string
           id: string
-          role: Database["public"]["Enums"]["app_role"]
+          role: string
           user_id: string
         }
         Insert: {
+          created_at?: string | null
           household_id: string
           id?: string
-          role: Database["public"]["Enums"]["app_role"]
+          role: string
           user_id: string
         }
         Update: {
+          created_at?: string | null
           household_id?: string
           id?: string
-          role?: Database["public"]["Enums"]["app_role"]
+          role?: string
           user_id?: string
         }
         Relationships: [
@@ -324,41 +240,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      approve_task: { Args: { _task_id: string }; Returns: Json }
-      deposit_to_goal: {
-        Args: { _amount: number; _goal_id: string }
-        Returns: Json
-      }
-      get_user_household_id: { Args: { _user_id: string }; Returns: string }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-      has_role_in_household: {
-        Args: {
-          _household_id: string
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-      submit_task: {
-        Args: { _proof_image_path: string; _task_id: string }
-        Returns: Json
-      }
+      approve_task_and_pay: { Args: { p_task_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "parent" | "child"
-      task_status: "assigned" | "submitted" | "approved" | "rejected"
-      transaction_type:
-        | "reward_credit"
-        | "manual_adjustment"
-        | "savings_credit"
-        | "wallet_debit"
-        | "goal_credit"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -485,16 +370,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      app_role: ["parent", "child"],
-      task_status: ["assigned", "submitted", "approved", "rejected"],
-      transaction_type: [
-        "reward_credit",
-        "manual_adjustment",
-        "savings_credit",
-        "wallet_debit",
-        "goal_credit",
-      ],
-    },
+    Enums: {},
   },
 } as const

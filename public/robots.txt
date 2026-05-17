@@ -6,4 +6,4 @@ Disallow: /auth/
 Disallow: /login
 Disallow: /signup
 
-Sitemap: https://kaspi.lovable.app/sitemap.xml
+Sitemap: https://kidcoin.app/sitemap.xml

@@ -10,11 +10,11 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "KidCoin עוזרת למשפחות להפוך מטלות בית לתגמולים: הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך." },
       { property: "og:title", content: "KidCoin — מערכת תגמולים למשפחות" },
       { property: "og:description", content: "הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך כסף." },
-      { property: "og:url", content: "https://kaspi.lovable.app/" },
+      { property: "og:url", content: "https://kidcoin.app/" },
       { name: "twitter:title", content: "KidCoin — מערכת תגמולים למשפחות" },
       { name: "twitter:description", content: "הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך כסף." },
     ],
-    links: [{ rel: "canonical", href: "https://kaspi.lovable.app/" }],
+    links: [{ rel: "canonical", href: "https://kidcoin.app/" }],
   }),
   component: Index,
 });

@@ -9,13 +9,18 @@ const InputSchema = z.object({
   displayName: z.string().min(1).max(100),
 });
 
+/**
+ * Creates a child auth account. The DB trigger `on_auth_user_created`
+ * runs `handle_new_user`, which reads `role`, `household_id`, and
+ * `full_name` from user_metadata and creates `user_roles` + `child_profiles`
+ * atomically. If the trigger fails, the auth.users insert is rolled back.
+ */
 export const createChild = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data, context }) => {
     const { userId, supabase } = context;
 
-    // Verify caller is a parent and get their household
     const { data: roleRow, error: roleError } = await supabase
       .from("user_roles")
       .select("role, household_id")
@@ -23,58 +28,28 @@ export const createChild = createServerFn({ method: "POST" })
       .maybeSingle();
 
     if (roleError || !roleRow || roleRow.role !== "parent") {
-      throw new Response("Forbidden: only parents can create children", {
-        status: 403,
-      });
+      console.error("Role check failed:", { roleError, roleRow, userId });
+      throw new Error("Forbidden: only parents can create children");
     }
 
     const householdId = roleRow.household_id;
 
-    // 1. Create the child auth user (auto-confirmed) using admin client
     const { data: created, error: createErr } =
       await supabaseAdmin.auth.admin.createUser({
         email: data.email,
         password: data.password,
         email_confirm: true,
+        user_metadata: {
+          role: "child",
+          household_id: householdId,
+          full_name: data.displayName,
+        },
       });
 
     if (createErr || !created.user) {
       console.error("Child account creation failed:", createErr);
-      throw new Response("Failed to create child account", { status: 400 });
+      throw new Error(createErr?.message ?? "Failed to create child account");
     }
 
-    const childUserId = created.user.id;
-
-    // 2. Insert the child role (bypasses RLS via admin)
-    const { error: roleInsertErr } = await supabaseAdmin
-      .from("user_roles")
-      .insert({
-        user_id: childUserId,
-        role: "child",
-        household_id: householdId,
-      });
-
-    if (roleInsertErr) {
-      // rollback the auth user
-      await supabaseAdmin.auth.admin.deleteUser(childUserId);
-      console.error("Child role insert failed:", roleInsertErr);
-      throw new Response("Failed to set child role", { status: 500 });
-    }
-
-    // 3. Insert the child profile
-    const { error: profileErr } = await supabaseAdmin
-      .from("child_profiles")
-      .insert({
-        user_id: childUserId,
-        household_id: householdId,
-        display_name: data.displayName,
-      });
-
-    if (profileErr) {
-      await supabaseAdmin.auth.admin.deleteUser(childUserId);
-      console.error("Child profile creation failed:", profileErr);
-      throw new Response("Failed to create child profile", { status: 500 });
-    }
-
-    return { success: true, childUserId };
+    return { success: true, childUserId: created.user.id };
   });

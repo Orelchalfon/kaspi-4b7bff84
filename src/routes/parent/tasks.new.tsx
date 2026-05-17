@@ -50,15 +50,20 @@ function NewTask() {
 
     const { error: tError } = await supabase.from("tasks").insert({
       household_id: householdId,
-      child_profile_id: childId,
-      created_by: user.id,
+      child_id: childId,
+      created_by_parent_id: user.id,
       title,
       description: description || null,
       reward_amount: parseInt(reward, 10),
     });
 
     if (tError) {
-      setError("שגיאה ביצירת משימה");
+      console.error("[tasks.new] insert failed:", tError);
+      setError(
+        import.meta.env.DEV
+          ? `שגיאה ביצירת משימה: ${tError.message}`
+          : "שגיאה ביצירת משימה",
+      );
       setLoading(false);
       return;
     }

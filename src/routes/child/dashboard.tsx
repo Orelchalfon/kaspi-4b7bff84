@@ -12,35 +12,38 @@ export const Route = createFileRoute("/child/dashboard")({
   component: ChildDashboard,
 });
 
+interface TaskRow {
+  id: string;
+  title: string;
+  reward_amount: number;
+  status: string;
+  created_at: string | null;
+}
+
 function ChildDashboard() {
   const { childProfileId } = useAuth();
   const [balance, setBalance] = useState(0);
-  const [tasks, setTasks] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!childProfileId) return;
 
     async function load() {
-      // Balance from ledger
       const { data: txData } = await supabase
         .from("transactions")
         .select("amount, type")
-        .eq("child_profile_id", childProfileId!);
-      const WALLET_TYPES = ["reward_credit", "manual_adjustment", "wallet_debit", "goal_credit"];
+        .eq("child_id", childProfileId!);
       setBalance(
-        (txData || [])
-          .filter((t: any) => WALLET_TYPES.includes(t.type))
-          .reduce((sum: number, t: any) => sum + t.amount, 0),
+        (txData || []).reduce((sum: number, t: { amount: number }) => sum + t.amount, 0),
       );
 
-      // My tasks
       const { data: taskData } = await supabase
         .from("tasks")
-        .select("*")
-        .eq("child_profile_id", childProfileId!)
+        .select("id, title, reward_amount, status, created_at")
+        .eq("child_id", childProfileId!)
         .order("created_at", { ascending: false });
-      setTasks(taskData || []);
+      setTasks((taskData || []) as TaskRow[]);
 
       setLoading(false);
     }
@@ -54,7 +57,6 @@ function ChildDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Balance card */}
       <Card className="bg-primary text-primary-foreground" aria-label={`היתרה שלי: ${balance} מטבעות`}>
         <CardContent className="py-6 text-center">
           <p className="text-sm opacity-80">היתרה שלי</p>
@@ -65,7 +67,6 @@ function ChildDashboard() {
         </CardContent>
       </Card>
 
-      {/* Tasks */}
       <section>
         <h2 className="mb-3 text-lg font-semibold">המשימות שלי</h2>
         {tasks.length === 0 ? (

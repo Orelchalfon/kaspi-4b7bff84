@@ -73,7 +73,7 @@ function ParentTransactions() {
         <>
           <div className="space-y-2">
             {transactions.map((tx) => {
-              const name = children[tx.child_profile_id] || "ילד";
+              const name = children[tx.child_id] || "ילד";
               return (
                 <Card key={tx.id}>
                   <CardContent className="flex items-center justify-between py-3">
@@ -99,7 +99,7 @@ function ParentTransactions() {
               <p className="text-sm font-semibold text-muted-foreground">סיכום לפי ילד</p>
               {Object.entries(
                 transactions.reduce<Record<string, number>>((acc, tx) => {
-                  acc[tx.child_profile_id] = (acc[tx.child_profile_id] || 0) + tx.amount;
+                  acc[tx.child_id] = (acc[tx.child_id] || 0) + tx.amount;
                   return acc;
                 }, {}),
               ).map(([cpId, total]) => {
