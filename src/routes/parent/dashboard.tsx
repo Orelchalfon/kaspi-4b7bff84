@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +28,12 @@ import { Plus, UserPlus, Inbox, Receipt, Check, X, PiggyBank } from "lucide-reac
 import { CoinAmount } from "@/components/coin-amount";
 import { StatusBadge } from "@/components/status-badge";
 import { DashboardSkeleton } from "@/components/loading-skeletons";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -297,51 +304,12 @@ function ParentDashboard() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {children.map((child) => {
-              const isActive = child.id === selectedChildId;
-              const pending = pendingByChild[child.id] ?? 0;
-              return (
-                <button
-                  key={child.id}
-                  type="button"
-                  onClick={() => setSelectedChildId(child.id)}
-                  aria-pressed={isActive}
-                  aria-label={`בחר את ${child.display_name}`}
-                  className={cn(
-                    "text-start transition-all w-[60px] mx-auto",
-                    "focus-visible:outline-none",
-                  )}
-                >
-                  <div className="flex items-center justify-center ">
-                    <div className="flex items-center ">
-                      <span
-                        className={cn(
-                          "flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold",
-                          isActive
-                            ? "bg-primary text-primary-foreground border-solid shadow-none border-2 border-purple-300"
-                            : "bg-primary/10 text-primary",
-                        )}
-                        aria-hidden
-                      >
-                        {child.display_name.charAt(0)}
-                      </span>
-                      <div>
-                        {pending > 0 && (
-                          <span
-                            className="mt-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-warning px-1.5 text-[11px] font-bold tabular-nums text-warning-foreground"
-                            aria-label={`${pending} משימות ממתינות לאישור`}
-                          >
-                            {pending} ממתינות
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+          <ChildrenStack
+            childrenList={children}
+            selectedChildId={selectedChildId}
+            pendingByChild={pendingByChild}
+            onSelect={setSelectedChildId}
+          />
         )}
       </section>
 
@@ -502,5 +470,159 @@ function ParentDashboard() {
         </section>
       )}
     </div>
+  );
+}
+
+interface ChildrenStackProps {
+  childrenList: ChildRow[];
+  selectedChildId: string | null;
+  pendingByChild: Record<string, number>;
+  onSelect: (id: string) => void;
+}
+
+// Inline stack of child-avatar buttons. Active sits at the start edge (right in
+// RTL); inactive children peek out behind toward the end. Desktop: hover opens
+// the fan. Mobile: tap the top avatar to toggle. Selecting a non-active avatar
+// fires onSelect and collapses.
+function ChildrenStack({
+  childrenList,
+  selectedChildId,
+  pendingByChild,
+  onSelect,
+}: ChildrenStackProps) {
+  const isMobile = useIsMobile();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isExpanded) return;
+    function onPointerDown(e: PointerEvent) {
+      if (!wrapperRef.current) return;
+      if (!wrapperRef.current.contains(e.target as Node)) {
+        setIsExpanded(false);
+      }
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [isExpanded]);
+
+  const activeChild =
+    childrenList.find((c) => c.id === selectedChildId) ?? childrenList[0] ?? null;
+  const ordered = activeChild
+    ? [activeChild, ...childrenList.filter((c) => c.id !== activeChild.id)]
+    : childrenList;
+
+  const n = ordered.length;
+  const expandedWidth = 48 + Math.max(0, n - 1) * 64;
+  const activePending = activeChild ? (pendingByChild[activeChild.id] ?? 0) : 0;
+
+  function handleAvatarClick(child: ChildRow, isActive: boolean) {
+    if (isActive) {
+      setIsExpanded((prev) => !prev);
+      return;
+    }
+    onSelect(child.id);
+    setIsExpanded(false);
+  }
+
+  return (
+    <TooltipProvider delayDuration={150} skipDelayDuration={300}>
+      <div
+        role="group"
+        aria-label="ילדים"
+        ref={wrapperRef}
+        onMouseEnter={isMobile ? undefined : () => setIsExpanded(true)}
+        onMouseLeave={isMobile ? undefined : () => setIsExpanded(false)}
+        className="relative h-20 overflow-visible"
+        style={{ width: `${expandedWidth}px`, maxWidth: "100%" }}
+      >
+        {ordered.map((child, i) => {
+          const isActive = i === 0;
+          const pending = pendingByChild[child.id] ?? 0;
+
+          let transform = "translateX(0) scale(1)";
+          let opacity = 1;
+          if (!isExpanded && !isActive) {
+            const scale = Math.max(0.85, 1 - i * 0.06);
+            transform = `translateX(${i * -24}px) scale(${scale})`;
+            opacity = 0.8;
+          } else if (isExpanded && !isActive) {
+            transform = `translateX(${i * -64}px) scale(1)`;
+          }
+
+          return (
+            <Tooltip key={child.id}>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => handleAvatarClick(child, isActive)}
+                  aria-pressed={isActive}
+                  aria-haspopup={isActive ? "true" : undefined}
+                  aria-expanded={isActive ? isExpanded : undefined}
+                  aria-label={`בחר את ${child.display_name}`}
+                  className={cn(
+                    "absolute start-0 top-2 rounded-full transition-[transform,opacity] duration-300 ease-out",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "motion-reduce:transition-none",
+                  )}
+                  style={{
+                    transform,
+                    opacity,
+                    zIndex: n - i,
+                    transitionDelay: `${i * 40}ms`,
+                  }}
+                >
+                  <span className="relative inline-flex">
+                    <span
+                      className={cn(
+                        "flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold",
+                        isActive
+                          ? "border-2 border-solid border-purple-300 bg-primary text-primary-foreground shadow-none"
+                          : "bg-primary/10 text-primary",
+                      )}
+                      aria-hidden
+                    >
+                      {child.display_name.charAt(0)}
+                    </span>
+                    {pending > 0 && (
+                      <span
+                        className="absolute -top-1 -start-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-warning px-1 text-[11px] font-bold tabular-nums text-warning-foreground shadow-sm"
+                        aria-hidden
+                      >
+                        {pending}
+                      </span>
+                    )}
+                  </span>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                sideOffset={10}
+                className={cn(
+                  "border-2 border-foreground/25 bg-popover px-3 py-1.5 text-sm font-semibold text-popover-foreground shadow-lg",
+                  "data-[state=delayed-open]:zoom-in-90 data-[state=closed]:zoom-out-90",
+                  "data-[state=delayed-open]:duration-200",
+                )}
+              >
+                {child.display_name}
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
+
+        {activePending > 0 && (
+          <span
+            className={cn(
+              "pointer-events-none absolute start-0 top-[60px] inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-warning px-1.5 text-[11px] font-bold tabular-nums text-warning-foreground transition-opacity duration-300 ease-out",
+              "motion-reduce:transition-none",
+              isExpanded ? "opacity-100" : "opacity-0",
+            )}
+            aria-label={`${activePending} משימות ממתינות לאישור`}
+          >
+            {activePending} ממתינות
+          </span>
+        )}
+      </div>
+    </TooltipProvider>
   );
 }
