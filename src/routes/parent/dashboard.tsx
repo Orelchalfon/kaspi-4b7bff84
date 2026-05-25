@@ -1,18 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useAuth } from "@/hooks/use-auth";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { CoinAmount } from "@/components/coin-amount";
+import { DashboardSkeleton } from "@/components/loading-skeletons";
+import { StatusBadge } from "@/components/status-badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,21 +12,28 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, UserPlus, Inbox, Receipt, Check, X, PiggyBank } from "lucide-react";
-import { CoinAmount } from "@/components/coin-amount";
-import { StatusBadge } from "@/components/status-badge";
-import { DashboardSkeleton } from "@/components/loading-skeletons";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAuth } from "@/hooks/use-auth";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from "@/integrations/supabase/client";
 import { isWalletTx } from "@/lib/transactions";
+import { cn } from "@/lib/utils";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Check, Inbox, PiggyBank, Plus, Receipt, UserPlus, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/parent/dashboard")({
   component: ParentDashboard,
@@ -144,6 +139,16 @@ function ParentDashboard() {
     for (const c of children) m[c.id] = 0;
     for (const tx of transactions) {
       if (!isWalletTx(tx.type)) continue;
+      m[tx.child_id] = (m[tx.child_id] ?? 0) + tx.amount;
+    }
+    return m;
+  }, [children, transactions]);
+
+  const savingsBalances = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const c of children) m[c.id] = 0;
+    for (const tx of transactions) {
+      if (tx.type !== "savings_credit") continue;
       m[tx.child_id] = (m[tx.child_id] ?? 0) + tx.amount;
     }
     return m;
@@ -315,11 +320,18 @@ function ParentDashboard() {
 
       {selectedChild && (
         <section aria-label={`פרטי ${selectedChild.display_name}`} className="space-y-6">
-          <div className="flex items-center justify-between border-t pt-6">
+          <div className="flex flex-wrap items-center justify-between gap-y-2 border-t pt-6">
             <h2 className="text-xl font-bold">{selectedChild.display_name}</h2>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>יתרה:</span>
-              <CoinAmount value={balances[selectedChild.id] ?? 0} size="lg" animate />
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+              <span className="flex items-center gap-2" aria-label="חיסכון">
+                <PiggyBank className="h-4 w-4" aria-hidden />
+                <span>חיסכון:</span>
+                <CoinAmount value={savingsBalances[selectedChild.id] ?? 0} size="lg" animate />
+              </span>
+              <span className="flex items-center gap-2">
+                <span>יתרה:</span>
+                <CoinAmount value={balances[selectedChild.id] ?? 0} size="lg" animate />
+              </span>
             </div>
           </div>
 
@@ -506,8 +518,7 @@ function ChildrenStack({
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [isExpanded]);
 
-  const activeChild =
-    childrenList.find((c) => c.id === selectedChildId) ?? childrenList[0] ?? null;
+  const activeChild = childrenList.find((c) => c.id === selectedChildId) ?? childrenList[0] ?? null;
   const ordered = activeChild
     ? [activeChild, ...childrenList.filter((c) => c.id !== activeChild.id)]
     : childrenList;
