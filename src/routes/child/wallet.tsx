@@ -36,7 +36,10 @@ function ChildWallet() {
 
       const txs = (txData || []) as TxRow[];
       setTransactions(txs);
-      setBalance(txs.reduce((sum, t) => sum + t.amount, 0));
+      const WALLET_TYPES = new Set(["task_reward", "manual_adjustment", "wallet_debit"]);
+      setBalance(
+        txs.reduce((sum, t) => (WALLET_TYPES.has(t.type) ? sum + t.amount : sum), 0),
+      );
       setLoading(false);
     }
 

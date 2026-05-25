@@ -34,8 +34,13 @@ function ChildDashboard() {
         .from("transactions")
         .select("amount, type")
         .eq("child_id", childProfileId!);
+      const WALLET_TYPES = new Set(["task_reward", "manual_adjustment", "wallet_debit"]);
       setBalance(
-        (txData || []).reduce((sum: number, t: { amount: number }) => sum + t.amount, 0),
+        (txData || []).reduce(
+          (sum: number, t: { amount: number; type: string }) =>
+            WALLET_TYPES.has(t.type) ? sum + t.amount : sum,
+          0,
+        ),
       );
 
       const { data: taskData } = await supabase

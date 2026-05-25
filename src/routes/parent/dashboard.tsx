@@ -117,11 +117,14 @@ function ParentDashboard() {
     loadAll(householdId).finally(() => setLoading(false));
   }, [householdId]);
 
-  // Wallet balance = task_reward + manual_adjustment + goal_allocation (allocation is negative)
+  // Wallet = task_reward + manual_adjustment + wallet_debit
+  // (savings_credit/goal_credit are separate pots; goal_allocation is legacy/unused)
   const balances = useMemo(() => {
+    const WALLET_TYPES = new Set(["task_reward", "manual_adjustment", "wallet_debit"]);
     const m: Record<string, number> = {};
     for (const c of children) m[c.id] = 0;
     for (const tx of transactions) {
+      if (!WALLET_TYPES.has(tx.type)) continue;
       m[tx.child_id] = (m[tx.child_id] ?? 0) + tx.amount;
     }
     return m;

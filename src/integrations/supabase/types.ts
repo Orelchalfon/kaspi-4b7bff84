@@ -7,6 +7,8 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
@@ -40,6 +42,63 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "child_profiles_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goals: {
+        Row: {
+          child_id: string
+          created_at: string
+          created_by: string
+          cycle_amount: number
+          cycle_period: string
+          household_id: string
+          id: string
+          status: string
+          target_amount: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          created_by: string
+          cycle_amount: number
+          cycle_period: string
+          household_id: string
+          id?: string
+          status?: string
+          target_amount: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          created_by?: string
+          cycle_amount?: number
+          cycle_period?: string
+          household_id?: string
+          id?: string
+          status?: string
+          target_amount?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goals_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goals_household_id_fkey"
             columns: ["household_id"]
             isOneToOne: false
             referencedRelation: "households"
@@ -156,6 +215,7 @@ export type Database = {
           amount: number
           child_id: string
           created_at: string | null
+          goal_id: string | null
           household_id: string
           id: string
           reference_task_id: string | null
@@ -165,6 +225,7 @@ export type Database = {
           amount: number
           child_id: string
           created_at?: string | null
+          goal_id?: string | null
           household_id: string
           id?: string
           reference_task_id?: string | null
@@ -174,6 +235,7 @@ export type Database = {
           amount?: number
           child_id?: string
           created_at?: string | null
+          goal_id?: string | null
           household_id?: string
           id?: string
           reference_task_id?: string | null
@@ -185,6 +247,13 @@ export type Database = {
             columns: ["child_id"]
             isOneToOne: false
             referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
             referencedColumns: ["id"]
           },
           {
@@ -241,6 +310,10 @@ export type Database = {
     }
     Functions: {
       approve_task_and_pay: { Args: { p_task_id: string }; Returns: boolean }
+      deposit_to_goal: {
+        Args: { _amount: number; _goal_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
