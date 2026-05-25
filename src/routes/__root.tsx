@@ -10,9 +10,7 @@ function NotFoundComponent() {
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
         <h2 className="mt-4 text-xl font-semibold text-foreground">הדף לא נמצא</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          הדף שחיפשת לא קיים או הועבר.
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">הדף שחיפשת לא קיים או הועבר.</p>
         <div className="mt-6">
           <Link
             to="/"
@@ -32,7 +30,11 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "KidCoin — מערכת תגמולים למשפחות" },
-      { name: "description", content: "KidCoin היא מערכת תגמולים למשפחות: הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך בעזרת מטלות הבית." },
+      {
+        name: "description",
+        content:
+          "KidCoin היא מערכת תגמולים למשפחות: הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך בעזרת מטלות הבית.",
+      },
       { property: "og:site_name", content: "KidCoin" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -41,7 +43,10 @@ export const Route = createRootRoute({
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap",
+      },
     ],
     scripts: [
       {
@@ -87,7 +92,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <AuthProvider>
-      <main><Outlet /></main>
+      <main>
+        <Outlet />
+      </main>
       <Toaster richColors closeButton position="top-center" dir="rtl" />
     </AuthProvider>
   );

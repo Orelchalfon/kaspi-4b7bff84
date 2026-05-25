@@ -12,7 +12,10 @@ export const Route = createFileRoute("/signup")({
   head: () => ({
     meta: [
       { title: "הרשמה — KidCoin" },
-      { name: "description", content: "פתחו חשבון הורה ב-KidCoin והתחילו לנהל משימות, מטבעות וחיסכון של הילדים." },
+      {
+        name: "description",
+        content: "פתחו חשבון הורה ב-KidCoin והתחילו לנהל משימות, מטבעות וחיסכון של הילדים.",
+      },
       { property: "og:title", content: "הרשמה — KidCoin" },
       { property: "og:description", content: "פתחו חשבון הורה חדש ב-KidCoin." },
       { property: "og:url", content: "https://kidcoin.app/signup" },
@@ -76,14 +79,25 @@ function SignupPage() {
             </div>
             <CardTitle className="text-2xl">בדקו את המייל</CardTitle>
             <CardDescription>
-              שלחנו קישור אימות אל <span dir="ltr" className="font-medium">{email}</span>. לחצו על הקישור כדי להפעיל את החשבון.
+              שלחנו קישור אימות אל{" "}
+              <span dir="ltr" className="font-medium">
+                {email}
+              </span>
+              . לחצו על הקישור כדי להפעיל את החשבון.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-center text-sm text-muted-foreground">
               לא רואים את המייל? בדקו בתיקיית הספאם.
             </p>
-            <Button variant="outline" className="min-h-11 w-full" onClick={() => { setEmailSent(false); navigate({ to: "/login" }); }}>
+            <Button
+              variant="outline"
+              className="min-h-11 w-full"
+              onClick={() => {
+                setEmailSent(false);
+                navigate({ to: "/login" });
+              }}
+            >
               חזרה להתחברות
             </Button>
           </CardContent>
@@ -106,7 +120,10 @@ function SignupPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             {error && (
-              <div role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              <div
+                role="alert"
+                className="rounded-md bg-destructive/10 p-3 text-sm text-destructive"
+              >
                 {error}
               </div>
             )}
@@ -167,7 +184,10 @@ function SignupPage() {
           </form>
           <p className="mt-4 text-center text-sm text-muted-foreground">
             כבר יש לכם חשבון?{" "}
-            <Link to="/login" className="font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">
+            <Link
+              to="/login"
+              className="font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+            >
               התחברות
             </Link>
           </p>

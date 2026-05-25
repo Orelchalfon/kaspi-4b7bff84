@@ -53,24 +53,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
 
-        if (session?.user) {
-          // Defer role fetch to avoid holding the auth lock
-          setTimeout(() => {
-            fetchRole(session.user.id);
-          }, 0);
-        } else {
-          setRole(null);
-          setHouseholdId(null);
-          setChildProfileId(null);
-          setIsLoading(false);
-        }
+      if (session?.user) {
+        // Defer role fetch to avoid holding the auth lock
+        setTimeout(() => {
+          fetchRole(session.user.id);
+        }, 0);
+      } else {
+        setRole(null);
+        setHouseholdId(null);
+        setChildProfileId(null);
+        setIsLoading(false);
       }
-    );
+    });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);

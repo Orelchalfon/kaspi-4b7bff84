@@ -31,11 +31,7 @@ let childProfileB: string;
 let taskA: string; // belongs to household A
 let taskB: string; // belongs to household B
 
-async function setupHousehold(
-  parent: AdHocUser,
-  child: AdHocUser,
-  name: string,
-) {
+async function setupHousehold(parent: AdHocUser, child: AdHocUser, name: string) {
   const sb = userClient(parent.accessToken);
   const { data: hh, error: hhErr } = await sb
     .from("households")
@@ -162,11 +158,7 @@ describe("RLS cross-household isolation", () => {
     expect(data ?? []).toEqual([]);
 
     // Confirm the row is unchanged via admin
-    const { data: row } = await admin
-      .from("tasks")
-      .select("title")
-      .eq("id", taskB)
-      .single();
+    const { data: row } = await admin.from("tasks").select("title").eq("id", taskB).single();
     expect(row?.title).toBe("task in HouseB");
   });
 
@@ -180,11 +172,7 @@ describe("RLS cross-household isolation", () => {
     expect(error).toBeNull();
     expect(data ?? []).toEqual([]);
 
-    const { data: row } = await admin
-      .from("tasks")
-      .select("status")
-      .eq("id", taskB)
-      .single();
+    const { data: row } = await admin.from("tasks").select("status").eq("id", taskB).single();
     expect(row?.status).toBe("assigned");
   });
 

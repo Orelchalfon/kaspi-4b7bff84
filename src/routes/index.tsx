@@ -7,12 +7,22 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "KidCoin — מערכת תגמולים למשפחות" },
-      { name: "description", content: "KidCoin עוזרת למשפחות להפוך מטלות בית לתגמולים: הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך." },
+      {
+        name: "description",
+        content:
+          "KidCoin עוזרת למשפחות להפוך מטלות בית לתגמולים: הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך.",
+      },
       { property: "og:title", content: "KidCoin — מערכת תגמולים למשפחות" },
-      { property: "og:description", content: "הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך כסף." },
+      {
+        property: "og:description",
+        content: "הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך כסף.",
+      },
       { property: "og:url", content: "https://kidcoin.app/" },
       { name: "twitter:title", content: "KidCoin — מערכת תגמולים למשפחות" },
-      { name: "twitter:description", content: "הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך כסף." },
+      {
+        name: "twitter:description",
+        content: "הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך כסף.",
+      },
     ],
     links: [{ rel: "canonical", href: "https://kidcoin.app/" }],
   }),

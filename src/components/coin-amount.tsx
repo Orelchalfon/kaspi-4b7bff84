@@ -49,11 +49,7 @@ export function CoinAmount({
       aria-label={`${value} מטבעות`}
     >
       <Coins className={cn(sizes.icon, "text-coin", iconClassName)} aria-hidden />
-      {animate ? (
-        <AnimatedNumber value={value} formatter={format} />
-      ) : (
-        <span>{format(value)}</span>
-      )}
+      {animate ? <AnimatedNumber value={value} formatter={format} /> : <span>{format(value)}</span>}
     </span>
   );
 }

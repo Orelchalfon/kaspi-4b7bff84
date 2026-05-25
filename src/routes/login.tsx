@@ -12,7 +12,10 @@ export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
       { title: "התחברות — KidCoin" },
-      { name: "description", content: "התחברו לחשבון KidCoin שלכם כדי לנהל משימות, מטבעות וחיסכון של המשפחה." },
+      {
+        name: "description",
+        content: "התחברו לחשבון KidCoin שלכם כדי לנהל משימות, מטבעות וחיסכון של המשפחה.",
+      },
       { property: "og:title", content: "התחברות — KidCoin" },
       { property: "og:description", content: "התחברו לחשבון KidCoin שלכם." },
       { property: "og:url", content: "https://kidcoin.app/login" },
@@ -71,11 +74,7 @@ function LoginPage() {
         setError("יותר מדי ניסיונות התחברות. נסו שוב בעוד כמה דקות.");
       } else {
         // Show real error in dev so we can debug; generic in prod
-        setError(
-          import.meta.env.DEV
-            ? `שגיאה: ${error.message}`
-            : "שגיאה בהתחברות. נסו שוב."
-        );
+        setError(import.meta.env.DEV ? `שגיאה: ${error.message}` : "שגיאה בהתחברות. נסו שוב.");
       }
       setLoading(false);
       requestAnimationFrame(() => document.getElementById("password")?.focus());
@@ -160,13 +159,20 @@ function LoginPage() {
             </Button>
             {resetSent && (
               <p role="status" className="text-center text-xs text-muted-foreground">
-                שלחנו קישור לאיפוס סיסמה ל-<span dir="ltr" className="font-medium">{email}</span>. בדקו את תיבת הדואר (וגם בספאם).
+                שלחנו קישור לאיפוס סיסמה ל-
+                <span dir="ltr" className="font-medium">
+                  {email}
+                </span>
+                . בדקו את תיבת הדואר (וגם בספאם).
               </p>
             )}
           </form>
           <p className="mt-4 text-center text-sm text-muted-foreground">
             אין לכם חשבון?{" "}
-            <Link to="/signup" className="font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">
+            <Link
+              to="/signup"
+              className="font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+            >
               הרשמה
             </Link>
           </p>

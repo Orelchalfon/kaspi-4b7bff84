@@ -116,9 +116,7 @@ function ParentTaskDetail() {
           <CardTitle>{task.title}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {task.description && (
-            <p className="text-sm text-muted-foreground">{task.description}</p>
-          )}
+          {task.description && <p className="text-sm text-muted-foreground">{task.description}</p>}
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">ילד:</span>
             <span className="font-medium">{childName}</span>

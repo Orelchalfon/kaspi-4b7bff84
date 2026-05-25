@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Coins, Sparkles } from "lucide-react";
 import { CoinAmount } from "@/components/coin-amount";
 import { AnimatedNumber } from "@/components/animated-number";
+import { computeWalletBalance } from "@/lib/transactions";
 import { StatusBadge } from "@/components/status-badge";
 import { DashboardSkeleton } from "@/components/loading-skeletons";
 
@@ -35,14 +36,7 @@ function ChildDashboard() {
         .from("transactions")
         .select("amount, type")
         .eq("child_id", childProfileId!);
-      const WALLET_TYPES = new Set(["task_reward", "manual_adjustment", "wallet_debit"]);
-      setBalance(
-        (txData || []).reduce(
-          (sum: number, t: { amount: number; type: string }) =>
-            WALLET_TYPES.has(t.type) ? sum + t.amount : sum,
-          0,
-        ),
-      );
+      setBalance(computeWalletBalance(txData || []));
 
       const { data: taskData } = await supabase
         .from("tasks")
@@ -63,7 +57,10 @@ function ChildDashboard() {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-primary text-primary-foreground" aria-label={`היתרה שלי: ${balance} מטבעות`}>
+      <Card
+        className="bg-primary text-primary-foreground"
+        aria-label={`היתרה שלי: ${balance} מטבעות`}
+      >
         <CardContent className="py-6 text-center">
           <p className="text-sm opacity-80">היתרה שלי</p>
           <p className="mt-1 flex items-center justify-center gap-2 text-4xl font-bold tabular-nums">

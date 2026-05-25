@@ -8,10 +8,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), "VITE_");
   const envDefine = Object.fromEntries(
-    Object.entries(env).map(([key, value]) => [
-      `import.meta.env.${key}`,
-      JSON.stringify(value),
-    ]),
+    Object.entries(env).map(([key, value]) => [`import.meta.env.${key}`, JSON.stringify(value)]),
   );
 
   return {
@@ -19,9 +16,7 @@ export default defineConfig(({ command, mode }) => {
     plugins: [
       tailwindcss(),
       tsconfigPaths({ projects: ["./tsconfig.json"] }),
-      ...(command === "build"
-        ? [cloudflare({ viteEnvironment: { name: "ssr" } })]
-        : []),
+      ...(command === "build" ? [cloudflare({ viteEnvironment: { name: "ssr" } })] : []),
       tanstackStart({
         importProtection: {
           behavior: "error",

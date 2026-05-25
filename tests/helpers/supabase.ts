@@ -11,11 +11,9 @@ if (!SUPABASE_URL || !SERVICE_ROLE || !ANON) {
   );
 }
 
-export const admin: SupabaseClient<Database> = createClient<Database>(
-  SUPABASE_URL,
-  SERVICE_ROLE,
-  { auth: { persistSession: false, autoRefreshToken: false } },
-);
+export const admin: SupabaseClient<Database> = createClient<Database>(SUPABASE_URL, SERVICE_ROLE, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
 
 /** Create an anon client signed in as the given access token (RLS as that user). */
 export function userClient(accessToken: string): SupabaseClient<Database> {

@@ -4,7 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { isWalletTx } from "@/lib/transactions";
 
 export const Route = createFileRoute("/parent/dashboard")({
   component: ParentDashboard,
@@ -64,29 +72,31 @@ function ParentDashboard() {
   const [savingPct, setSavingPct] = useState(false);
 
   async function loadAll(hhId: string) {
-    const [{ data: cData }, { data: txData }, { data: tData }, { data: sData }] = await Promise.all([
-      supabase
-        .from("child_profiles")
-        .select("id, display_name")
-        .eq("household_id", hhId)
-        .order("display_name", { ascending: true }),
-      supabase
-        .from("transactions")
-        .select("id, child_id, amount, reference_task_id, created_at, type")
-        .eq("household_id", hhId)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("tasks")
-        .select("id, title, reward_amount, status, child_id, created_at")
-        .eq("household_id", hhId)
-        .in("status", ["assigned", "submitted"])
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("household_settings")
-        .select("savings_percentage")
-        .eq("household_id", hhId)
-        .maybeSingle(),
-    ]);
+    const [{ data: cData }, { data: txData }, { data: tData }, { data: sData }] = await Promise.all(
+      [
+        supabase
+          .from("child_profiles")
+          .select("id, display_name")
+          .eq("household_id", hhId)
+          .order("display_name", { ascending: true }),
+        supabase
+          .from("transactions")
+          .select("id, child_id, amount, reference_task_id, created_at, type")
+          .eq("household_id", hhId)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("tasks")
+          .select("id, title, reward_amount, status, child_id, created_at")
+          .eq("household_id", hhId)
+          .in("status", ["assigned", "submitted"])
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("household_settings")
+          .select("savings_percentage")
+          .eq("household_id", hhId)
+          .maybeSingle(),
+      ],
+    );
 
     const childList = cData || [];
     const txList = (txData || []) as TxRow[];
@@ -98,9 +108,14 @@ function ParentDashboard() {
     setSavingsPct(pct);
     setPctInput(String(pct));
 
-    const txTaskIds = Array.from(new Set(txList.map((t) => t.reference_task_id).filter((x): x is string => !!x)));
+    const txTaskIds = Array.from(
+      new Set(txList.map((t) => t.reference_task_id).filter((x): x is string => !!x)),
+    );
     if (txTaskIds.length > 0) {
-      const { data: titlesData } = await supabase.from("tasks").select("id, title").in("id", txTaskIds);
+      const { data: titlesData } = await supabase
+        .from("tasks")
+        .select("id, title")
+        .in("id", txTaskIds);
       const map: Record<string, string> = {};
       (titlesData || []).forEach((t: { id: string; title: string }) => (map[t.id] = t.title));
       setTaskTitles(map);
@@ -117,14 +132,11 @@ function ParentDashboard() {
     loadAll(householdId).finally(() => setLoading(false));
   }, [householdId]);
 
-  // Wallet = task_reward + manual_adjustment + wallet_debit
-  // (savings_credit/goal_credit are separate pots; goal_allocation is legacy/unused)
   const balances = useMemo(() => {
-    const WALLET_TYPES = new Set(["task_reward", "manual_adjustment", "wallet_debit"]);
     const m: Record<string, number> = {};
     for (const c of children) m[c.id] = 0;
     for (const tx of transactions) {
-      if (!WALLET_TYPES.has(tx.type)) continue;
+      if (!isWalletTx(tx.type)) continue;
       m[tx.child_id] = (m[tx.child_id] ?? 0) + tx.amount;
     }
     return m;
@@ -192,10 +204,9 @@ function ParentDashboard() {
       return;
     }
     setSavingPct(true);
-    const { error } = await supabase.from("household_settings").upsert(
-      { household_id: householdId, savings_percentage: n },
-      { onConflict: "household_id" },
-    );
+    const { error } = await supabase
+      .from("household_settings")
+      .upsert({ household_id: householdId, savings_percentage: n }, { onConflict: "household_id" });
     setSavingPct(false);
     if (error) {
       console.error("[savings_percentage]", error);
@@ -246,7 +257,9 @@ function ParentDashboard() {
           </div>
           <div className="flex items-end gap-2">
             <div className="space-y-1">
-              <Label htmlFor="pct" className="text-xs">אחוז (0-100)</Label>
+              <Label htmlFor="pct" className="text-xs">
+                אחוז (0-100)
+              </Label>
               <Input
                 id="pct"
                 type="number"
@@ -295,14 +308,19 @@ function ParentDashboard() {
                   onClick={() => setSelectedChildId(child.id)}
                   aria-pressed={isActive}
                   aria-label={`בחר את ${child.display_name}`}
-                  className={cn("text-start transition-all w-[60px] mx-auto", "focus-visible:outline-none")}
+                  className={cn(
+                    "text-start transition-all w-[60px] mx-auto",
+                    "focus-visible:outline-none",
+                  )}
                 >
                   <div className="flex items-center justify-center ">
                     <div className="flex items-center ">
                       <span
                         className={cn(
                           "flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold",
-                          isActive ? "bg-primary text-primary-foreground border-solid shadow-none border-2 border-purple-300" : "bg-primary/10 text-primary",
+                          isActive
+                            ? "bg-primary text-primary-foreground border-solid shadow-none border-2 border-purple-300"
+                            : "bg-primary/10 text-primary",
                         )}
                         aria-hidden
                       >
@@ -408,7 +426,9 @@ function ParentDashboard() {
                                   <AlertDialogContent dir="rtl">
                                     <AlertDialogHeader>
                                       <AlertDialogTitle>לדחות את המשימה?</AlertDialogTitle>
-                                      <AlertDialogDescription>פעולה זו לא תזכה את הילד במטבעות.</AlertDialogDescription>
+                                      <AlertDialogDescription>
+                                        פעולה זו לא תזכה את הילד במטבעות.
+                                      </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                       <AlertDialogCancel>ביטול</AlertDialogCancel>
@@ -459,9 +479,15 @@ function ParentDashboard() {
                       {childTransactions.map((tx) => (
                         <TableRow key={tx.id}>
                           <TableCell className="tabular-nums text-muted-foreground">
-                            {tx.created_at ? new Date(tx.created_at).toLocaleDateString("he-IL") : "—"}
+                            {tx.created_at
+                              ? new Date(tx.created_at).toLocaleDateString("he-IL")
+                              : "—"}
                           </TableCell>
-                          <TableCell>{tx.reference_task_id ? (taskTitles[tx.reference_task_id] ?? "משימה") : "—"}</TableCell>
+                          <TableCell>
+                            {tx.reference_task_id
+                              ? (taskTitles[tx.reference_task_id] ?? "משימה")
+                              : "—"}
+                          </TableCell>
                           <TableCell>
                             <CoinAmount value={tx.amount} signed tone="success" />
                           </TableCell>

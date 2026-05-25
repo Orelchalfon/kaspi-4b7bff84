@@ -34,17 +34,16 @@ export const createChild = createServerFn({ method: "POST" })
 
     const householdId = roleRow.household_id;
 
-    const { data: created, error: createErr } =
-      await supabaseAdmin.auth.admin.createUser({
-        email: data.email,
-        password: data.password,
-        email_confirm: true,
-        user_metadata: {
-          role: "child",
-          household_id: householdId,
-          full_name: data.displayName,
-        },
-      });
+    const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+      email: data.email,
+      password: data.password,
+      email_confirm: true,
+      user_metadata: {
+        role: "child",
+        household_id: householdId,
+        full_name: data.displayName,
+      },
+    });
 
     if (createErr || !created.user) {
       console.error("Child account creation failed:", createErr);

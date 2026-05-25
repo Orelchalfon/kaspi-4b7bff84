@@ -8,6 +8,7 @@ import { Receipt } from "lucide-react";
 import { CoinAmount } from "@/components/coin-amount";
 import { ListSkeleton } from "@/components/loading-skeletons";
 import { ChildAvatar } from "@/components/child-avatar";
+import { TransactionRow } from "@/components/transaction-row";
 
 export const Route = createFileRoute("/parent/transactions")({
   component: ParentTransactions,
@@ -75,20 +76,13 @@ function ParentTransactions() {
             {transactions.map((tx) => {
               const name = children[tx.child_id] || "ילד";
               return (
-                <Card key={tx.id}>
-                  <CardContent className="flex items-center justify-between py-3">
-                    <div className="flex items-center gap-3">
-                      <ChildAvatar name={name} size="sm" />
-                      <div>
-                        <p className="font-medium">{name}</p>
-                        <p className="text-xs tabular-nums text-muted-foreground">
-                          {new Date(tx.created_at).toLocaleDateString("he-IL")}
-                        </p>
-                      </div>
-                    </div>
-                    <CoinAmount value={tx.amount} signed tone="success" />
-                  </CardContent>
-                </Card>
+                <TransactionRow
+                  key={tx.id}
+                  tx={tx}
+                  leading={<ChildAvatar name={name} size="sm" />}
+                  primaryLabel={name}
+                  showContextIcon={false}
+                />
               );
             })}
           </div>

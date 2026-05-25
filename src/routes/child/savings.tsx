@@ -27,8 +27,14 @@ import {
 } from "@/components/ui/select";
 import { CoinAmount } from "@/components/coin-amount";
 import { AnimatedNumber } from "@/components/animated-number";
+import { TransactionRow } from "@/components/transaction-row";
 import { ListSkeleton } from "@/components/loading-skeletons";
 import { cn } from "@/lib/utils";
+import {
+  computeGoalDeposits,
+  computeSavingsBalance,
+  computeWalletBalance,
+} from "@/lib/transactions";
 
 export const Route = createFileRoute("/child/savings")({
   component: ChildSavings,
@@ -51,6 +57,7 @@ interface TxRow {
   amount: number;
   type: string;
   goal_id: string | null;
+  reference_task_id: string | null;
   created_at: string | null;
 }
 
@@ -83,6 +90,8 @@ function ChildSavings() {
   const { childProfileId, householdId, user } = useAuth();
   const [goals, setGoals] = useState<GoalRow[]>([]);
   const [transactions, setTransactions] = useState<TxRow[]>([]);
+  const [taskTitles, setTaskTitles] = useState<Record<string, string>>({});
+  const [goalTitles, setGoalTitles] = useState<Record<string, string>>({});
   const [savingsPct, setSavingsPct] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -109,7 +118,7 @@ function ChildSavings() {
         .order("created_at", { ascending: false }),
       supabase
         .from("transactions")
-        .select("id, amount, type, goal_id, created_at")
+        .select("id, amount, type, goal_id, reference_task_id, created_at")
         .eq("child_id", cpId)
         .order("created_at", { ascending: false }),
       supabase
@@ -119,9 +128,36 @@ function ChildSavings() {
         .maybeSingle(),
     ]);
 
-    setGoals((gData ?? []) as GoalRow[]);
-    setTransactions((tData ?? []) as TxRow[]);
+    const goalList = (gData ?? []) as GoalRow[];
+    const txList = (tData ?? []) as TxRow[];
+    setGoals(goalList);
+    setTransactions(txList);
     setSavingsPct(sData?.savings_percentage ?? 0);
+
+    // Goal titles come straight from the goals we already fetched.
+    const goalMap: Record<string, string> = {};
+    goalList.forEach((g) => (goalMap[g.id] = g.title));
+    setGoalTitles(goalMap);
+
+    // Task titles only matter for savings_credit rows that came from approve_task_and_pay.
+    const taskIds = Array.from(
+      new Set(
+        txList
+          .filter((t) => t.type === "savings_credit" && t.reference_task_id)
+          .map((t) => t.reference_task_id as string),
+      ),
+    );
+    if (taskIds.length > 0) {
+      const { data: titlesData } = await supabase
+        .from("tasks")
+        .select("id, title")
+        .in("id", taskIds);
+      const map: Record<string, string> = {};
+      (titlesData || []).forEach((t: { id: string; title: string }) => (map[t.id] = t.title));
+      setTaskTitles(map);
+    } else {
+      setTaskTitles({});
+    }
   }
 
   useEffect(() => {
@@ -130,33 +166,9 @@ function ChildSavings() {
     loadAll(childProfileId, householdId).finally(() => setLoading(false));
   }, [childProfileId, householdId]);
 
-  const savingsBalance = useMemo(
-    () => transactions.filter((t) => t.type === "savings_credit").reduce((s, t) => s + t.amount, 0),
-    [transactions],
-  );
-
-  const walletBalance = useMemo(
-    () =>
-      transactions
-        .filter(
-          (t) =>
-            t.type === "task_reward" ||
-            t.type === "manual_adjustment" ||
-            t.type === "wallet_debit",
-        )
-        .reduce((s, t) => s + t.amount, 0),
-    [transactions],
-  );
-
-  const depositedByGoal = useMemo(() => {
-    const m: Record<string, number> = {};
-    for (const t of transactions) {
-      if (t.type === "goal_credit" && t.goal_id) {
-        m[t.goal_id] = (m[t.goal_id] ?? 0) + t.amount;
-      }
-    }
-    return m;
-  }, [transactions]);
+  const savingsBalance = useMemo(() => computeSavingsBalance(transactions), [transactions]);
+  const walletBalance = useMemo(() => computeWalletBalance(transactions), [transactions]);
+  const depositedByGoal = useMemo(() => computeGoalDeposits(transactions), [transactions]);
 
   const recentSavings = useMemo(
     () => transactions.filter((t) => t.type === "savings_credit").slice(0, 5),
@@ -289,19 +301,14 @@ function ChildSavings() {
         <section aria-label="חיסכון אחרון">
           <h2 className="mb-3 text-base font-semibold">חיסכון אחרון</h2>
           <div className="space-y-2">
-            {recentSavings.map((tx) => {
-              const positive = tx.amount > 0;
-              return (
-                <Card key={tx.id}>
-                  <CardContent className="flex items-center justify-between py-3">
-                    <p className="text-xs tabular-nums text-muted-foreground">
-                      {tx.created_at ? new Date(tx.created_at).toLocaleDateString("he-IL") : "—"}
-                    </p>
-                    <CoinAmount value={tx.amount} signed tone={positive ? "success" : "muted"} />
-                  </CardContent>
-                </Card>
-              );
-            })}
+            {recentSavings.map((tx) => (
+              <TransactionRow
+                key={tx.id}
+                tx={tx}
+                taskTitle={tx.reference_task_id ? taskTitles[tx.reference_task_id] : undefined}
+                goalTitle={tx.goal_id ? goalTitles[tx.goal_id] : undefined}
+              />
+            ))}
           </div>
         </section>
       )}

@@ -39,7 +39,10 @@ function ParentLayout() {
       </a>
       <header className="border-b bg-card">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-          <Link to="/parent/dashboard" className="flex items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <Link
+            to="/parent/dashboard"
+            className="flex items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Coins className="h-4 w-4" aria-hidden />
             </span>

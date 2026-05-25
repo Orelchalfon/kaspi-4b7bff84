@@ -127,10 +127,9 @@ describe("Task status transitions persist correctly", () => {
       .eq("id", taskId);
 
     // Approve (parent via RPC)
-    const { data, error } = await userClient(parent.accessToken).rpc(
-      "approve_task",
-      { _task_id: taskId },
-    );
+    const { data, error } = await userClient(parent.accessToken).rpc("approve_task", {
+      _task_id: taskId,
+    });
     expect(error).toBeNull();
     expect((data as any)?.success).toBe(true);
 
@@ -158,10 +157,7 @@ describe("Task status transitions persist correctly", () => {
       .eq("id", taskId);
 
     const sb = userClient(parent.accessToken);
-    const { error } = await sb
-      .from("tasks")
-      .update({ status: "rejected" })
-      .eq("id", taskId);
+    const { error } = await sb.from("tasks").update({ status: "rejected" }).eq("id", taskId);
     expect(error).toBeNull();
 
     const t = await readTask(taskId);
@@ -169,10 +165,7 @@ describe("Task status transitions persist correctly", () => {
     expect(t.submitted_at).not.toBeNull();
     expect(t.approved_at).toBeNull();
 
-    const { data: txs } = await admin
-      .from("transactions")
-      .select("id")
-      .eq("task_id", taskId);
+    const { data: txs } = await admin.from("transactions").select("id").eq("task_id", taskId);
     expect(txs).toHaveLength(0);
   });
 

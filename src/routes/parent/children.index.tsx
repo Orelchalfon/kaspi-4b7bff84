@@ -64,7 +64,9 @@ function ChildrenList() {
             <Users className="h-10 w-10 opacity-40" aria-hidden />
             <p>עדיין לא הוספתם ילדים.</p>
             <Link to="/parent/children/new">
-              <Button variant="link" className="mt-1">הוסיפו ילד ראשון</Button>
+              <Button variant="link" className="mt-1">
+                הוסיפו ילד ראשון
+              </Button>
             </Link>
           </CardContent>
         </Card>

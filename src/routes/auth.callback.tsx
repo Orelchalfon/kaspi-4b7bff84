@@ -54,9 +54,7 @@ function AuthCallback() {
           <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
             <Coins className="h-7 w-7" aria-hidden />
           </div>
-          <CardTitle className="text-xl">
-            {error ? "אופס" : "מאמת את החשבון..."}
-          </CardTitle>
+          <CardTitle className="text-xl">{error ? "אופס" : "מאמת את החשבון..."}</CardTitle>
         </CardHeader>
         <CardContent>
           {error ? (

@@ -60,9 +60,7 @@ function NewTask() {
     if (tError) {
       console.error("[tasks.new] insert failed:", tError);
       setError(
-        import.meta.env.DEV
-          ? `שגיאה ביצירת משימה: ${tError.message}`
-          : "שגיאה ביצירת משימה",
+        import.meta.env.DEV ? `שגיאה ביצירת משימה: ${tError.message}` : "שגיאה ביצירת משימה",
       );
       setLoading(false);
       return;
@@ -101,7 +99,10 @@ function NewTask() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             {error && (
-              <div role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              <div
+                role="alert"
+                className="rounded-md bg-destructive/10 p-3 text-sm text-destructive"
+              >
                 {error}
               </div>
             )}
@@ -155,7 +156,9 @@ function NewTask() {
                 dir="ltr"
                 className="tabular-nums"
               />
-              <p className="text-xs text-muted-foreground">כמה מטבעות הילד יקבל אחרי שהמשימה תאושר</p>
+              <p className="text-xs text-muted-foreground">
+                כמה מטבעות הילד יקבל אחרי שהמשימה תאושר
+              </p>
             </div>
             <Button type="submit" className="min-h-11 w-full" disabled={loading}>
               {loading ? "יוצר..." : "צור משימה"}
