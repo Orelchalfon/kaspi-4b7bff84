@@ -333,7 +333,7 @@ function ParentDashboard() {
             <h2 className="text-xl font-bold">{selectedChild.display_name}</h2>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>יתרה:</span>
-              <CoinAmount value={balances[selectedChild.id] ?? 0} size="lg" />
+              <CoinAmount value={balances[selectedChild.id] ?? 0} size="lg" animate />
             </div>
           </div>
 

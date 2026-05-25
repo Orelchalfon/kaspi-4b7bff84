@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Coins, Sparkles } from "lucide-react";
 import { CoinAmount } from "@/components/coin-amount";
+import { AnimatedNumber } from "@/components/animated-number";
 import { StatusBadge } from "@/components/status-badge";
 import { DashboardSkeleton } from "@/components/loading-skeletons";
 
@@ -67,7 +68,7 @@ function ChildDashboard() {
           <p className="text-sm opacity-80">היתרה שלי</p>
           <p className="mt-1 flex items-center justify-center gap-2 text-4xl font-bold tabular-nums">
             <Coins className="h-8 w-8 text-coin" aria-hidden />
-            <span>{balance}</span>
+            <AnimatedNumber value={balance} />
           </p>
         </CardContent>
       </Card>

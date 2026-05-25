@@ -310,10 +310,15 @@ export type Database = {
     }
     Functions: {
       approve_task_and_pay: { Args: { p_task_id: string }; Returns: boolean }
+      deposit_savings_to_goal: {
+        Args: { _amount: number; _goal_id: string }
+        Returns: Json
+      }
       deposit_to_goal: {
         Args: { _amount: number; _goal_id: string }
         Returns: Json
       }
+      deposit_to_savings: { Args: { _amount: number }; Returns: Json }
     }
     Enums: {
       [_ in never]: never

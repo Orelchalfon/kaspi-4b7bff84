@@ -1,11 +1,13 @@
 import { Coins } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AnimatedNumber } from "@/components/animated-number";
 
 interface CoinAmountProps {
   value: number;
   signed?: boolean;
   size?: "sm" | "md" | "lg" | "xl";
-  tone?: "default" | "success" | "muted" | "primary";
+  tone?: "default" | "success" | "muted" | "primary" | "destructive";
+  animate?: boolean;
   className?: string;
   iconClassName?: string;
 }
@@ -22,6 +24,7 @@ const toneMap = {
   success: "text-success",
   muted: "text-muted-foreground",
   primary: "text-primary-foreground",
+  destructive: "text-destructive",
 };
 
 export function CoinAmount({
@@ -29,11 +32,12 @@ export function CoinAmount({
   signed = false,
   size = "md",
   tone = "default",
+  animate = false,
   className,
   iconClassName,
 }: CoinAmountProps) {
   const sizes = sizeMap[size];
-  const display = signed && value > 0 ? `+${value}` : `${value}`;
+  const format = (n: number) => (signed && n > 0 ? `+${n}` : `${n}`);
   return (
     <span
       className={cn(
@@ -45,7 +49,11 @@ export function CoinAmount({
       aria-label={`${value} מטבעות`}
     >
       <Coins className={cn(sizes.icon, "text-coin", iconClassName)} aria-hidden />
-      <span>{display}</span>
+      {animate ? (
+        <AnimatedNumber value={value} formatter={format} />
+      ) : (
+        <span>{format(value)}</span>
+      )}
     </span>
   );
 }

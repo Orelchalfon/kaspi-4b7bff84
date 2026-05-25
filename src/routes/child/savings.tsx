@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { PiggyBank, Target, Plus, CheckCircle2, Coins } from "lucide-react";
+import { PiggyBank, Target, Plus, CheckCircle2, Coins, ArrowLeftRight } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,13 +26,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CoinAmount } from "@/components/coin-amount";
+import { AnimatedNumber } from "@/components/animated-number";
 import { ListSkeleton } from "@/components/loading-skeletons";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/child/savings")({
   component: ChildSavings,
 });
 
 type CyclePeriod = "day" | "week" | "month";
+type DepositSource = "wallet" | "savings";
 
 interface GoalRow {
   id: string;
@@ -82,9 +85,8 @@ function ChildSavings() {
   const [transactions, setTransactions] = useState<TxRow[]>([]);
   const [savingsPct, setSavingsPct] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [acting, setActing] = useState<string | null>(null);
 
-  // Dialog state
+  // Add-goal dialog
   const [dialogOpen, setDialogOpen] = useState(false);
   const [titleInput, setTitleInput] = useState("");
   const [targetInput, setTargetInput] = useState("");
@@ -94,6 +96,9 @@ function ChildSavings() {
     Partial<Record<keyof z.infer<typeof goalSchema>, string>>
   >({});
   const [submitting, setSubmitting] = useState(false);
+
+  // Move-to-savings dialog
+  const [moveOpen, setMoveOpen] = useState(false);
 
   async function loadAll(cpId: string, hhId: string) {
     const [{ data: gData }, { data: tData }, { data: sData }] = await Promise.all([
@@ -135,7 +140,7 @@ function ChildSavings() {
       transactions
         .filter(
           (t) =>
-            t.type === "reward_credit" ||
+            t.type === "task_reward" ||
             t.type === "manual_adjustment" ||
             t.type === "wallet_debit",
         )
@@ -211,28 +216,7 @@ function ChildSavings() {
     if (childProfileId && householdId) await loadAll(childProfileId, householdId);
   }
 
-  async function handleDeposit(goal: GoalRow) {
-    if (walletBalance < goal.cycle_amount) {
-      toast.error("אין מספיק יתרה בארנק");
-      return;
-    }
-    setActing(goal.id);
-    const { data, error } = await supabase.rpc("deposit_to_goal", {
-      _goal_id: goal.id,
-      _amount: goal.cycle_amount,
-    });
-    setActing(null);
-
-    if (error) {
-      console.error("[deposit_to_goal]", error);
-      toast.error(import.meta.env.DEV ? `שגיאה: ${error.message}` : "שגיאה בהפקדה");
-      return;
-    }
-    if (data && typeof data === "object" && "error" in (data as Record<string, unknown>)) {
-      toast.error(String((data as Record<string, unknown>).error));
-      return;
-    }
-    toast.success("הפקדה הצליחה!");
+  async function refresh() {
     if (childProfileId && householdId) await loadAll(childProfileId, householdId);
   }
 
@@ -240,7 +224,7 @@ function ChildSavings() {
     return (
       <div className="space-y-6">
         <Card className="bg-primary/10">
-          <CardContent className="h-28" />
+          <CardContent className="h-40" />
         </Card>
         <ListSkeleton rows={3} />
       </div>
@@ -249,42 +233,75 @@ function ChildSavings() {
 
   return (
     <div className="space-y-6">
-      {/* A. Savings pot card */}
+      {/* A. Savings pot card with wallet chip + move action */}
       <Card
-        className="bg-primary text-primary-foreground"
+        className="bg-primary text-primary-foreground shadow-md"
         aria-label={`חיסכון: ${savingsBalance} מטבעות`}
       >
-        <CardContent className="py-6 text-center">
-          <div className="flex items-center justify-center gap-2 text-sm opacity-80">
-            <PiggyBank className="h-4 w-4" aria-hidden />
-            <span>החיסכון שלי</span>
+        <CardContent className="space-y-4 py-6">
+          <div className="flex flex-col items-center gap-2 text-center">
+            <div className="flex items-center gap-2 text-sm opacity-80">
+              <PiggyBank className="h-4 w-4" aria-hidden />
+              <span>החיסכון שלי</span>
+            </div>
+            <p className="flex items-center gap-2 text-4xl font-bold tabular-nums">
+              <Coins className="h-8 w-8 text-coin" aria-hidden />
+              <AnimatedNumber value={savingsBalance} />
+            </p>
+            <p className="text-xs opacity-80">
+              {savingsPct > 0
+                ? `מועבר אוטומטית: ${savingsPct}% מכל תגמול`
+                : "כרגע אין העברה אוטומטית מהתגמולים"}
+            </p>
           </div>
-          <p className="mt-1 flex items-center justify-center gap-2 text-4xl font-bold tabular-nums">
-            <Coins className="h-8 w-8 text-coin" aria-hidden />
-            <span>{savingsBalance}</span>
-          </p>
-          <p className="mt-2 text-xs opacity-80">
-            {savingsPct > 0
-              ? `מועבר אוטומטית: ${savingsPct}% מכל תגמול`
-              : "כרגע אין העברה אוטומטית מהתגמולים"}
-          </p>
+
+          <div className="flex items-center justify-center gap-2">
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/15 px-3 py-1.5 text-xs"
+              aria-label={`יתרה בארנק ${walletBalance} מטבעות`}
+            >
+              <Coins className="h-3.5 w-3.5 text-coin" aria-hidden />
+              <span>בארנק</span>
+              <AnimatedNumber value={walletBalance} className="font-semibold" />
+            </span>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => setMoveOpen(true)}
+              disabled={walletBalance <= 0}
+              className="min-h-9 gap-1.5 transition-transform active:scale-[0.97]"
+            >
+              <ArrowLeftRight className="h-4 w-4" aria-hidden />
+              <span>העבר לחיסכון</span>
+            </Button>
+          </div>
         </CardContent>
       </Card>
+
+      <MoveToSavingsDialog
+        open={moveOpen}
+        onOpenChange={setMoveOpen}
+        walletBalance={walletBalance}
+        onSuccess={refresh}
+      />
 
       {recentSavings.length > 0 && (
         <section aria-label="חיסכון אחרון">
           <h2 className="mb-3 text-base font-semibold">חיסכון אחרון</h2>
           <div className="space-y-2">
-            {recentSavings.map((tx) => (
-              <Card key={tx.id}>
-                <CardContent className="flex items-center justify-between py-3">
-                  <p className="text-xs tabular-nums text-muted-foreground">
-                    {tx.created_at ? new Date(tx.created_at).toLocaleDateString("he-IL") : "—"}
-                  </p>
-                  <CoinAmount value={tx.amount} signed tone="success" />
-                </CardContent>
-              </Card>
-            ))}
+            {recentSavings.map((tx) => {
+              const positive = tx.amount > 0;
+              return (
+                <Card key={tx.id}>
+                  <CardContent className="flex items-center justify-between py-3">
+                    <p className="text-xs tabular-nums text-muted-foreground">
+                      {tx.created_at ? new Date(tx.created_at).toLocaleDateString("he-IL") : "—"}
+                    </p>
+                    <CoinAmount value={tx.amount} signed tone={positive ? "success" : "muted"} />
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </section>
       )}
@@ -301,7 +318,7 @@ function ChildSavings() {
             }}
           >
             <DialogTrigger asChild>
-              <Button size="sm" className="min-h-10">
+              <Button size="sm" className="min-h-10 transition-transform active:scale-[0.97]">
                 <Plus className="h-4 w-4" aria-hidden />
                 <span className="ms-1.5">הוסף מטרה</span>
               </Button>
@@ -407,74 +424,377 @@ function ChildSavings() {
           </Card>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
-            {goals.map((goal) => {
-              const deposited = depositedByGoal[goal.id] ?? 0;
-              const pct = Math.min(100, Math.round((deposited / goal.target_amount) * 100));
-              const isCompleted = goal.status === "completed";
-              const insufficient = walletBalance < goal.cycle_amount;
-              return (
-                <Card key={goal.id} className={isCompleted ? "opacity-70" : ""}>
-                  <CardContent className="space-y-3 py-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {isCompleted && (
-                          <span
-                            className="inline-flex h-6 items-center gap-1 rounded-full bg-success/15 px-2 text-xs font-semibold text-success"
-                            aria-label="הושלם"
-                          >
-                            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
-                            הושלם
-                          </span>
-                        )}
-                        <p className="font-semibold">{goal.title}</p>
-                      </div>
-                      <CoinAmount value={goal.target_amount} />
-                    </div>
-
-                    <div
-                      className="h-2 w-full overflow-hidden rounded-full bg-primary/15"
-                      role="progressbar"
-                      aria-valuenow={pct}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-label={`${pct}% הושלמו`}
-                    >
-                      <div
-                        className="h-full bg-primary transition-all"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs tabular-nums text-muted-foreground">
-                      <span>
-                        {deposited} מתוך {goal.target_amount}
-                      </span>
-                      <span>
-                        {goal.cycle_amount} נקודות כל {periodLabel[goal.cycle_period]}
-                      </span>
-                    </div>
-
-                    {!isCompleted && (
-                      <Button
-                        className="min-h-10 w-full"
-                        onClick={() => handleDeposit(goal)}
-                        disabled={acting === goal.id || insufficient}
-                        aria-label={`הפקד ${goal.cycle_amount} מטבעות ל${goal.title}`}
-                      >
-                        {acting === goal.id
-                          ? "מפקיד..."
-                          : insufficient
-                            ? "אין מספיק יתרה"
-                            : `הפקד עכשיו (${goal.cycle_amount})`}
-                      </Button>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
+            {goals.map((goal) => (
+              <GoalCard
+                key={goal.id}
+                goal={goal}
+                deposited={depositedByGoal[goal.id] ?? 0}
+                walletBalance={walletBalance}
+                savingsBalance={savingsBalance}
+                onChanged={refresh}
+              />
+            ))}
           </div>
         )}
       </section>
     </div>
+  );
+}
+
+function GoalCard({
+  goal,
+  deposited,
+  walletBalance,
+  savingsBalance,
+  onChanged,
+}: {
+  goal: GoalRow;
+  deposited: number;
+  walletBalance: number;
+  savingsBalance: number;
+  onChanged: () => Promise<void>;
+}) {
+  const [source, setSource] = useState<DepositSource>("wallet");
+  const [useCustom, setUseCustom] = useState(false);
+  const [customInput, setCustomInput] = useState("");
+  const [acting, setActing] = useState(false);
+
+  const remaining = Math.max(0, goal.target_amount - deposited);
+  const isCompleted = goal.status === "completed";
+  const pct = Math.min(100, Math.round((deposited / goal.target_amount) * 100));
+
+  const sourceBalance = source === "wallet" ? walletBalance : savingsBalance;
+
+  const customNum = Number(customInput);
+  const customValid = customInput !== "" && Number.isInteger(customNum) && customNum > 0;
+  const amount = useCustom ? (customValid ? customNum : 0) : goal.cycle_amount;
+  const overSource = amount > sourceBalance;
+  const overTarget = amount > remaining;
+  const canDeposit = !isCompleted && amount > 0 && !overSource && !overTarget;
+
+  async function deposit() {
+    if (!canDeposit || acting) return;
+    setActing(true);
+    const rpc = source === "wallet" ? "deposit_to_goal" : "deposit_savings_to_goal";
+    const { data, error } = await supabase.rpc(rpc, {
+      _goal_id: goal.id,
+      _amount: amount,
+    });
+    setActing(false);
+
+    if (error) {
+      console.error(`[${rpc}]`, error);
+      toast.error(import.meta.env.DEV ? `שגיאה: ${error.message}` : "שגיאה בהפקדה");
+      return;
+    }
+    if (data && typeof data === "object" && "error" in (data as Record<string, unknown>)) {
+      toast.error(String((data as Record<string, unknown>).error));
+      return;
+    }
+    toast.success("הפקדה הצליחה!");
+    if (useCustom) {
+      setUseCustom(false);
+      setCustomInput("");
+    }
+    await onChanged();
+  }
+
+  const sourceWord = source === "wallet" ? "מהארנק" : "מהחיסכון";
+  const ctaLabel = (() => {
+    if (isCompleted) return "הושלם";
+    if (acting) return "מפקיד...";
+    if (useCustom && !customValid) return "הזינו סכום";
+    if (overSource) return source === "wallet" ? "אין מספיק בארנק" : "אין מספיק בחיסכון";
+    if (overTarget) return `נשאר רק ${remaining}`;
+    return `הפקד ${amount} ${sourceWord}`;
+  })();
+
+  return (
+    <Card
+      className={cn(
+        "overflow-hidden transition-shadow",
+        isCompleted ? "opacity-70" : "hover:shadow-md",
+      )}
+    >
+      <CardContent className="space-y-4 py-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {isCompleted && (
+              <span
+                className="inline-flex h-6 items-center gap-1 rounded-full bg-success/15 px-2 text-xs font-semibold text-success"
+                aria-label="הושלם"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+                הושלם
+              </span>
+            )}
+            <p className="font-semibold">{goal.title}</p>
+          </div>
+          <CoinAmount value={goal.target_amount} />
+        </div>
+
+        <div
+          className="h-2 w-full overflow-hidden rounded-full bg-primary/15"
+          role="progressbar"
+          aria-valuenow={pct}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`${pct}% הושלמו`}
+        >
+          <div
+            className="h-full bg-primary transition-[width] duration-500 ease-out"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span className="tabular-nums">
+            <AnimatedNumber value={deposited} className="font-semibold text-foreground" /> מתוך{" "}
+            {goal.target_amount}
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px]">
+            {goal.cycle_amount} כל {periodLabel[goal.cycle_period]}
+          </span>
+        </div>
+
+        {!isCompleted && (
+          <>
+            <div
+              role="radiogroup"
+              aria-label="מקור ההפקדה"
+              className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1"
+            >
+              <SourceOption
+                active={source === "wallet"}
+                disabled={acting}
+                label="ארנק"
+                balance={walletBalance}
+                onClick={() => setSource("wallet")}
+              />
+              <SourceOption
+                active={source === "savings"}
+                disabled={acting}
+                label="חיסכון"
+                balance={savingsBalance}
+                onClick={() => setSource("savings")}
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setUseCustom(false)}
+                disabled={acting}
+                className={cn(
+                  "inline-flex min-h-9 items-center rounded-full px-3 text-xs font-medium transition-colors",
+                  !useCustom
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:text-foreground",
+                )}
+              >
+                סכום מחזורי {goal.cycle_amount}
+              </button>
+              <button
+                type="button"
+                onClick={() => setUseCustom(true)}
+                disabled={acting}
+                className={cn(
+                  "inline-flex min-h-9 items-center rounded-full px-3 text-xs font-medium transition-colors",
+                  useCustom
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:text-foreground",
+                )}
+              >
+                סכום אחר
+              </button>
+            </div>
+
+            {useCustom && (
+              <div className="space-y-1">
+                <Label htmlFor={`goal-custom-${goal.id}`} className="sr-only">
+                  סכום מותאם
+                </Label>
+                <Input
+                  id={`goal-custom-${goal.id}`}
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={Math.max(1, Math.min(sourceBalance, remaining))}
+                  dir="ltr"
+                  className="tabular-nums"
+                  value={customInput}
+                  onChange={(e) => setCustomInput(e.target.value)}
+                  placeholder={`עד ${Math.min(sourceBalance, remaining)}`}
+                  disabled={acting}
+                  autoFocus
+                />
+              </div>
+            )}
+
+            <Button
+              className="min-h-11 w-full transition-transform active:scale-[0.98]"
+              onClick={deposit}
+              disabled={!canDeposit || acting}
+              aria-label={ctaLabel}
+            >
+              {ctaLabel}
+            </Button>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function SourceOption({
+  active,
+  disabled,
+  label,
+  balance,
+  onClick,
+}: {
+  active: boolean;
+  disabled?: boolean;
+  label: string;
+  balance: number;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={active}
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-md px-3 py-1.5 text-sm transition-all",
+        active
+          ? "bg-background text-foreground shadow-sm"
+          : "text-muted-foreground hover:text-foreground",
+        disabled && "opacity-60",
+      )}
+    >
+      <span className="font-medium">{label}</span>
+      <span className="text-[11px] tabular-nums opacity-70">
+        זמין <AnimatedNumber value={balance} />
+      </span>
+    </button>
+  );
+}
+
+function MoveToSavingsDialog({
+  open,
+  onOpenChange,
+  walletBalance,
+  onSuccess,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  walletBalance: number;
+  onSuccess: () => Promise<void>;
+}) {
+  const [amount, setAmount] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      setAmount("");
+      setErr(null);
+      setSubmitting(false);
+    }
+  }, [open]);
+
+  const num = Number(amount);
+  const valid = amount !== "" && Number.isInteger(num) && num > 0 && num <= walletBalance;
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (!valid) {
+      setErr(num > walletBalance ? `אין מספיק בארנק (${walletBalance})` : "סכום לא תקין");
+      return;
+    }
+    setSubmitting(true);
+    setErr(null);
+    const { data, error } = await supabase.rpc("deposit_to_savings", { _amount: num });
+    setSubmitting(false);
+
+    if (error) {
+      console.error("[deposit_to_savings]", error);
+      setErr(import.meta.env.DEV ? error.message : "שגיאה בהעברה");
+      return;
+    }
+    if (data && typeof data === "object" && "error" in (data as Record<string, unknown>)) {
+      setErr(String((data as Record<string, unknown>).error));
+      return;
+    }
+    toast.success("ההעברה הצליחה");
+    onOpenChange(false);
+    await onSuccess();
+  }
+
+  function setMax() {
+    setAmount(String(walletBalance));
+    setErr(null);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent dir="rtl">
+        <DialogHeader>
+          <DialogTitle>העברה לחיסכון</DialogTitle>
+          <DialogDescription>העבירו מטבעות מהארנק לחיסכון שלכם.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={submit} className="space-y-4" noValidate>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="move-amount">סכום</Label>
+              <button
+                type="button"
+                onClick={setMax}
+                className="text-xs font-medium text-primary hover:underline"
+                disabled={submitting || walletBalance <= 0}
+              >
+                העבר הכל ({walletBalance})
+              </button>
+            </div>
+            <Input
+              id="move-amount"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={walletBalance}
+              dir="ltr"
+              className="tabular-nums text-lg"
+              value={amount}
+              onChange={(e) => {
+                setAmount(e.target.value);
+                if (err) setErr(null);
+              }}
+              placeholder="50"
+              autoFocus
+              disabled={submitting}
+            />
+            <p className="text-xs text-muted-foreground">
+              בארנק: <span className="tabular-nums font-semibold">{walletBalance}</span> מטבעות
+            </p>
+            {err && (
+              <p role="alert" className="text-xs text-destructive">
+                {err}
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              type="submit"
+              className="min-h-11 w-full transition-transform active:scale-[0.98]"
+              disabled={submitting || !valid}
+            >
+              {submitting ? "מעביר..." : "העבר"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

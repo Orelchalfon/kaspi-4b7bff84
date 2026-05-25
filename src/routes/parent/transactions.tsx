@@ -110,7 +110,7 @@ function ParentTransactions() {
                       <ChildAvatar name={name} size="sm" />
                       <span className="font-medium">{name}</span>
                     </div>
-                    <CoinAmount value={total} tone="success" />
+                    <CoinAmount value={total} tone="success" animate />
                   </div>
                 );
               })}
@@ -120,6 +120,7 @@ function ParentTransactions() {
                   value={transactions.reduce((sum, t) => sum + t.amount, 0)}
                   size="lg"
                   tone="success"
+                  animate
                 />
               </div>
             </CardContent>
