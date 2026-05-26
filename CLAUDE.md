@@ -62,9 +62,10 @@ Required env vars (`.env` for dev, host env for prod):
 - `user_roles(id, user_id, household_id, role text CHECK IN ('parent','child','admin'))`
 - `child_profiles(id, user_id, household_id, display_name, current_balance numeric default 0)` — `current_balance` is a **cached wallet balance** maintained by RPCs (not derived on read).
 - `tasks(id, household_id, child_id, created_by_parent_id, title, description, reward_amount, status text CHECK IN ('assigned','submitted','approved','rejected'), submitted_at, reviewed_at)`
-- `transactions(id, household_id, child_id, type, amount numeric, reference_task_id, goal_id)` — `type` text CHECK IN `('task_reward','manual_adjustment','goal_allocation','savings_credit','wallet_debit','goal_credit')`. There is **no `idempotency_key`, no `created_by`**, no enum. The legacy `goal_allocation` value is permitted but unused.
-- `household_settings(id, household_id unique, savings_percentage int 0..100 default 10)`
+- `transactions(id, household_id, child_id, type, amount numeric, reference_task_id, goal_id, reference_quiz_attempt_id)` — `type` text CHECK IN `('task_reward','manual_adjustment','goal_allocation','savings_credit','wallet_debit','goal_credit','quiz_reward')`. There is **no `idempotency_key`, no `created_by`**, no enum. The legacy `goal_allocation` value is permitted but unused.
+- `household_settings(id, household_id unique, savings_percentage int 0..100 default 10, quiz_subjects text[] default '{}', quiz_reward_amount int 0..1000 default 5)`
 - `goals(id, household_id, child_id, title, target_amount int, cycle_amount int, cycle_period text IN ('day','week','month'), status text default 'active', created_by, created_at, updated_at)`
+- `quiz_attempts(id, household_id, child_id, subject text IN ('english','math','torah','finance'), total int, correct int, passed bool, paid bool default false, created_at)` — one row per quiz finish; `paid` is true only for the first successful attempt per subject per child per Asia/Jerusalem day. Writes happen only via `complete_quiz_and_pay`.
 
 **No `has_role()` or `get_user_household_id()` helpers exist on this DB** — RLS policies inline `SELECT household_id FROM user_roles WHERE user_id = auth.uid()` instead.
 
@@ -72,6 +73,7 @@ Required env vars (`.env` for dev, host env for prod):
 
 - `approve_task_and_pay(p_task_id uuid) RETURNS boolean` — locks the task, idempotent on "transactions exist for this task". Inserts `task_reward (+full)`, and if `household_settings.savings_percentage > 0` also inserts `wallet_debit (-save)` + `savings_credit (+save)`. Updates `child_profiles.current_balance` to reflect wallet delta only.
 - `deposit_to_goal(_goal_id uuid, _amount integer) RETURNS jsonb` — child-owner or household-parent. Validates wallet ≥ amount and `deposited + amount ≤ target`. Inserts `wallet_debit (-amt)` + `goal_credit (+amt)`, updates cached balance, flips goal to `completed` when target reached. Returns `{ success: true, deposited, target }` or `{ error: '...' }`.
+- `complete_quiz_and_pay(_subject text, _correct int, _total int) RETURNS jsonb` — called by the authenticated child after a quiz. Records the attempt; pass = ≥80%. Pays out only the first passing attempt per subject per Asia/Jerusalem day: inserts `quiz_reward (+reward)`, applies the savings split exactly like `approve_task_and_pay`, updates `child_profiles.current_balance`. Returns `{ passed, paid, wallet_delta, savings_delta, reward, attempt_id }` on payout, `{ passed: false, paid: false, reason }` on fail or already-paid, or `{ error: '...' }`.
 
 **Storage:** there is no `task-proofs` bucket in this DB. The plan envisioned proof-image uploads, but the live schema doesn't have a `proof_image_path` column on tasks and no Storage bucket has been provisioned. Task approval currently doesn't require proof.
 
@@ -80,12 +82,14 @@ Required env vars (`.env` for dev, host env for prod):
 `transactions` is the only source of truth. Both the RPCs and any read-side code should compute balances by **filtering on `type`**:
 
 ```text
-wallet_balance   = SUM(amount) WHERE child_id = X AND type IN ('task_reward','manual_adjustment','wallet_debit')
+wallet_balance   = SUM(amount) WHERE child_id = X AND type IN ('task_reward','manual_adjustment','wallet_debit','quiz_reward')
 savings_balance  = SUM(amount) WHERE child_id = X AND type = 'savings_credit'
 goal_deposited   = SUM(amount) WHERE goal_id = G AND type = 'goal_credit'
 ```
 
-`child_profiles.current_balance` is a cached mirror of `wallet_balance` updated by `approve_task_and_pay` and `deposit_to_goal`. Anything that mutates the wallet outside those RPCs (e.g. a future manual-adjustment flow) must keep the cache in sync.
+The canonical wallet-tx allowlist lives in `src/lib/transactions.ts` (`WALLET_TX_TYPES` / `isWalletTx`) — reuse it instead of hardcoding the list in each route.
+
+`child_profiles.current_balance` is a cached mirror of `wallet_balance` updated by `approve_task_and_pay`, `deposit_to_goal`, and `complete_quiz_and_pay`. Anything that mutates the wallet outside those RPCs (e.g. a future manual-adjustment flow) must keep the cache in sync.
 
 > Why both `wallet_debit (-amt)` and `goal_credit (+amt)` on a single deposit? They live in different "pots" but share one ledger table. Wallet sum excludes `goal_credit`; goal pot only counts `goal_credit`. Don't add `goal_credit` to the wallet formula or deposits will appear to net to zero.
 

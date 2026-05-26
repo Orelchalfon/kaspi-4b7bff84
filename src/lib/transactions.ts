@@ -1,6 +1,19 @@
-import { CheckCircle2, Coins, Pencil, PiggyBank, Target, type LucideIcon } from "lucide-react";
+import {
+  BookOpen,
+  CheckCircle2,
+  Coins,
+  Pencil,
+  PiggyBank,
+  Target,
+  type LucideIcon,
+} from "lucide-react";
 
-export const WALLET_TX_TYPES = ["task_reward", "manual_adjustment", "wallet_debit"] as const;
+export const WALLET_TX_TYPES = [
+  "task_reward",
+  "manual_adjustment",
+  "wallet_debit",
+  "quiz_reward",
+] as const;
 export type WalletTxType = (typeof WALLET_TX_TYPES)[number];
 
 const WALLET_TX_SET = new Set<string>(WALLET_TX_TYPES);
@@ -78,6 +91,8 @@ export function describeTx(
       return { Icon: PiggyBank, label: "העברה לחיסכון" };
     case "goal_credit":
       return { Icon: Target, label: goalTitle ? `מטרה: ${goalTitle}` : "הפקדה למטרה" };
+    case "quiz_reward":
+      return { Icon: BookOpen, label: "תגמול חידון" };
     default:
       return { Icon: Coins, label: "תנועה" };
   }

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -28,10 +29,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
+import { SUBJECTS, SUBJECT_LABELS_HE, isQuizSubject, type QuizSubject } from "@/lib/quiz-bank";
 import { isWalletTx } from "@/lib/transactions";
 import { cn } from "@/lib/utils";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Check, Inbox, PiggyBank, Plus, Receipt, UserPlus, X } from "lucide-react";
+import { BookOpen, Check, Inbox, PiggyBank, Plus, Receipt, UserPlus, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -72,6 +74,11 @@ function ParentDashboard() {
   const [savingsPct, setSavingsPct] = useState<number>(0);
   const [pctInput, setPctInput] = useState<string>("0");
   const [savingPct, setSavingPct] = useState(false);
+  const [savedSubjects, setSavedSubjects] = useState<QuizSubject[]>([]);
+  const [savedReward, setSavedReward] = useState<number>(5);
+  const [quizSubjects, setQuizSubjects] = useState<QuizSubject[]>([]);
+  const [quizRewardInput, setQuizRewardInput] = useState<string>("5");
+  const [savingQuiz, setSavingQuiz] = useState(false);
 
   async function loadAll(hhId: string) {
     const [{ data: cData }, { data: txData }, { data: tData }, { data: sData }] = await Promise.all(
@@ -94,7 +101,7 @@ function ParentDashboard() {
           .order("created_at", { ascending: false }),
         supabase
           .from("household_settings")
-          .select("savings_percentage")
+          .select("savings_percentage, quiz_subjects, quiz_reward_amount")
           .eq("household_id", hhId)
           .maybeSingle(),
       ],
@@ -109,6 +116,13 @@ function ParentDashboard() {
     const pct = sData?.savings_percentage ?? 0;
     setSavingsPct(pct);
     setPctInput(String(pct));
+    const rawSubjects = (sData?.quiz_subjects ?? []) as string[];
+    const validSubjects = rawSubjects.filter(isQuizSubject);
+    const reward = sData?.quiz_reward_amount ?? 5;
+    setSavedSubjects(validSubjects);
+    setQuizSubjects(validSubjects);
+    setSavedReward(reward);
+    setQuizRewardInput(String(reward));
 
     const txTaskIds = Array.from(
       new Set(txList.map((t) => t.reference_task_id).filter((x): x is string => !!x)),
@@ -170,7 +184,7 @@ function ParentDashboard() {
       transactions.filter(
         (t) =>
           t.child_id === selectedChildId &&
-          (t.type === "task_reward" || t.type === "manual_adjustment"),
+          (t.type === "task_reward" || t.type === "manual_adjustment" || t.type === "quiz_reward"),
       ),
     [transactions, selectedChildId],
   );
@@ -227,6 +241,43 @@ function ParentDashboard() {
     }
     toast.success("אחוז החיסכון עודכן");
     setSavingsPct(n);
+  };
+
+  const toggleSubject = (s: QuizSubject) => {
+    setQuizSubjects((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
+  };
+
+  const quizDirty = useMemo(() => {
+    if (Number(quizRewardInput) !== savedReward) return true;
+    if (quizSubjects.length !== savedSubjects.length) return true;
+    const a = [...quizSubjects].sort();
+    const b = [...savedSubjects].sort();
+    return a.some((s, i) => s !== b[i]);
+  }, [quizSubjects, savedSubjects, quizRewardInput, savedReward]);
+
+  const handleSaveQuiz = async () => {
+    if (!householdId) return;
+    const n = Number(quizRewardInput);
+    if (!Number.isFinite(n) || n < 0 || n > 1000 || !Number.isInteger(n)) {
+      toast.error("תגמול חייב להיות מספר שלם בין 0 ל-1000");
+      return;
+    }
+    setSavingQuiz(true);
+    const { error } = await supabase
+      .from("household_settings")
+      .upsert(
+        { household_id: householdId, quiz_subjects: quizSubjects, quiz_reward_amount: n },
+        { onConflict: "household_id" },
+      );
+    setSavingQuiz(false);
+    if (error) {
+      console.error("[quiz_settings]", error);
+      toast.error(import.meta.env.DEV ? `שגיאה: ${error.message}` : "שגיאה בשמירה");
+      return;
+    }
+    toast.success("הגדרות הלימוד נשמרו");
+    setSavedSubjects([...quizSubjects]);
+    setSavedReward(n);
   };
 
   if (loading) {
@@ -291,6 +342,76 @@ function ParentDashboard() {
             >
               {savingPct ? "שומר..." : "שמור"}
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="flex flex-col gap-4 py-4">
+          <div className="flex items-start gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <BookOpen className="h-5 w-5" aria-hidden />
+            </span>
+            <div className="flex-1">
+              <p className="font-semibold">לימוד וחידונים</p>
+              <p className="text-xs text-muted-foreground">
+                בחרו נושאים והגדירו תגמול לחידון שעבר בהצלחה. הילד יוכל לזכות בתגמול פעם ביום לכל
+                נושא. אחוז החיסכון של המשפחה יחול גם על תגמולי חידון.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+            <fieldset className="flex flex-col gap-2">
+              <legend className="mb-1 text-xs font-medium text-muted-foreground">
+                נושאים פעילים
+              </legend>
+              <div className="flex flex-wrap gap-x-4 gap-y-2">
+                {SUBJECTS.map((s) => {
+                  const checked = quizSubjects.includes(s);
+                  return (
+                    <label
+                      key={s}
+                      className="flex cursor-pointer items-center gap-2 text-sm select-none"
+                    >
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={() => toggleSubject(s)}
+                        aria-label={SUBJECT_LABELS_HE[s]}
+                      />
+                      <span className="text-foreground">{SUBJECT_LABELS_HE[s]}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
+            <div className="flex items-end gap-2">
+              <div className="space-y-1">
+                <Label htmlFor="quiz-reward" className="text-xs">
+                  תגמול לחידון שעבר
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="quiz-reward"
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    max={1000}
+                    value={quizRewardInput}
+                    onChange={(e) => setQuizRewardInput(e.target.value)}
+                    className="w-24 tabular-nums"
+                  />
+                  <span className="text-xs text-muted-foreground">מטבעות</span>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                className="min-h-10"
+                onClick={handleSaveQuiz}
+                disabled={savingQuiz || !quizDirty}
+              >
+                {savingQuiz ? "שומר..." : "שמור"}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

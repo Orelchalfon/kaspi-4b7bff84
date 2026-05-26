@@ -105,18 +105,24 @@ export type Database = {
           created_at: string | null;
           household_id: string;
           id: string;
+          quiz_reward_amount: number;
+          quiz_subjects: string[];
           savings_percentage: number;
         };
         Insert: {
           created_at?: string | null;
           household_id: string;
           id?: string;
+          quiz_reward_amount?: number;
+          quiz_subjects?: string[];
           savings_percentage?: number;
         };
         Update: {
           created_at?: string | null;
           household_id?: string;
           id?: string;
+          quiz_reward_amount?: number;
+          quiz_subjects?: string[];
           savings_percentage?: number;
         };
         Relationships: [
@@ -146,6 +152,57 @@ export type Database = {
           name?: string;
         };
         Relationships: [];
+      };
+      quiz_attempts: {
+        Row: {
+          child_id: string;
+          correct: number;
+          created_at: string;
+          household_id: string;
+          id: string;
+          paid: boolean;
+          passed: boolean;
+          subject: string;
+          total: number;
+        };
+        Insert: {
+          child_id: string;
+          correct: number;
+          created_at?: string;
+          household_id: string;
+          id?: string;
+          paid?: boolean;
+          passed: boolean;
+          subject: string;
+          total: number;
+        };
+        Update: {
+          child_id?: string;
+          correct?: number;
+          created_at?: string;
+          household_id?: string;
+          id?: string;
+          paid?: boolean;
+          passed?: boolean;
+          subject?: string;
+          total?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "quiz_attempts_child_id_fkey";
+            columns: ["child_id"];
+            isOneToOne: false;
+            referencedRelation: "child_profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "quiz_attempts_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       tasks: {
         Row: {
@@ -212,6 +269,7 @@ export type Database = {
           goal_id: string | null;
           household_id: string;
           id: string;
+          reference_quiz_attempt_id: string | null;
           reference_task_id: string | null;
           type: string;
         };
@@ -222,6 +280,7 @@ export type Database = {
           goal_id?: string | null;
           household_id: string;
           id?: string;
+          reference_quiz_attempt_id?: string | null;
           reference_task_id?: string | null;
           type: string;
         };
@@ -232,6 +291,7 @@ export type Database = {
           goal_id?: string | null;
           household_id?: string;
           id?: string;
+          reference_quiz_attempt_id?: string | null;
           reference_task_id?: string | null;
           type?: string;
         };
@@ -255,6 +315,13 @@ export type Database = {
             columns: ["household_id"];
             isOneToOne: false;
             referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "transactions_reference_quiz_attempt_id_fkey";
+            columns: ["reference_quiz_attempt_id"];
+            isOneToOne: false;
+            referencedRelation: "quiz_attempts";
             referencedColumns: ["id"];
           },
           {
@@ -304,6 +371,10 @@ export type Database = {
     };
     Functions: {
       approve_task_and_pay: { Args: { p_task_id: string }; Returns: boolean };
+      complete_quiz_and_pay: {
+        Args: { _correct: number; _subject: string; _total: number };
+        Returns: Json;
+      };
       deposit_savings_to_goal: {
         Args: { _amount: number; _goal_id: string };
         Returns: Json;

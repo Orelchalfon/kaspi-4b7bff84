@@ -9,6 +9,10 @@ import { CoinAmount } from "@/components/coin-amount";
 import { ListSkeleton } from "@/components/loading-skeletons";
 import { ChildAvatar } from "@/components/child-avatar";
 import { TransactionRow } from "@/components/transaction-row";
+import { isWalletTx } from "@/lib/transactions";
+import type { Tables } from "@/integrations/supabase/types";
+
+type TxRow = Tables<"transactions">;
 
 export const Route = createFileRoute("/parent/transactions")({
   component: ParentTransactions,
@@ -16,7 +20,7 @@ export const Route = createFileRoute("/parent/transactions")({
 
 function ParentTransactions() {
   const { householdId } = useAuth();
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<TxRow[]>([]);
   const [children, setChildren] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
@@ -41,7 +45,7 @@ function ParentTransactions() {
         .eq("household_id", householdId!)
         .order("created_at", { ascending: false });
 
-      setTransactions(txData || []);
+      setTransactions((txData ?? []) as TxRow[]);
       setLoading(false);
     }
 
@@ -87,12 +91,13 @@ function ParentTransactions() {
             })}
           </div>
 
-          {/* Per-child totals + grand total */}
+          {/* Per-child totals + grand total — limited to wallet-tx types so the sum reflects actual wallet balance. */}
           <Card className="bg-muted/40">
             <CardContent className="space-y-2 py-4">
-              <p className="text-sm font-semibold text-muted-foreground">סיכום לפי ילד</p>
+              <p className="text-sm font-semibold text-muted-foreground">יתרת ארנק לפי ילד</p>
               {Object.entries(
                 transactions.reduce<Record<string, number>>((acc, tx) => {
+                  if (!isWalletTx(tx.type)) return acc;
                   acc[tx.child_id] = (acc[tx.child_id] || 0) + tx.amount;
                   return acc;
                 }, {}),
@@ -109,9 +114,12 @@ function ParentTransactions() {
                 );
               })}
               <div className="mt-2 flex items-center justify-between border-t pt-2">
-                <span className="font-bold">סה״כ</span>
+                <span className="font-bold">סה״כ ארנקים</span>
                 <CoinAmount
-                  value={transactions.reduce((sum, t) => sum + t.amount, 0)}
+                  value={transactions.reduce(
+                    (sum, t) => (isWalletTx(t.type) ? sum + t.amount : sum),
+                    0,
+                  )}
                   size="lg"
                   tone="success"
                   animate

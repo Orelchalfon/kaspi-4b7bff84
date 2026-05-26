@@ -20,6 +20,7 @@ import { Route as ParentDashboardRouteImport } from './routes/parent/dashboard'
 import { Route as ParentChildrenRouteImport } from './routes/parent/children'
 import { Route as ChildWalletRouteImport } from './routes/child/wallet'
 import { Route as ChildSavingsRouteImport } from './routes/child/savings'
+import { Route as ChildEducateRouteImport } from './routes/child/educate'
 import { Route as ChildDashboardRouteImport } from './routes/child/dashboard'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ParentChildrenIndexRouteImport } from './routes/parent/children.index'
@@ -27,6 +28,7 @@ import { Route as ParentTasksNewRouteImport } from './routes/parent/tasks.new'
 import { Route as ParentTasksTaskIdRouteImport } from './routes/parent/tasks.$taskId'
 import { Route as ParentChildrenNewRouteImport } from './routes/parent/children.new'
 import { Route as ChildTasksTaskIdRouteImport } from './routes/child/tasks.$taskId'
+import { Route as ChildEducateSubjectRouteImport } from './routes/child/educate.$subject'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -83,6 +85,11 @@ const ChildSavingsRoute = ChildSavingsRouteImport.update({
   path: '/savings',
   getParentRoute: () => ChildRoute,
 } as any)
+const ChildEducateRoute = ChildEducateRouteImport.update({
+  id: '/educate',
+  path: '/educate',
+  getParentRoute: () => ChildRoute,
+} as any)
 const ChildDashboardRoute = ChildDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -118,6 +125,11 @@ const ChildTasksTaskIdRoute = ChildTasksTaskIdRouteImport.update({
   path: '/tasks/$taskId',
   getParentRoute: () => ChildRoute,
 } as any)
+const ChildEducateSubjectRoute = ChildEducateSubjectRouteImport.update({
+  id: '/$subject',
+  path: '/$subject',
+  getParentRoute: () => ChildEducateRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -128,11 +140,13 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/child/dashboard': typeof ChildDashboardRoute
+  '/child/educate': typeof ChildEducateRouteWithChildren
   '/child/savings': typeof ChildSavingsRoute
   '/child/wallet': typeof ChildWalletRoute
   '/parent/children': typeof ParentChildrenRouteWithChildren
   '/parent/dashboard': typeof ParentDashboardRoute
   '/parent/transactions': typeof ParentTransactionsRoute
+  '/child/educate/$subject': typeof ChildEducateSubjectRoute
   '/child/tasks/$taskId': typeof ChildTasksTaskIdRoute
   '/parent/children/new': typeof ParentChildrenNewRoute
   '/parent/tasks/$taskId': typeof ParentTasksTaskIdRoute
@@ -148,10 +162,12 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/child/dashboard': typeof ChildDashboardRoute
+  '/child/educate': typeof ChildEducateRouteWithChildren
   '/child/savings': typeof ChildSavingsRoute
   '/child/wallet': typeof ChildWalletRoute
   '/parent/dashboard': typeof ParentDashboardRoute
   '/parent/transactions': typeof ParentTransactionsRoute
+  '/child/educate/$subject': typeof ChildEducateSubjectRoute
   '/child/tasks/$taskId': typeof ChildTasksTaskIdRoute
   '/parent/children/new': typeof ParentChildrenNewRoute
   '/parent/tasks/$taskId': typeof ParentTasksTaskIdRoute
@@ -168,11 +184,13 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/child/dashboard': typeof ChildDashboardRoute
+  '/child/educate': typeof ChildEducateRouteWithChildren
   '/child/savings': typeof ChildSavingsRoute
   '/child/wallet': typeof ChildWalletRoute
   '/parent/children': typeof ParentChildrenRouteWithChildren
   '/parent/dashboard': typeof ParentDashboardRoute
   '/parent/transactions': typeof ParentTransactionsRoute
+  '/child/educate/$subject': typeof ChildEducateSubjectRoute
   '/child/tasks/$taskId': typeof ChildTasksTaskIdRoute
   '/parent/children/new': typeof ParentChildrenNewRoute
   '/parent/tasks/$taskId': typeof ParentTasksTaskIdRoute
@@ -190,11 +208,13 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/auth/callback'
     | '/child/dashboard'
+    | '/child/educate'
     | '/child/savings'
     | '/child/wallet'
     | '/parent/children'
     | '/parent/dashboard'
     | '/parent/transactions'
+    | '/child/educate/$subject'
     | '/child/tasks/$taskId'
     | '/parent/children/new'
     | '/parent/tasks/$taskId'
@@ -210,10 +230,12 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/auth/callback'
     | '/child/dashboard'
+    | '/child/educate'
     | '/child/savings'
     | '/child/wallet'
     | '/parent/dashboard'
     | '/parent/transactions'
+    | '/child/educate/$subject'
     | '/child/tasks/$taskId'
     | '/parent/children/new'
     | '/parent/tasks/$taskId'
@@ -229,11 +251,13 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/auth/callback'
     | '/child/dashboard'
+    | '/child/educate'
     | '/child/savings'
     | '/child/wallet'
     | '/parent/children'
     | '/parent/dashboard'
     | '/parent/transactions'
+    | '/child/educate/$subject'
     | '/child/tasks/$taskId'
     | '/parent/children/new'
     | '/parent/tasks/$taskId'
@@ -330,6 +354,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChildSavingsRouteImport
       parentRoute: typeof ChildRoute
     }
+    '/child/educate': {
+      id: '/child/educate'
+      path: '/educate'
+      fullPath: '/child/educate'
+      preLoaderRoute: typeof ChildEducateRouteImport
+      parentRoute: typeof ChildRoute
+    }
     '/child/dashboard': {
       id: '/child/dashboard'
       path: '/dashboard'
@@ -379,11 +410,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChildTasksTaskIdRouteImport
       parentRoute: typeof ChildRoute
     }
+    '/child/educate/$subject': {
+      id: '/child/educate/$subject'
+      path: '/$subject'
+      fullPath: '/child/educate/$subject'
+      preLoaderRoute: typeof ChildEducateSubjectRouteImport
+      parentRoute: typeof ChildEducateRoute
+    }
   }
 }
 
+interface ChildEducateRouteChildren {
+  ChildEducateSubjectRoute: typeof ChildEducateSubjectRoute
+}
+
+const ChildEducateRouteChildren: ChildEducateRouteChildren = {
+  ChildEducateSubjectRoute: ChildEducateSubjectRoute,
+}
+
+const ChildEducateRouteWithChildren = ChildEducateRoute._addFileChildren(
+  ChildEducateRouteChildren,
+)
+
 interface ChildRouteChildren {
   ChildDashboardRoute: typeof ChildDashboardRoute
+  ChildEducateRoute: typeof ChildEducateRouteWithChildren
   ChildSavingsRoute: typeof ChildSavingsRoute
   ChildWalletRoute: typeof ChildWalletRoute
   ChildTasksTaskIdRoute: typeof ChildTasksTaskIdRoute
@@ -391,6 +442,7 @@ interface ChildRouteChildren {
 
 const ChildRouteChildren: ChildRouteChildren = {
   ChildDashboardRoute: ChildDashboardRoute,
+  ChildEducateRoute: ChildEducateRouteWithChildren,
   ChildSavingsRoute: ChildSavingsRoute,
   ChildWalletRoute: ChildWalletRoute,
   ChildTasksTaskIdRoute: ChildTasksTaskIdRoute,
