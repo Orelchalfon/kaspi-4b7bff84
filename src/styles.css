@@ -51,6 +51,8 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-coin: var(--coin);
   --color-coin-foreground: var(--coin-foreground);
+  --color-ks-navy-deep: var(--ks-navy-deep);
+  --color-ks-cyan-soft: var(--ks-cyan-soft);
 }
 
 /* KidCoin — warm playful palette with gold coin accent */
@@ -81,6 +83,8 @@
   --ring: oklch(0.55 0.18 260);
   --coin: oklch(0.78 0.15 80);
   --coin-foreground: oklch(0.25 0.08 80);
+  --ks-navy-deep: oklch(0.22 0.05 255);
+  --ks-cyan-soft: oklch(0.92 0.04 220);
   --chart-1: oklch(0.55 0.18 260);
   --chart-2: oklch(0.6 0.12 185);
   --chart-3: oklch(0.78 0.15 80);
@@ -122,6 +126,8 @@
   --ring: oklch(0.7 0.15 260);
   --coin: oklch(0.78 0.15 80);
   --coin-foreground: oklch(0.15 0.08 80);
+  --ks-navy-deep: oklch(0.22 0.05 255);
+  --ks-cyan-soft: oklch(0.3 0.05 220);
   --chart-1: oklch(0.7 0.15 260);
   --chart-2: oklch(0.65 0.14 162);
   --chart-3: oklch(0.78 0.15 80);

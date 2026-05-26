@@ -1,27 +1,28 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect } from "react";
-import { Coins } from "lucide-react";
+
+import { LandingPage } from "@/components/landing/LandingPage";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "KidCoin — מערכת תגמולים למשפחות" },
+      { title: "Kaspii — המשפחה לומדת לחסוך, יחד" },
       {
         name: "description",
         content:
-          "KidCoin עוזרת למשפחות להפוך מטלות בית לתגמולים: הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך.",
+          "Kaspii היא סביבת תרגול משפחתית: הורים מגדירים משימות, ילדים צוברים מטבעות, ואחוז מכל תגמול הולך אוטומטית לחיסכון.",
       },
-      { property: "og:title", content: "KidCoin — מערכת תגמולים למשפחות" },
+      { property: "og:title", content: "Kaspii — המשפחה לומדת לחסוך, יחד" },
       {
         property: "og:description",
-        content: "הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך כסף.",
+        content: "הורים מגדירים משימות. ילדים צוברים מטבעות. אחוז מכל תגמול הולך אוטומטית לחיסכון.",
       },
       { property: "og:url", content: "https://kidcoin.app/" },
-      { name: "twitter:title", content: "KidCoin — מערכת תגמולים למשפחות" },
+      { name: "twitter:title", content: "Kaspii — המשפחה לומדת לחסוך, יחד" },
       {
         name: "twitter:description",
-        content: "הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך כסף.",
+        content: "הורים מגדירים משימות. ילדים צוברים מטבעות. אחוז מכל תגמול הולך אוטומטית לחיסכון.",
       },
     ],
     links: [{ rel: "canonical", href: "https://kidcoin.app/" }],
@@ -58,33 +59,5 @@ function Index() {
     );
   }
 
-  return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-4">
-      <div className="mx-auto max-w-lg text-center">
-        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-sm">
-          <Coins className="h-10 w-10" aria-hidden />
-        </div>
-        <h1 className="text-4xl font-bold tracking-tight text-foreground">
-          KidCoin — מערכת תגמולים למשפחות
-        </h1>
-        <p className="mt-3 text-lg text-muted-foreground">
-          מערכת תגמולים למשפחות — הורים מגדירים משימות, ילדים צוברים מטבעות
-        </p>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <Link
-            to="/signup"
-            className="inline-flex min-h-12 items-center justify-center rounded-lg bg-primary px-6 py-3 text-base font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-          >
-            הרשמה
-          </Link>
-          <Link
-            to="/login"
-            className="inline-flex min-h-12 items-center justify-center rounded-lg border border-input bg-background px-6 py-3 text-base font-medium text-foreground shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-          >
-            התחברות
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
+  return <LandingPage />;
 }

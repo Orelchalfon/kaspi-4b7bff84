@@ -29,13 +29,13 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "KidCoin — מערכת תגמולים למשפחות" },
+      { title: "Kaspii — המשפחה לומדת לחסוך, יחד" },
       {
         name: "description",
         content:
-          "KidCoin היא מערכת תגמולים למשפחות: הורים מגדירים משימות, ילדים צוברים מטבעות ולומדים לחסוך בעזרת מטלות הבית.",
+          "Kaspii היא סביבת תרגול משפחתית: הורים מגדירים משימות, ילדים צוברים מטבעות ואחוז מכל תגמול הולך אוטומטית לחיסכון.",
       },
-      { property: "og:site_name", content: "KidCoin" },
+      { property: "og:site_name", content: "Kaspii" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -54,7 +54,7 @@ export const Route = createRootRoute({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebSite",
-          name: "KidCoin",
+          name: "Kaspii",
           url: "https://kidcoin.app",
           inLanguage: "he",
         }),
@@ -64,7 +64,7 @@ export const Route = createRootRoute({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Organization",
-          name: "KidCoin",
+          name: "Kaspii",
           url: "https://kidcoin.app",
         }),
       },
