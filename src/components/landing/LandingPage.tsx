@@ -1,13 +1,20 @@
 import { LazyMotion, domAnimation } from "framer-motion";
+import { lazy, Suspense } from "react";
 
-import { ClosingCta, Footer } from "./ClosingCta";
-import { Faq } from "./Faq";
-import { FeatureRows } from "./FeatureRows";
 import { Hero } from "./Hero";
-import { HowItWorks } from "./HowItWorks";
 import { LandingNav } from "./LandingNav";
-import { RoleSplit } from "./RoleSplit";
-import { TrustStrip } from "./TrustStrip";
+
+const HowItWorks = lazy(() =>
+  import("./HowItWorks").then((m) => ({ default: m.HowItWorks })),
+);
+const FeatureRows = lazy(() =>
+  import("./FeatureRows").then((m) => ({ default: m.FeatureRows })),
+);
+const RoleSplit = lazy(() => import("./RoleSplit").then((m) => ({ default: m.RoleSplit })));
+const TrustStrip = lazy(() => import("./TrustStrip").then((m) => ({ default: m.TrustStrip })));
+const Faq = lazy(() => import("./Faq").then((m) => ({ default: m.Faq })));
+const ClosingCta = lazy(() => import("./ClosingCta").then((m) => ({ default: m.ClosingCta })));
+const Footer = lazy(() => import("./ClosingCta").then((m) => ({ default: m.Footer })));
 
 export function LandingPage() {
   return (
@@ -20,13 +27,15 @@ export function LandingPage() {
       </a>
       <LandingNav />
       <Hero />
-      <HowItWorks />
-      <FeatureRows />
-      <RoleSplit />
-      <TrustStrip />
-      <Faq />
-      <ClosingCta />
-      <Footer />
+      <Suspense fallback={null}>
+        <HowItWorks />
+        <FeatureRows />
+        <RoleSplit />
+        <TrustStrip />
+        <Faq />
+        <ClosingCta />
+        <Footer />
+      </Suspense>
     </LazyMotion>
   );
 }

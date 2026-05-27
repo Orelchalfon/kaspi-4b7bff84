@@ -212,8 +212,10 @@ function ChildQuizPage() {
 
       <div className="h-1.5 overflow-hidden rounded-full bg-foreground/[0.06]">
         <div
-          className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
-          style={{ width: `${((currentIdx + (hasPicked ? 1 : 0)) / questions.length) * 100}%` }}
+          className="h-full w-full origin-right rounded-full bg-primary transition-transform duration-300 ease-out"
+          style={{
+            transform: `scaleX(${(currentIdx + (hasPicked ? 1 : 0)) / questions.length})`,
+          }}
           aria-hidden
         />
       </div>

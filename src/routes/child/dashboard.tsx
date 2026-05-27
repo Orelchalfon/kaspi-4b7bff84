@@ -32,19 +32,16 @@ function ChildDashboard() {
     if (!childProfileId) return;
 
     async function load() {
-      const { data: txData } = await supabase
-        .from("transactions")
-        .select("amount, type")
-        .eq("child_id", childProfileId!);
+      const [{ data: txData }, { data: taskData }] = await Promise.all([
+        supabase.from("transactions").select("amount, type").eq("child_id", childProfileId!),
+        supabase
+          .from("tasks")
+          .select("id, title, reward_amount, status, created_at")
+          .eq("child_id", childProfileId!)
+          .order("created_at", { ascending: false }),
+      ]);
       setBalance(computeWalletBalance(txData || []));
-
-      const { data: taskData } = await supabase
-        .from("tasks")
-        .select("id, title, reward_amount, status, created_at")
-        .eq("child_id", childProfileId!)
-        .order("created_at", { ascending: false });
       setTasks((taskData || []) as TaskRow[]);
-
       setLoading(false);
     }
 
@@ -57,10 +54,7 @@ function ChildDashboard() {
 
   return (
     <div className="space-y-6">
-      <Card
-        className="bg-primary text-primary-foreground"
-        aria-label={`היתרה שלי: ${balance} מטבעות`}
-      >
+      <Card className="bg-primary text-primary-foreground">
         <CardContent className="py-6 text-center">
           <p className="text-sm opacity-80">היתרה שלי</p>
           <p className="mt-1 flex items-center justify-center gap-2 text-4xl font-bold tabular-nums">

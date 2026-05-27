@@ -40,9 +40,17 @@ export const Route = createRootRoute({
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
+      { rel: "icon", href: "/kaspii_logo.png", type: "image/png" },
+      { rel: "apple-touch-icon", href: "/kaspii_logo.png" },
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "preconnect",
+        href: "https://flxhxmrtdqegfsupvvus.supabase.co",
+        crossOrigin: "anonymous",
+      },
+      { rel: "dns-prefetch", href: "https://flxhxmrtdqegfsupvvus.supabase.co" },
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap",

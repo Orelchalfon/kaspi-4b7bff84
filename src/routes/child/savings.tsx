@@ -549,8 +549,8 @@ function GoalCard({
           aria-label={`${pct}% הושלמו`}
         >
           <div
-            className="h-full bg-primary transition-[width] duration-500 ease-out"
-            style={{ width: `${pct}%` }}
+            className="h-full w-full origin-right bg-primary transition-transform duration-500 ease-out"
+            style={{ transform: `scaleX(${pct / 100})` }}
           />
         </div>
 

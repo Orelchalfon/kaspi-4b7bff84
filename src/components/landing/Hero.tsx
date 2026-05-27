@@ -3,13 +3,7 @@ import { m } from "framer-motion";
 import { ArrowDown, Check, Coins, PiggyBank, Sparkles } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import {
-  ctaInteractions,
-  deviceFrameReveal,
-  fadeUpSmall,
-  floatingToastReveal,
-  heroStagger,
-} from "./motion/variants";
+import { ctaInteractions, deviceFrameReveal, floatingToastReveal } from "./motion/variants";
 
 export function Hero() {
   return (
@@ -21,31 +15,27 @@ export function Hero() {
       <CyanWash />
 
       <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 px-5 md:grid-cols-[1.05fr_1fr] md:gap-16 md:px-8">
-        <m.div variants={heroStagger} initial="hidden" animate="visible" className="text-start">
-          <m.div variants={fadeUpSmall}>
+        <div className="text-start">
+          <div>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
               <Sparkles className="h-3.5 w-3.5" aria-hidden />
               מערכת תגמולים למשפחות
             </span>
-          </m.div>
+          </div>
 
-          <m.h1
+          <h1
             id="hero-headline"
-            variants={fadeUpSmall}
             className="mt-5 text-[2.5rem] leading-[1.05] font-bold tracking-tight text-foreground md:text-6xl"
           >
             המשפחה לומדת לחסוך — <span className="text-primary">יחד.</span>
-          </m.h1>
+          </h1>
 
-          <m.p
-            variants={fadeUpSmall}
-            className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg"
-          >
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
             הורים מגדירים משימות. ילדים צוברים מטבעות. אחוז מכל תגמול הולך אוטומטית לחיסכון — בלי
             לזכור, בלי להתווכח.
-          </m.p>
+          </p>
 
-          <m.div variants={fadeUpSmall} className="mt-8 flex flex-wrap items-center gap-3">
+          <div className="mt-8 flex flex-wrap items-center gap-3">
             <m.div {...ctaInteractions}>
               <Link
                 to="/signup"
@@ -61,12 +51,12 @@ export function Hero() {
               איך זה עובד
               <ArrowDown className="h-4 w-4" aria-hidden />
             </a>
-          </m.div>
+          </div>
 
-          <m.p variants={fadeUpSmall} className="mt-6 max-w-md text-sm text-muted-foreground/80">
+          <p className="mt-6 max-w-md text-sm text-muted-foreground/80">
             <bdi>Kaspii</bdi> היא סביבת תרגול משפחתית — המטבעות וירטואליים, ההרגל אמיתי.
-          </m.p>
-        </m.div>
+          </p>
+        </div>
 
         <m.div
           variants={deviceFrameReveal}
