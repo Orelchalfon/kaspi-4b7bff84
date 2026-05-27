@@ -24,6 +24,7 @@ import { Route as ChildEducateRouteImport } from './routes/child/educate'
 import { Route as ChildDashboardRouteImport } from './routes/child/dashboard'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ParentChildrenIndexRouteImport } from './routes/parent/children.index'
+import { Route as ChildEducateIndexRouteImport } from './routes/child/educate.index'
 import { Route as ParentTasksNewRouteImport } from './routes/parent/tasks.new'
 import { Route as ParentTasksTaskIdRouteImport } from './routes/parent/tasks.$taskId'
 import { Route as ParentChildrenNewRouteImport } from './routes/parent/children.new'
@@ -105,6 +106,11 @@ const ParentChildrenIndexRoute = ParentChildrenIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ParentChildrenRoute,
 } as any)
+const ChildEducateIndexRoute = ChildEducateIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ChildEducateRoute,
+} as any)
 const ParentTasksNewRoute = ParentTasksNewRouteImport.update({
   id: '/tasks/new',
   path: '/tasks/new',
@@ -151,6 +157,7 @@ export interface FileRoutesByFullPath {
   '/parent/children/new': typeof ParentChildrenNewRoute
   '/parent/tasks/$taskId': typeof ParentTasksTaskIdRoute
   '/parent/tasks/new': typeof ParentTasksNewRoute
+  '/child/educate/': typeof ChildEducateIndexRoute
   '/parent/children/': typeof ParentChildrenIndexRoute
 }
 export interface FileRoutesByTo {
@@ -162,7 +169,6 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/child/dashboard': typeof ChildDashboardRoute
-  '/child/educate': typeof ChildEducateRouteWithChildren
   '/child/savings': typeof ChildSavingsRoute
   '/child/wallet': typeof ChildWalletRoute
   '/parent/dashboard': typeof ParentDashboardRoute
@@ -172,6 +178,7 @@ export interface FileRoutesByTo {
   '/parent/children/new': typeof ParentChildrenNewRoute
   '/parent/tasks/$taskId': typeof ParentTasksTaskIdRoute
   '/parent/tasks/new': typeof ParentTasksNewRoute
+  '/child/educate': typeof ChildEducateIndexRoute
   '/parent/children': typeof ParentChildrenIndexRoute
 }
 export interface FileRoutesById {
@@ -195,6 +202,7 @@ export interface FileRoutesById {
   '/parent/children/new': typeof ParentChildrenNewRoute
   '/parent/tasks/$taskId': typeof ParentTasksTaskIdRoute
   '/parent/tasks/new': typeof ParentTasksNewRoute
+  '/child/educate/': typeof ChildEducateIndexRoute
   '/parent/children/': typeof ParentChildrenIndexRoute
 }
 export interface FileRouteTypes {
@@ -219,6 +227,7 @@ export interface FileRouteTypes {
     | '/parent/children/new'
     | '/parent/tasks/$taskId'
     | '/parent/tasks/new'
+    | '/child/educate/'
     | '/parent/children/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -230,7 +239,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/auth/callback'
     | '/child/dashboard'
-    | '/child/educate'
     | '/child/savings'
     | '/child/wallet'
     | '/parent/dashboard'
@@ -240,6 +248,7 @@ export interface FileRouteTypes {
     | '/parent/children/new'
     | '/parent/tasks/$taskId'
     | '/parent/tasks/new'
+    | '/child/educate'
     | '/parent/children'
   id:
     | '__root__'
@@ -262,6 +271,7 @@ export interface FileRouteTypes {
     | '/parent/children/new'
     | '/parent/tasks/$taskId'
     | '/parent/tasks/new'
+    | '/child/educate/'
     | '/parent/children/'
   fileRoutesById: FileRoutesById
 }
@@ -382,6 +392,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ParentChildrenIndexRouteImport
       parentRoute: typeof ParentChildrenRoute
     }
+    '/child/educate/': {
+      id: '/child/educate/'
+      path: '/'
+      fullPath: '/child/educate/'
+      preLoaderRoute: typeof ChildEducateIndexRouteImport
+      parentRoute: typeof ChildEducateRoute
+    }
     '/parent/tasks/new': {
       id: '/parent/tasks/new'
       path: '/tasks/new'
@@ -422,10 +439,12 @@ declare module '@tanstack/react-router' {
 
 interface ChildEducateRouteChildren {
   ChildEducateSubjectRoute: typeof ChildEducateSubjectRoute
+  ChildEducateIndexRoute: typeof ChildEducateIndexRoute
 }
 
 const ChildEducateRouteChildren: ChildEducateRouteChildren = {
   ChildEducateSubjectRoute: ChildEducateSubjectRoute,
+  ChildEducateIndexRoute: ChildEducateIndexRoute,
 }
 
 const ChildEducateRouteWithChildren = ChildEducateRoute._addFileChildren(

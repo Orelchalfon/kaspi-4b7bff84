@@ -689,7 +689,6 @@ function ChildrenStack({
                   type="button"
                   onClick={() => handleAvatarClick(child, isActive)}
                   aria-pressed={isActive}
-                  aria-haspopup={isActive ? "true" : undefined}
                   aria-expanded={isActive ? isExpanded : undefined}
                   aria-label={`בחר את ${child.display_name}`}
                   className={cn(
