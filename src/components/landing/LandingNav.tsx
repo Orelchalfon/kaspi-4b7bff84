@@ -9,6 +9,7 @@ const navLinks = [
   { label: "איך זה עובד", href: "#how-it-works" },
   { label: "חיסכון", href: "#savings" },
   { label: "מטרות", href: "#goals" },
+  { label: "לימוד", href: "#educate" },
 ];
 
 export function LandingNav() {

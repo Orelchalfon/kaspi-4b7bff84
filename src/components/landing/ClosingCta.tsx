@@ -4,8 +4,6 @@ import { Coins } from "lucide-react";
 
 import { ctaInteractions, fadeUp, viewportOnce } from "./motion/variants";
 
-const githubUrl = "https://github.com/Orelchalfon/kaspi-4b7bff84";
-
 export function ClosingCta() {
   return (
     <section
@@ -46,7 +44,7 @@ export function Footer() {
           <span className="text-sm font-semibold text-foreground">
             <bdi>Kaspii</bdi>
           </span>
-          <span className="text-xs text-muted-foreground">© {new Date().getFullYear()}</span>
+          <span className="text-xs text-muted-foreground">© OCD&#123;ev&#125; 2026</span>
         </div>
 
         <nav aria-label="קישורי תחתית">
@@ -59,16 +57,6 @@ export function Footer() {
             </li>
             <li>
               <span className="cursor-default opacity-60">יצירת קשר</span>
-            </li>
-            <li>
-              <a
-                href={githubUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:outline-none"
-              >
-                קוד ב-GitHub
-              </a>
             </li>
           </ul>
         </nav>

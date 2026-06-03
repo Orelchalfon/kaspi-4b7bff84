@@ -1,5 +1,5 @@
 import { m } from "framer-motion";
-import { ArrowDownRight, Bike, Coins, PiggyBank } from "lucide-react";
+import { ArrowDownRight, Bike, BookOpen, Check, Coins, PiggyBank } from "lucide-react";
 
 import { cardHoverLift, fadeUp, viewportOnce } from "./motion/variants";
 
@@ -22,6 +22,14 @@ export function FeatureRows() {
           body="יוצרים מטרה (אופניים? משחק?), בוחרים סכום מחזורי — יום, שבוע או חודש — והילד מפקיד מהארנק או מהחיסכון בקצב שלו. ההרגל נבנה דרך החזרה הקטנה."
           illustration={<GoalsIllustration />}
           reversed={true}
+        />
+        <FeatureRow
+          id="educate"
+          eyebrow="לימוד"
+          headline="תגמול גם על לימוד, לא רק על מטלות."
+          body="ההורה בוחר נושאים — אנגלית, חשבון, תורה, כספים — והילד עונה על חידון של 5 שאלות. עברת? המטבעות עוברים אוטומטית לארנק, עם אותו פיצול חיסכון. נושא אחד, פעם ביום."
+          illustration={<EducateIllustration />}
+          reversed={false}
         />
       </div>
     </section>
@@ -201,6 +209,68 @@ function GoalCard({
           </span>
         )}
       </div>
+    </div>
+  );
+}
+
+function EducateIllustration() {
+  return (
+    <div className="relative">
+      <div className="relative isolate rounded-3xl border border-foreground/5 bg-card p-5 shadow-[0_1px_2px_rgba(20,30,60,0.04),0_18px_40px_-24px_rgba(20,30,60,0.15)]">
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <BookOpen className="h-5 w-5" aria-hidden />
+          </span>
+          <div className="leading-tight">
+            <p className="text-sm font-semibold text-foreground">חידון בחשבון</p>
+            <p className="text-[11px] text-muted-foreground">שאלה 3 מתוך 5</p>
+          </div>
+        </div>
+
+        <p className="mt-5 text-base leading-snug font-semibold text-foreground">כמה זה ‎5 + 7?</p>
+
+        <div className="mt-3 grid grid-cols-1 gap-2">
+          <QuizChoice label="11" />
+          <QuizChoice label="12" selected />
+          <QuizChoice label="13" />
+          <QuizChoice label="14" />
+        </div>
+
+        <div className="mt-4 flex items-center justify-between rounded-xl border border-foreground/5 bg-background/60 px-3 py-2">
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Check className="h-3.5 w-3.5 text-success" aria-hidden />
+            עברת — נצבר אוטומטית
+          </span>
+          <span
+            className="text-sm font-semibold text-primary"
+            style={{ fontFeatureSettings: '"tnum"' }}
+          >
+            +5
+          </span>
+        </div>
+      </div>
+
+      <Callout className="-top-3 end-4">
+        <span className="text-base font-bold" style={{ fontFeatureSettings: '"tnum"' }}>
+          +5
+        </span>
+        <span className="text-[10px] font-medium opacity-80">לכל נושא ביום</span>
+      </Callout>
+    </div>
+  );
+}
+
+function QuizChoice({ label, selected = false }: { label: string; selected?: boolean }) {
+  return (
+    <div
+      className={
+        selected
+          ? "rounded-lg border border-primary bg-primary/10 px-3 py-2 text-xs font-semibold text-primary"
+          : "rounded-lg border border-border bg-background/60 px-3 py-2 text-xs text-foreground"
+      }
+      style={{ fontFeatureSettings: '"tnum"' }}
+    >
+      {label}
     </div>
   );
 }
