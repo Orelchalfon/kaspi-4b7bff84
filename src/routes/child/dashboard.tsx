@@ -1,14 +1,14 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { AnimatedNumber } from "@/components/animated-number";
+import { CoinAmount } from "@/components/coin-amount";
+import { DashboardSkeleton } from "@/components/loading-skeletons";
+import { StatusBadge } from "@/components/status-badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Coins, Sparkles } from "lucide-react";
-import { CoinAmount } from "@/components/coin-amount";
-import { AnimatedNumber } from "@/components/animated-number";
 import { computeWalletBalance } from "@/lib/transactions";
-import { StatusBadge } from "@/components/status-badge";
-import { DashboardSkeleton } from "@/components/loading-skeletons";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Coins, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/child/dashboard")({
   component: ChildDashboard,
@@ -64,7 +64,7 @@ function ChildDashboard() {
         </CardContent>
       </Card>
 
-      <section>
+      <section className="space-y-4">
         <h2 className="mb-3 text-lg font-semibold">המשימות שלי</h2>
         {tasks.length === 0 ? (
           <Card>
@@ -74,7 +74,7 @@ function ChildDashboard() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-2">
+          <div className="flex flex-col gap-4">
             {tasks.map((task) => (
               <Link key={task.id} to="/child/tasks/$taskId" params={{ taskId: task.id }}>
                 <Card className="cursor-pointer transition-colors hover:bg-accent/50">
