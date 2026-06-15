@@ -7,12 +7,19 @@ const InputSchema = z.object({
   email: z.string().email().max(255),
   password: z.string().min(6).max(128),
   displayName: z.string().min(1).max(100),
+  birthdate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .refine((s) => {
+      const d = new Date(`${s}T00:00:00Z`);
+      return !Number.isNaN(d.getTime()) && d.getTime() <= Date.now() && s >= "2000-01-01";
+    }, "תאריך לידה לא תקין"),
 });
 
 /**
  * Creates a child auth account. The DB trigger `on_auth_user_created`
- * runs `handle_new_user`, which reads `role`, `household_id`, and
- * `full_name` from user_metadata and creates `user_roles` + `child_profiles`
+ * runs `handle_new_user`, which reads `role`, `household_id`, `full_name`,
+ * and `birthdate` from user_metadata and creates `user_roles` + `child_profiles`
  * atomically. If the trigger fails, the auth.users insert is rolled back.
  */
 export const createChild = createServerFn({ method: "POST" })
@@ -42,6 +49,7 @@ export const createChild = createServerFn({ method: "POST" })
         role: "child",
         household_id: householdId,
         full_name: data.displayName,
+        birthdate: data.birthdate,
       },
     });
 

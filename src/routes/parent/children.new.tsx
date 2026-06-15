@@ -17,6 +17,7 @@ function NewChild() {
   const navigate = useNavigate();
   const { session } = useAuth();
   const [displayName, setDisplayName] = useState("");
+  const [birthdate, setBirthdate] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -33,7 +34,7 @@ function NewChild() {
         throw new Error("לא מחובר");
       }
       await createChild({
-        data: { email, password, displayName },
+        data: { email, password, displayName, birthdate },
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       toast.success(`הילד ${displayName} נוסף בהצלחה`);
@@ -71,6 +72,20 @@ function NewChild() {
                 required
                 autoComplete="off"
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="birthdate">תאריך לידה</Label>
+              <Input
+                id="birthdate"
+                type="date"
+                value={birthdate}
+                onChange={(e) => setBirthdate(e.target.value)}
+                required
+                min="2000-01-01"
+                max={new Date().toISOString().slice(0, 10)}
+                dir="ltr"
+              />
+              <p className="text-xs text-muted-foreground">לפי הגיל נתאים את רמת החידונים</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">אימייל לילד</Label>

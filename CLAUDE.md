@@ -48,7 +48,7 @@ Required env vars (`.env` for dev, host env for prod):
 - `src/integrations/supabase/client.ts` — anon client used in the browser. Wrapped in a `Proxy` so `createClient` is called lazily (avoids errors during SSR if env vars aren't materialized yet).
 - `src/integrations/supabase/client.server.ts` — **service-role** client; only import from `*.server.ts` files (TanStack Start's `importProtection` in `vite.config.ts` blocks client-side imports).
 - `src/integrations/supabase/auth-middleware.ts` — `requireSupabaseAuth` middleware for `createServerFn`: validates the `Authorization: Bearer` header via `supabase.auth.getClaims`, then injects a RLS-respecting `supabase` client + `userId` into the handler context.
-- `src/server/create-child.ts` — the one server function: creates a child auth user via admin SDK (`supabaseAdmin.auth.admin.createUser`). A DB trigger `on_auth_user_created → handle_new_user` reads `role`, `household_id`, `full_name` from `user_metadata` and atomically creates `user_roles` + `child_profiles`. **Never** try to insert rows for the child from the client.
+- `src/server/create-child.ts` — the one server function: creates a child auth user via admin SDK (`supabaseAdmin.auth.admin.createUser`). A DB trigger `on_auth_user_created → handle_new_user` reads `role`, `household_id`, `full_name`, `birthdate` from `user_metadata` and atomically creates `user_roles` + `child_profiles` (a malformed/out-of-range birthdate is clamped to NULL, never blocks signup). **Never** try to insert rows for the child from the client.
 - `src/hooks/use-auth.tsx` — single `AuthProvider`. Exposes `{ isAuthenticated, isLoading, user, session, role, householdId, childProfileId, signOut, refreshRole }`. `fetchRole` is wrapped in `setTimeout(0)` inside `onAuthStateChange` to release the auth lock before issuing queries.
 - `src/integrations/supabase/types.ts` is **generated** from the live DB. Regenerate with the Supabase MCP `generate_typescript_types` tool or `supabase gen types typescript --project-id flxhxmrtdqegfsupvvus` after any schema change.
 
@@ -60,7 +60,7 @@ Required env vars (`.env` for dev, host env for prod):
 
 - `households(id, name, created_at)`
 - `user_roles(id, user_id, household_id, role text CHECK IN ('parent','child','admin'))`
-- `child_profiles(id, user_id, household_id, display_name, current_balance numeric default 0)` — `current_balance` is a **cached wallet balance** maintained by RPCs (not derived on read).
+- `child_profiles(id, user_id, household_id, display_name, current_balance numeric default 0, birthdate date)` — `current_balance` is a **cached wallet balance** maintained by RPCs (not derived on read). `birthdate` (nullable, CHECK 2000-01-01..today) drives the quiz difficulty tier; NULL falls back to the middle tier.
 - `tasks(id, household_id, child_id, created_by_parent_id, title, description, reward_amount, status text CHECK IN ('assigned','submitted','approved','rejected'), submitted_at, reviewed_at)`
 - `transactions(id, household_id, child_id, type, amount numeric, reference_task_id, goal_id, reference_quiz_attempt_id)` — `type` text CHECK IN `('task_reward','manual_adjustment','goal_allocation','savings_credit','wallet_debit','goal_credit','quiz_reward')`. There is **no `idempotency_key`, no `created_by`**, no enum. The legacy `goal_allocation` value is permitted but unused.
 - `household_settings(id, household_id unique, savings_percentage int 0..100 default 10, quiz_subjects text[] default '{}', quiz_reward_amount int 0..1000 default 5)`
@@ -73,6 +73,7 @@ Required env vars (`.env` for dev, host env for prod):
 
 - `approve_task_and_pay(p_task_id uuid) RETURNS boolean` — locks the task, idempotent on "transactions exist for this task". Inserts `task_reward (+full)`, and if `household_settings.savings_percentage > 0` also inserts `wallet_debit (-save)` + `savings_credit (+save)`. Updates `child_profiles.current_balance` to reflect wallet delta only.
 - `deposit_to_goal(_goal_id uuid, _amount integer) RETURNS jsonb` — child-owner or household-parent. Validates wallet ≥ amount and `deposited + amount ≤ target`. Inserts `wallet_debit (-amt)` + `goal_credit (+amt)`, updates cached balance, flips goal to `completed` when target reached. Returns `{ success: true, deposited, target }` or `{ error: '...' }`.
+- `set_child_birthdate(_child_id uuid, _birthdate date) RETURNS jsonb` — household-parent-only edit of `child_profiles.birthdate` (range-validated, NULL allowed to clear). Used by the edit dialog on `/parent/children`; deliberately an RPC rather than a client-side UPDATE so parents never get a broad UPDATE path to `current_balance`.
 - `complete_quiz_and_pay(_subject text, _correct int, _total int) RETURNS jsonb` — called by the authenticated child after a quiz. Records the attempt; pass = ≥80%. Pays out only the first passing attempt per subject per Asia/Jerusalem day: inserts `quiz_reward (+reward)`, applies the savings split exactly like `approve_task_and_pay`, updates `child_profiles.current_balance`. Returns `{ passed, paid, wallet_delta, savings_delta, reward, attempt_id }` on payout, `{ passed: false, paid: false, reason }` on fail or already-paid, or `{ error: '...' }`.
 
 **Storage:** there is no `task-proofs` bucket in this DB. The plan envisioned proof-image uploads, but the live schema doesn't have a `proof_image_path` column on tasks and no Storage bucket has been provisioned. Task approval currently doesn't require proof.
@@ -109,7 +110,7 @@ The canonical wallet-tx allowlist lives in `src/lib/transactions.ts` (`WALLET_TX
 - `rls-isolation.test.ts` — cross-household leakage
 - `task-status-transitions.test.ts` — status transitions
 
-The tests don't yet cover the savings or goal-deposit flows — worth adding when touching that code.
+`parent-child-flow` also covers the savings split on approval; `child-birthdate.test.ts` covers the birthdate trigger + `set_child_birthdate`. Goal-deposit flows are still uncovered — worth adding when touching that code. Note: `households`/`user_roles` have SELECT-only RLS — tests rely on the signup trigger to create households (`householdOf`/`createChildUser` in `tests/helpers/supabase.ts`).
 
 ---
 

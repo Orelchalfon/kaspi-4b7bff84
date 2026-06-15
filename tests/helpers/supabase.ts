@@ -69,8 +69,79 @@ export async function deleteUser(userId: string): Promise<void> {
 /** Hard-delete a household and everything that references it (service role). */
 export async function purgeHousehold(householdId: string): Promise<void> {
   await admin.from("transactions").delete().eq("household_id", householdId);
+  await admin.from("quiz_attempts").delete().eq("household_id", householdId);
+  await admin.from("goals").delete().eq("household_id", householdId);
   await admin.from("tasks").delete().eq("household_id", householdId);
+  await admin.from("household_settings").delete().eq("household_id", householdId);
   await admin.from("child_profiles").delete().eq("household_id", householdId);
   await admin.from("user_roles").delete().eq("household_id", householdId);
   await admin.from("households").delete().eq("id", householdId);
+}
+
+/**
+ * The signup trigger (`handle_new_user`) auto-creates a household + parent
+ * role for every metadata-less auth user, so an ad-hoc user from
+ * `createAdHocUser` is already a parent of a fresh household — look it up
+ * here. (`households`/`user_roles` have SELECT-only RLS; clients cannot
+ * insert them directly.)
+ */
+export async function householdOf(userId: string): Promise<string> {
+  const { data, error } = await admin
+    .from("user_roles")
+    .select("household_id")
+    .eq("user_id", userId)
+    .single();
+  if (error || !data) throw new Error(`no user_roles row for ${userId}: ${error?.message}`);
+  return data.household_id;
+}
+
+export interface ChildUser extends AdHocUser {
+  childProfileId: string;
+}
+
+/**
+ * Create a child auth user the same way the createChild server fn does:
+ * admin createUser with role/household_id/full_name/birthdate metadata, then
+ * let `handle_new_user` create user_roles + child_profiles.
+ */
+export async function createChildUser(
+  prefix: string,
+  householdId: string,
+  birthdate?: string,
+): Promise<ChildUser> {
+  const email = `${prefix}-${crypto.randomUUID()}@kidcoin.test`;
+  const password = `Pwd_${crypto.randomUUID().slice(0, 12)}`;
+  const { data: created, error: cErr } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: {
+      role: "child",
+      household_id: householdId,
+      full_name: `child-${prefix}`,
+      ...(birthdate !== undefined ? { birthdate } : {}),
+    },
+  });
+  if (cErr || !created.user) throw new Error(`createUser failed: ${cErr?.message}`);
+
+  const anon = createClient<Database>(SUPABASE_URL, ANON, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { data: signed, error: sErr } = await anon.auth.signInWithPassword({ email, password });
+  if (sErr || !signed.session) throw new Error(`signIn failed: ${sErr?.message}`);
+
+  const { data: profile, error: pErr } = await admin
+    .from("child_profiles")
+    .select("id")
+    .eq("user_id", created.user.id)
+    .single();
+  if (pErr || !profile) throw new Error(`child profile missing: ${pErr?.message}`);
+
+  return {
+    userId: created.user.id,
+    email,
+    password,
+    accessToken: signed.session.access_token,
+    childProfileId: profile.id,
+  };
 }

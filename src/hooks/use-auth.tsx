@@ -12,6 +12,7 @@ interface AuthState {
   role: UserRole;
   householdId: string | null;
   childProfileId: string | null;
+  childBirthdate: string | null;
   signOut: () => Promise<void>;
   refreshRole: (userId?: string) => Promise<void>;
 }
@@ -24,6 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<UserRole>(null);
   const [householdId, setHouseholdId] = useState<string | null>(null);
   const [childProfileId, setChildProfileId] = useState<string | null>(null);
+  const [childBirthdate, setChildBirthdate] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   async function fetchRole(userId: string) {
@@ -40,15 +42,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.role === "child") {
         const { data: cp } = await supabase
           .from("child_profiles")
-          .select("id")
+          .select("id, birthdate")
           .eq("user_id", userId)
           .maybeSingle();
         setChildProfileId(cp?.id ?? null);
+        setChildBirthdate(cp?.birthdate ?? null);
       }
     } else {
       setRole(null);
       setHouseholdId(null);
       setChildProfileId(null);
+      setChildBirthdate(null);
     }
   }
 
@@ -68,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRole(null);
         setHouseholdId(null);
         setChildProfileId(null);
+        setChildBirthdate(null);
         setIsLoading(false);
       }
     });
@@ -92,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRole(null);
     setHouseholdId(null);
     setChildProfileId(null);
+    setChildBirthdate(null);
   };
 
   const refreshRole = async (userId?: string) => {
@@ -109,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role,
         householdId,
         childProfileId,
+        childBirthdate,
         signOut,
         refreshRole,
       }}

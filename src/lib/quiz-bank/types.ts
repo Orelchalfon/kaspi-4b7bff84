@@ -8,11 +8,21 @@ export const SUBJECT_LABELS_HE: Record<QuizSubject, string> = {
   finance: "כספים",
 };
 
+export const QUIZ_LEVELS = ["young", "middle", "older"] as const;
+export type QuizLevel = (typeof QUIZ_LEVELS)[number];
+
+export const LEVEL_LABELS_HE: Record<QuizLevel, string> = {
+  young: "כיתות א'-ב'",
+  middle: "כיתות ג'-ה'",
+  older: "כיתות ו' ומעלה",
+};
+
 export interface QuizQuestion {
   id: string;
   prompt: string;
   choices: [string, string, string, string];
   correctIndex: 0 | 1 | 2 | 3;
+  level: QuizLevel;
 }
 
 export const QUIZ_LENGTH = 5;

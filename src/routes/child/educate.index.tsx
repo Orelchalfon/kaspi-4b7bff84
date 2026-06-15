@@ -14,7 +14,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ListSkeleton } from "@/components/loading-skeletons";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { SUBJECT_LABELS_HE, isQuizSubject, type QuizSubject } from "@/lib/quiz-bank";
+import {
+  LEVEL_LABELS_HE,
+  SUBJECT_LABELS_HE,
+  isQuizSubject,
+  levelForBirthdate,
+  type QuizSubject,
+} from "@/lib/quiz-bank";
 
 export const Route = createFileRoute("/child/educate/")({
   component: ChildEducate,
@@ -55,7 +61,8 @@ function attemptDateKey(iso: string): string {
 }
 
 function ChildEducate() {
-  const { childProfileId, householdId } = useAuth();
+  const { childProfileId, householdId, childBirthdate } = useAuth();
+  const level = useMemo(() => levelForBirthdate(childBirthdate), [childBirthdate]);
   const [subjects, setSubjects] = useState<QuizSubject[]>([]);
   const [reward, setReward] = useState<number>(5);
   const [attempts, setAttempts] = useState<AttemptRow[]>([]);
@@ -134,7 +141,9 @@ function ChildEducate() {
                           <p className="text-lg font-semibold text-foreground">
                             {SUBJECT_LABELS_HE[s]}
                           </p>
-                          <p className="text-xs text-muted-foreground">חידון של 5 שאלות</p>
+                          <p className="text-xs text-muted-foreground">
+                            חידון של 5 שאלות · רמת {LEVEL_LABELS_HE[level]}
+                          </p>
                         </div>
                       </div>
                       <span
