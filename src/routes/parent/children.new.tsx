@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { createChild } from "@/server/create-child";
 import { useAuth } from "@/hooks/use-auth";
+import { AvatarPicker } from "@/components/avatar-picker";
+import { DEFAULT_COLOR_KEY, DEFAULT_ICON_KEY, serializeAvatar } from "@/lib/avatars";
 
 export const Route = createFileRoute("/parent/children/new")({
   component: NewChild,
@@ -18,6 +20,8 @@ function NewChild() {
   const { session } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [birthdate, setBirthdate] = useState("");
+  const [iconKey, setIconKey] = useState(DEFAULT_ICON_KEY);
+  const [colorKey, setColorKey] = useState(DEFAULT_COLOR_KEY);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -34,13 +38,19 @@ function NewChild() {
         throw new Error("לא מחובר");
       }
       await createChild({
-        data: { email, password, displayName, birthdate },
+        data: {
+          email,
+          password,
+          displayName,
+          birthdate,
+          avatar: serializeAvatar(iconKey, colorKey),
+        },
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       toast.success(`הילד ${displayName} נוסף בהצלחה`);
       navigate({ to: "/parent/children" });
-    } catch (err: any) {
-      setError(err?.message || "שגיאה ביצירת ילד");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "שגיאה ביצירת ילד");
       setLoading(false);
     }
   };
@@ -71,6 +81,17 @@ function NewChild() {
                 placeholder="יוסי"
                 required
                 autoComplete="off"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>דמות</Label>
+              <AvatarPicker
+                iconKey={iconKey}
+                colorKey={colorKey}
+                onChange={(i, c) => {
+                  setIconKey(i);
+                  setColorKey(c);
+                }}
               />
             </div>
             <div className="space-y-2">

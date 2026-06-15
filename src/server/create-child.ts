@@ -14,6 +14,7 @@ const InputSchema = z.object({
       const d = new Date(`${s}T00:00:00Z`);
       return !Number.isNaN(d.getTime()) && d.getTime() <= Date.now() && s >= "2000-01-01";
     }, "תאריך לידה לא תקין"),
+  avatar: z.string().max(40).optional(),
 });
 
 /**
@@ -50,6 +51,7 @@ export const createChild = createServerFn({ method: "POST" })
         household_id: householdId,
         full_name: data.displayName,
         birthdate: data.birthdate,
+        avatar: data.avatar ?? "",
       },
     });
 

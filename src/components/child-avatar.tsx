@@ -1,4 +1,5 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { parseAvatar } from "@/lib/avatars";
 import { cn } from "@/lib/utils";
 
 interface ChildAvatarProps {
@@ -6,7 +7,17 @@ interface ChildAvatarProps {
   size?: "sm" | "md" | "lg";
   verified?: boolean;
   className?: string;
+  // When provided, render the chosen (or deterministic) icon + color instead of
+  // the name initial. `seed` (the child id) drives the fallback when avatar is null.
+  avatar?: string | null;
+  seed?: string;
 }
+
+const iconSizeMap = {
+  sm: "text-base",
+  md: "text-lg",
+  lg: "text-xl",
+};
 
 const sizeMap = {
   sm: "h-8 w-8 text-xs",
@@ -20,14 +31,28 @@ const badgeSizeMap = {
   lg: "h-5 w-5",
 };
 
-export function ChildAvatar({ name, size = "md", verified = true, className }: ChildAvatarProps) {
+export function ChildAvatar({
+  name,
+  size = "md",
+  verified = true,
+  className,
+  avatar,
+  seed,
+}: ChildAvatarProps) {
   const initial = name?.trim().charAt(0).toUpperCase() || "?";
+  const resolved = seed !== undefined ? parseAvatar(avatar, seed) : null;
   return (
     <div className={cn("relative inline-block shrink-0", className)} aria-label={name}>
       <Avatar className={sizeMap[size]}>
-        <AvatarFallback className="bg-primary/10 font-semibold text-primary">
-          {initial}
-        </AvatarFallback>
+        {resolved ? (
+          <AvatarFallback className={cn(resolved.color.bg, iconSizeMap[size])}>
+            <span aria-hidden>{resolved.icon.emoji}</span>
+          </AvatarFallback>
+        ) : (
+          <AvatarFallback className="bg-primary/10 font-semibold text-primary">
+            {initial}
+          </AvatarFallback>
+        )}
       </Avatar>
       {verified && (
         <span className="absolute -end-1 -top-1" aria-hidden>

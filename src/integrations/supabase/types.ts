@@ -10,6 +10,7 @@ export type Database = {
     Tables: {
       child_profiles: {
         Row: {
+          avatar: string | null;
           birthdate: string | null;
           created_at: string | null;
           current_balance: number | null;
@@ -19,6 +20,7 @@ export type Database = {
           user_id: string;
         };
         Insert: {
+          avatar?: string | null;
           birthdate?: string | null;
           created_at?: string | null;
           current_balance?: number | null;
@@ -28,6 +30,7 @@ export type Database = {
           user_id: string;
         };
         Update: {
+          avatar?: string | null;
           birthdate?: string | null;
           created_at?: string | null;
           current_balance?: number | null;
@@ -387,6 +390,10 @@ export type Database = {
         Returns: Json;
       };
       deposit_to_savings: { Args: { _amount: number }; Returns: Json };
+      set_child_avatar: {
+        Args: { _avatar: string; _child_id: string };
+        Returns: Json;
+      };
       set_child_birthdate: {
         Args: { _birthdate: string; _child_id: string };
         Returns: Json;

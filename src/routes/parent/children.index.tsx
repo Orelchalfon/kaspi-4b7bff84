@@ -18,7 +18,9 @@ import {
 import { Pencil, UserPlus, Users } from "lucide-react";
 import { ListSkeleton } from "@/components/loading-skeletons";
 import { ChildAvatar } from "@/components/child-avatar";
+import { AvatarPicker } from "@/components/avatar-picker";
 import { LEVEL_LABELS_HE, ageInYears, levelForBirthdate } from "@/lib/quiz-bank";
+import { DEFAULT_COLOR_KEY, DEFAULT_ICON_KEY, parseAvatar, serializeAvatar } from "@/lib/avatars";
 
 export const Route = createFileRoute("/parent/children/")({
   component: ChildrenList,
@@ -29,6 +31,7 @@ interface ChildRow {
   display_name: string;
   user_id: string;
   birthdate: string | null;
+  avatar: string | null;
 }
 
 function ChildrenList() {
@@ -41,7 +44,7 @@ function ChildrenList() {
     if (!householdId) return;
     const { data } = await supabase
       .from("child_profiles")
-      .select("id, display_name, user_id, birthdate")
+      .select("id, display_name, user_id, birthdate, avatar")
       .eq("household_id", householdId);
     setChildren(data || []);
     setLoading(false);
@@ -92,7 +95,12 @@ function ChildrenList() {
             <Card key={child.id}>
               <CardContent className="flex items-center justify-between py-4">
                 <span className="flex items-center gap-2">
-                  <ChildAvatar name={child.display_name} size="md" />
+                  <ChildAvatar
+                    name={child.display_name}
+                    size="md"
+                    avatar={child.avatar}
+                    seed={child.id}
+                  />
                   <span className="leading-tight">
                     <span className="block font-medium">{child.display_name}</span>
                     <span className="block text-xs text-muted-foreground">
@@ -103,7 +111,7 @@ function ChildrenList() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  aria-label="עריכת תאריך לידה"
+                  aria-label="עריכת ילד"
                   onClick={() => setEditing(child)}
                 >
                   <Pencil className="h-4 w-4" aria-hidden />
@@ -147,28 +155,57 @@ function EditBirthdateDialog({
   onSaved: () => Promise<void>;
 }) {
   const [value, setValue] = useState("");
+  const [iconKey, setIconKey] = useState(DEFAULT_ICON_KEY);
+  const [colorKey, setColorKey] = useState(DEFAULT_COLOR_KEY);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     setValue(child?.birthdate ?? "");
+    if (child) {
+      const resolved = parseAvatar(child.avatar, child.id);
+      setIconKey(resolved.icon.key);
+      setColorKey(resolved.color.key);
+    } else {
+      setIconKey(DEFAULT_ICON_KEY);
+      setColorKey(DEFAULT_COLOR_KEY);
+    }
   }, [child]);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!child || !value) return;
+    if (!child) return;
     setSubmitting(true);
-    const { data, error } = await supabase.rpc("set_child_birthdate", {
+
+    let ok = true;
+
+    const { data: aData, error: aErr } = await supabase.rpc("set_child_avatar", {
       _child_id: child.id,
-      _birthdate: value,
+      _avatar: serializeAvatar(iconKey, colorKey),
     });
+    const aPayload = aData as Record<string, unknown> | null;
+    if (aErr || typeof aPayload?.error === "string") {
+      console.error("[set_child_avatar]", aErr ?? aPayload?.error);
+      ok = false;
+    }
+
+    if (value) {
+      const { data, error } = await supabase.rpc("set_child_birthdate", {
+        _child_id: child.id,
+        _birthdate: value,
+      });
+      const payload = data as Record<string, unknown> | null;
+      if (error || typeof payload?.error === "string") {
+        console.error("[set_child_birthdate]", error ?? payload?.error);
+        ok = false;
+      }
+    }
+
     setSubmitting(false);
-    const payload = data as Record<string, unknown> | null;
-    if (error || typeof payload?.error === "string") {
-      console.error("[set_child_birthdate]", error ?? payload?.error);
-      toast.error("שגיאה בעדכון תאריך הלידה");
+    if (!ok) {
+      toast.error("שגיאה בעדכון פרטי הילד");
       return;
     }
-    toast.success("תאריך הלידה עודכן");
+    toast.success("הפרטים עודכנו");
     onOpenChange(false);
     await onSaved();
   };
@@ -177,10 +214,21 @@ function EditBirthdateDialog({
     <Dialog open={!!child} onOpenChange={onOpenChange}>
       <DialogContent dir="rtl">
         <DialogHeader>
-          <DialogTitle>תאריך לידה — {child?.display_name}</DialogTitle>
-          <DialogDescription>לפי הגיל נתאים את רמת החידונים של הילד.</DialogDescription>
+          <DialogTitle>עריכת ילד — {child?.display_name}</DialogTitle>
+          <DialogDescription>בחרו דמות וצבע, ועדכנו את תאריך הלידה לפי הצורך.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4" noValidate>
+          <div className="space-y-2">
+            <Label>דמות</Label>
+            <AvatarPicker
+              iconKey={iconKey}
+              colorKey={colorKey}
+              onChange={(i, c) => {
+                setIconKey(i);
+                setColorKey(c);
+              }}
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="edit-birthdate">תאריך לידה</Label>
             <Input
@@ -188,14 +236,13 @@ function EditBirthdateDialog({
               type="date"
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              required
               min="2000-01-01"
               max={new Date().toISOString().slice(0, 10)}
               dir="ltr"
             />
           </div>
           <DialogFooter>
-            <Button type="submit" className="min-h-11 w-full" disabled={submitting || !value}>
+            <Button type="submit" className="min-h-11 w-full" disabled={submitting}>
               {submitting ? "שומר..." : "שמור"}
             </Button>
           </DialogFooter>
