@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { m, useScroll, useMotionValueEvent } from "framer-motion";
-import { useState } from "react";
+import { m, useMotionValueEvent, useScroll } from "framer-motion";
 import { Coins } from "lucide-react";
+import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -31,7 +31,7 @@ export function LandingNav() {
       )}
       initial={false}
     >
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 md:px-8">
+      <div className="mx-auto flex   h-16 max-w-6xl items-center justify-between px-5 md:px-8">
         <Link to="/" className="flex items-center gap-2" aria-label="Kaspii — דף הבית">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <Coins className="h-5 w-5" aria-hidden />

@@ -1,6 +1,3 @@
-import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -10,7 +7,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useAuth } from "@/hooks/use-auth";
+import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { Coins, LogOut, Menu } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/child")({
   component: ChildLayout,
@@ -54,7 +54,7 @@ function ChildLayout() {
         דלג לתוכן הראשי
       </a>
       <header className="border-b bg-card">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-2 px-4 py-3">
+        <div className="mx-auto flex flex-row-reverse max-w-4xl items-center justify-between gap-2 px-4 py-3">
           <Link
             to="/child/dashboard"
             className="flex shrink-0 items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -62,7 +62,7 @@ function ChildLayout() {
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Coins className="h-4 w-4" aria-hidden />
             </span>
-            <span className="text-lg font-bold text-foreground">KidCoin</span>
+            <span className="text-lg font-bold text-foreground">Kaspii</span>
           </Link>
 
           {/* Tablet and up: inline navigation */}
@@ -80,11 +80,6 @@ function ChildLayout() {
           </nav>
 
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="sm" onClick={signOut} aria-label="יציאה">
-              <LogOut className="h-4 w-4" aria-hidden />
-              <span className="ms-1 hidden sm:inline">יציאה</span>
-            </Button>
-
             {/* Below tablet: hamburger menu */}
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger asChild>
@@ -99,11 +94,11 @@ function ChildLayout() {
               </SheetTrigger>
               <SheetContent side="right" className="w-72 p-0">
                 <SheetHeader className="border-b px-4 py-4 text-start">
-                  <SheetTitle className="flex items-center gap-2">
+                  <SheetTitle className="flex items-center justify-end gap-2">
                     <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
                       <Coins className="h-4 w-4" aria-hidden />
                     </span>
-                    KidCoin
+                    Kaspii
                   </SheetTitle>
                 </SheetHeader>
                 <nav className="flex flex-col gap-1 p-3">
@@ -116,8 +111,13 @@ function ChildLayout() {
                       >
                         {item.label}
                       </Link>
+                      
                     </SheetClose>
                   ))}
+                  <Button variant="ghost" size="sm" onClick={signOut} aria-label="יציאה">
+                    <LogOut className="h-4 w-4" aria-hidden />
+                    <span className="ms-1 hidden sm:inline">יציאה</span>
+                  </Button>
                 </nav>
               </SheetContent>
             </Sheet>

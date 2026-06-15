@@ -1,5 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import { LandingPage } from "@/components/landing/LandingPage";
@@ -18,17 +18,17 @@ export const Route = createFileRoute("/")({
         property: "og:description",
         content: "הורים מגדירים משימות. ילדים צוברים מטבעות. אחוז מכל תגמול הולך אוטומטית לחיסכון.",
       },
-      { property: "og:url", content: "https://kidcoin.app/" },
-      { property: "og:image", content: "https://kidcoin.app/kaspii_logo.png" },
+      { property: "og:url", content: "https://kaspii-web.kaspii.workers.dev/" },
+      { property: "og:image", content: "https://kaspii-web.kaspii.workers.dev/kaspii_logo.png" },
       { property: "og:image:alt", content: "Kaspii" },
       { name: "twitter:title", content: "Kaspii — המשפחה לומדת לחסוך, יחד" },
       {
         name: "twitter:description",
         content: "הורים מגדירים משימות. ילדים צוברים מטבעות. אחוז מכל תגמול הולך אוטומטית לחיסכון.",
       },
-      { name: "twitter:image", content: "https://kidcoin.app/kaspii_logo.png" },
+      { name: "twitter:image", content: "https://kaspii-web.kaspii.workers.dev/kaspii_logo.png" },
     ],
-    links: [{ rel: "canonical", href: "https://kidcoin.app/" }],
+    links: [{ rel: "canonical", href: "https://kaspii-web.kaspii.workers.dev/" }],
   }),
   component: Index,
 });
