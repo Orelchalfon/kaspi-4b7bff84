@@ -1,9 +1,44 @@
 import { Link } from "@tanstack/react-router";
-import { m } from "framer-motion";
+import { AnimatePresence, m, useInView, useReducedMotion } from "framer-motion";
 import { ArrowDown, Check, Coins, PiggyBank, Sparkles } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
-import { ctaInteractions, deviceFrameReveal, floatingToastReveal } from "./motion/variants";
+import { ctaInteractions, deviceFrameReveal, easeOutSoft } from "./motion/variants";
+import { useCountUp } from "./use-count-up";
+
+const BASE_BALANCE = 128;
+// Wallet gain after the automatic 10% savings split on a +10 task (+9 wallet, +1 savings).
+const WALLET_GAIN = 9;
+const FINAL_BALANCE = BASE_BALANCE + WALLET_GAIN;
+
+/**
+ * Drives the looping in-app demo: idle → task completes → (toast + balance bump) →
+ * hold → reset → repeat. Only loops while `run` is true (in view, motion allowed).
+ * When paused with `staticDone` it settles on the completed state for a readable
+ * reduced-motion baseline.
+ */
+function useDemoLoop(run: boolean, staticDone: boolean): boolean {
+  const [done, setDone] = useState(staticDone);
+
+  useEffect(() => {
+    if (!run) {
+      if (staticDone) setDone(true);
+      return;
+    }
+    let timers: ReturnType<typeof setTimeout>[] = [];
+    const cycle = () => {
+      setDone(false);
+      const complete = setTimeout(() => setDone(true), 1200);
+      const restart = setTimeout(cycle, 4200);
+      timers = [complete, restart];
+    };
+    cycle();
+    return () => timers.forEach((t) => clearTimeout(t));
+  }, [run, staticDone]);
+
+  return done;
+}
 
 export function Hero() {
   return (
@@ -64,18 +99,49 @@ export function Hero() {
           animate="visible"
           className="relative mx-auto w-full max-w-md md:max-w-none"
         >
-          <DeviceFrame />
-          <m.div
-            variants={floatingToastReveal}
-            initial="hidden"
-            animate="visible"
-            className="absolute -bottom-4 start-2 z-10 md:-bottom-6 md:start-[-2rem]"
-          >
-            <ApprovalToast />
-          </m.div>
+          <HeroDevice />
         </m.div>
       </div>
     </section>
+  );
+}
+
+function HeroDevice() {
+  const reduceMotion = useReducedMotion() ?? false;
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { amount: 0.5 });
+  const run = !reduceMotion && inView;
+  const done = useDemoLoop(run, reduceMotion);
+  const balance = useCountUp(done ? FINAL_BALANCE : BASE_BALANCE, {
+    play: run && done,
+    from: BASE_BALANCE,
+  });
+
+  const toast = <ApprovalToast />;
+
+  return (
+    <div ref={ref} className="relative">
+      <DeviceFrame done={done} balance={balance} />
+
+      {reduceMotion ? (
+        <div className="absolute -bottom-4 start-2 z-10 md:-bottom-6 md:start-[-2rem]">{toast}</div>
+      ) : (
+        <AnimatePresence>
+          {done ? (
+            <m.div
+              key="toast"
+              initial={{ opacity: 0, y: 8, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.96 }}
+              transition={{ type: "spring", stiffness: 220, damping: 22 }}
+              className="absolute -bottom-4 start-2 z-10 md:-bottom-6 md:start-[-2rem]"
+            >
+              {toast}
+            </m.div>
+          ) : null}
+        </AnimatePresence>
+      )}
+    </div>
   );
 }
 
@@ -91,7 +157,7 @@ function CyanWash() {
   );
 }
 
-function DeviceFrame() {
+function DeviceFrame({ done, balance }: { done: boolean; balance: number }) {
   return (
     <div
       className={cn(
@@ -119,7 +185,7 @@ function DeviceFrame() {
               className="text-3xl font-bold tracking-tight text-foreground"
               style={{ fontFeatureSettings: '"tnum"' }}
             >
-              128
+              {balance}
             </span>
             <span className="text-sm font-medium text-muted-foreground">מטבעות</span>
             <span className="ms-auto flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--coin)]/15 text-[color:var(--coin-foreground)]">
@@ -142,14 +208,53 @@ function DeviceFrame() {
             </div>
             <span className="text-xs font-semibold text-success">+10</span>
           </li>
-          <li className="flex items-center justify-between rounded-lg border border-border bg-card p-3">
+          <li
+            className={cn(
+              "flex items-center justify-between rounded-lg border p-3 transition-colors duration-300",
+              done ? "border-success/15 bg-success/5" : "border-border bg-card",
+            )}
+          >
             <div className="flex items-center gap-2.5">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background text-muted-foreground">
-                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" aria-hidden />
+              <span className="relative flex h-6 w-6 items-center justify-center" aria-hidden>
+                <AnimatePresence initial={false}>
+                  {done ? (
+                    <m.span
+                      key="check"
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.5 }}
+                      transition={{ duration: 0.25, ease: easeOutSoft }}
+                      className="absolute inset-0 flex items-center justify-center rounded-full bg-success/15 text-success"
+                    >
+                      <Check className="h-3.5 w-3.5" aria-hidden />
+                    </m.span>
+                  ) : (
+                    <m.span
+                      key="dot"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute inset-0 flex items-center justify-center rounded-full border border-border bg-background text-muted-foreground"
+                    >
+                      <span
+                        className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40"
+                        aria-hidden
+                      />
+                    </m.span>
+                  )}
+                </AnimatePresence>
               </span>
               <span className="text-sm font-medium text-foreground">לקרוא 20 דקות</span>
             </div>
-            <span className="text-xs font-semibold text-muted-foreground">+8</span>
+            <span
+              className={cn(
+                "text-xs font-semibold transition-colors duration-300",
+                done ? "text-success" : "text-muted-foreground",
+              )}
+            >
+              +10
+            </span>
           </li>
         </ul>
       </div>

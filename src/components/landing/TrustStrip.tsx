@@ -1,7 +1,7 @@
 import { m } from "framer-motion";
 import { Coins, Lock, ShieldCheck, EyeOff } from "lucide-react";
 
-import { fadeUp, viewportOnce } from "./motion/variants";
+import { fadeUp, fadeUpItem, staggerContainer, viewportOnce } from "./motion/variants";
 
 const cells = [
   {
@@ -45,19 +45,23 @@ export function TrustStrip() {
           initial="hidden"
           whileInView="visible"
           viewport={viewportOnce}
-          variants={fadeUp}
+          variants={staggerContainer}
           className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5"
         >
           {cells.map((cell) => {
             const Icon = cell.icon;
             return (
-              <li key={cell.title} className="rounded-2xl border border-primary/8 bg-card p-5">
+              <m.li
+                key={cell.title}
+                variants={fadeUpItem}
+                className="rounded-2xl border border-primary/8 bg-card p-5"
+              >
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/8 text-primary">
                   <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
                 </span>
                 <h3 className="mt-4 text-base font-semibold text-foreground">{cell.title}</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{cell.body}</p>
-              </li>
+              </m.li>
             );
           })}
         </m.ul>

@@ -1,7 +1,7 @@
 import { m } from "framer-motion";
 import { ArrowDownRight, Bike, BookOpen, Check, Coins, PiggyBank } from "lucide-react";
 
-import { cardHoverLift, fadeUp, viewportOnce } from "./motion/variants";
+import { cardHoverLift, fadeUpItem, staggerContainer, viewportOnce } from "./motion/variants";
 
 export function FeatureRows() {
   return (
@@ -57,10 +57,10 @@ function FeatureRow({
       initial="hidden"
       whileInView="visible"
       viewport={viewportOnce}
-      variants={fadeUp}
+      variants={staggerContainer}
       className="grid grid-cols-1 items-center gap-10 md:grid-cols-2 md:gap-16"
     >
-      <div className={reversed ? "md:order-2" : "md:order-1"}>
+      <m.div variants={fadeUpItem} className={reversed ? "md:order-2" : "md:order-1"}>
         <p className="text-sm font-medium text-primary">{eyebrow}</p>
         <h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
           {headline}
@@ -68,8 +68,12 @@ function FeatureRow({
         <p className="mt-4 max-w-lg text-base leading-relaxed text-muted-foreground md:text-lg">
           {body}
         </p>
-      </div>
-      <m.div {...cardHoverLift} className={reversed ? "md:order-1" : "md:order-2"}>
+      </m.div>
+      <m.div
+        variants={fadeUpItem}
+        {...cardHoverLift}
+        className={reversed ? "md:order-1" : "md:order-2"}
+      >
         {illustration}
       </m.div>
     </m.div>

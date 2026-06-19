@@ -27,6 +27,24 @@ export const heroStagger: Variants = {
   },
 };
 
+// Generic container that cascades its children into view. Pair with `fadeUpItem`
+// on each repeated child so sections reveal in sequence instead of all at once.
+export const staggerContainer: Variants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.06, delayChildren: 0.04 },
+  },
+};
+
+export const fadeUpItem: Variants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.45, ease: easeOutSoft },
+  },
+};
+
 export const deviceFrameReveal: Variants = {
   hidden: { opacity: 0, y: 12, scale: 0.985 },
   visible: {

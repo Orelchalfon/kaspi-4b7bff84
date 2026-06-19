@@ -1,7 +1,7 @@
 import { m } from "framer-motion";
 import { Coins, Users, Wallet, CheckCircle2 } from "lucide-react";
 
-import { fadeUp, viewportOnce } from "./motion/variants";
+import { fadeUp, fadeUpItem, staggerContainer, viewportOnce } from "./motion/variants";
 
 export function RoleSplit() {
   return (
@@ -30,25 +30,29 @@ export function RoleSplit() {
           initial="hidden"
           whileInView="visible"
           viewport={viewportOnce}
-          variants={fadeUp}
+          variants={staggerContainer}
           className="mt-12 grid grid-cols-1 gap-6 md:mt-16 md:grid-cols-2"
         >
-          <RoleCard
-            badge="הורה"
-            badgeIcon={<Users className="h-3.5 w-3.5" aria-hidden />}
-            headline="אתה."
-            body="רואה את כל הילדים, מאשר משימות בלחיצה, קובע אחוז חיסכון אוטומטי, ועוקב אחרי תנועות המשק בית."
-            accent="cyan"
-            bullets={["אישור משימות אינליין", "אחוז חיסכון פר-משק-בית", "היסטוריית תנועות מלאה"]}
-          />
-          <RoleCard
-            badge="ילד"
-            badgeIcon={<Wallet className="h-3.5 w-3.5" aria-hidden />}
-            headline="הילד."
-            body="רואה רק את עצמו — משימות, ארנק, חיסכון, מטרות. ממוקד, נטול פרסומות, ובעברית פשוטה."
-            accent="gold"
-            bullets={['כפתור "סיימתי!" אחד', "קופה נפרדת לחיסכון", "מטרות עם סכום מחזורי"]}
-          />
+          <m.div variants={fadeUpItem}>
+            <RoleCard
+              badge="הורה"
+              badgeIcon={<Users className="h-3.5 w-3.5" aria-hidden />}
+              headline="אתה."
+              body="רואה את כל הילדים, מאשר משימות בלחיצה, קובע אחוז חיסכון אוטומטי, ועוקב אחרי תנועות המשק בית."
+              accent="cyan"
+              bullets={["אישור משימות אינליין", "אחוז חיסכון פר-משק-בית", "היסטוריית תנועות מלאה"]}
+            />
+          </m.div>
+          <m.div variants={fadeUpItem}>
+            <RoleCard
+              badge="ילד"
+              badgeIcon={<Wallet className="h-3.5 w-3.5" aria-hidden />}
+              headline="הילד."
+              body="רואה רק את עצמו — משימות, ארנק, חיסכון, מטרות. ממוקד, נטול פרסומות, ובעברית פשוטה."
+              accent="gold"
+              bullets={['כפתור "סיימתי!" אחד', "קופה נפרדת לחיסכון", "מטרות עם סכום מחזורי"]}
+            />
+          </m.div>
         </m.div>
       </div>
     </section>
