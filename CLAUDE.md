@@ -60,7 +60,7 @@ Required env vars (`.env` for dev, host env for prod):
 
 - `households(id, name, created_at)`
 - `user_roles(id, user_id, household_id, role text CHECK IN ('parent','child','admin'))`
-- `child_profiles(id, user_id, household_id, display_name, current_balance numeric default 0, birthdate date, avatar text)` — `current_balance` is a **cached wallet balance** maintained by RPCs (not derived on read). `birthdate` (nullable, CHECK 2000-01-01..today) drives the quiz difficulty tier; NULL falls back to the middle tier. `avatar` (nullable text) stores the parent-chosen `"<iconKey>|<colorKey>"` from the catalog in `src/lib/avatars.ts`; NULL falls back to a deterministic icon+color derived from the child id (see `parseAvatar`). Set via `handle_new_user` (from create-child metadata) or `set_child_avatar`.
+- `child_profiles(id, user_id, household_id, display_name, current_balance numeric default 0, birthdate date, avatar text)` — `current_balance` is a **cached wallet balance** maintained by RPCs (not derived on read). `birthdate` (nullable, CHECK 2000-01-01..today) drives the quiz difficulty band (see [Quiz leveling](#quiz-leveling-grade-bands)); NULL falls back to the default band `"5-6"`. `avatar` (nullable text) stores the parent-chosen `"<iconKey>|<colorKey>"` from the catalog in `src/lib/avatars.ts`; NULL falls back to a deterministic icon+color derived from the child id (see `parseAvatar`). Set via `handle_new_user` (from create-child metadata) or `set_child_avatar`.
 - `tasks(id, household_id, child_id, created_by_parent_id, title, description, reward_amount, status text CHECK IN ('assigned','submitted','approved','rejected'), submitted_at, reviewed_at)`
 - `transactions(id, household_id, child_id, type, amount numeric, reference_task_id, goal_id, reference_quiz_attempt_id)` — `type` text CHECK IN `('task_reward','manual_adjustment','goal_allocation','savings_credit','wallet_debit','goal_credit','quiz_reward')`. There is **no `idempotency_key`, no `created_by`**, no enum. The legacy `goal_allocation` value is permitted but unused.
 - `household_settings(id, household_id unique, savings_percentage int 0..100 default 10, quiz_subjects text[] default '{}', quiz_reward_amount int 0..1000 default 5)`
@@ -94,6 +94,17 @@ The canonical wallet-tx allowlist lives in `src/lib/transactions.ts` (`WALLET_TX
 `child_profiles.current_balance` is a cached mirror of `wallet_balance` updated by `approve_task_and_pay`, `deposit_to_goal`, and `complete_quiz_and_pay`. Anything that mutates the wallet outside those RPCs (e.g. a future manual-adjustment flow) must keep the cache in sync.
 
 > Why both `wallet_debit (-amt)` and `goal_credit (+amt)` on a single deposit? They live in different "pots" but share one ledger table. Wallet sum excludes `goal_credit`; goal pot only counts `goal_credit`. Don't add `goal_credit` to the wallet formula or deposits will appear to net to zero.
+
+### Quiz leveling (grade bands)
+
+Educational quizzes serve **age-appropriate questions** chosen entirely **client-side** in `src/lib/quiz-bank/` — leveling never touches the DB, RPCs, or `quiz_attempts`. Each question carries a `band: QuizBand` tag; the child's band is derived from `child_profiles.birthdate` at read time.
+
+- **6 two-grade bands** (`src/lib/quiz-bank/types.ts`): `QUIZ_BANDS = ["1-2","3-4","5-6","7-8","9-10","11-12"]` with Hebrew labels in `BAND_LABELS_HE` (`כיתות א'-ב'` … `כיתות י"א-י"ב`). This replaced an earlier 3-tier model (`young`/`middle`/`older`) that lumped grades 6–12 into one pool and served 12th-grade content to 6th-graders.
+- **Derivation** (`src/lib/quiz-bank/levels.ts`): `gradeForBirthdate` measures age **as of Sept 1 of the current school year** (so a whole grade cohort stays together regardless of who's had their birthday), then `grade = ageAtSept1 − 5` clamped to 1–12. `bandForBirthdate` maps grade → band via `QUIZ_BANDS[floor((grade−1)/2)]`. Missing/unparseable birthdate → `DEFAULT_BAND` (`"5-6"`).
+- **Selection** (`src/lib/quiz-bank/index.ts`): `getRandomQuiz(subject, band, n)` draws from that band, topping up from the **nearest bands** (easier first on ties) when a band's own pool is thin, then shuffles each question's choices and rebinds `correctIndex`. Each of the 4 subjects has ≥8 questions per band.
+- **Consumers**: `src/routes/child/educate.index.tsx` + `educate.$subject.tsx` (child quiz) and `src/routes/parent/children.index.tsx` (parent sees the child's age + band). `useAuth().childBirthdate` feeds the band. Unit-tested in `tests/quiz-levels.test.ts`.
+
+> **Optimization suggestion (future, not built):** add per-quiz **learning content** so a child can study a subject _before_ taking its quiz. `src/routes/child/educate.tsx` (today a bare `<Outlet/>`) would become a tabbed shell — **חידונים | לימוד** — with study material under "לימוד". **v2:** a gender-tailored **courses** tab surfacing age-appropriate skill courses (e.g. boys → carpentry/barbering; girls → Canva design and similar).
 
 ### Styling
 

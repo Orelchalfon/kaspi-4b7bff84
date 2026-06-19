@@ -8,13 +8,19 @@ export const SUBJECT_LABELS_HE: Record<QuizSubject, string> = {
   finance: "כספים",
 };
 
-export const QUIZ_LEVELS = ["young", "middle", "older"] as const;
-export type QuizLevel = (typeof QUIZ_LEVELS)[number];
+// Two-grade school bands. The key is the grade range; difficulty tracks the
+// child's actual grade (derived from birthdate) far more closely than the old
+// 3-tier model, which lumped grades 6–12 into a single "older" pool.
+export const QUIZ_BANDS = ["1-2", "3-4", "5-6", "7-8", "9-10", "11-12"] as const;
+export type QuizBand = (typeof QUIZ_BANDS)[number];
 
-export const LEVEL_LABELS_HE: Record<QuizLevel, string> = {
-  young: "כיתות א'-ב'",
-  middle: "כיתות ג'-ה'",
-  older: "כיתות ו' ומעלה",
+export const BAND_LABELS_HE: Record<QuizBand, string> = {
+  "1-2": "כיתות א'-ב'",
+  "3-4": "כיתות ג'-ד'",
+  "5-6": "כיתות ה'-ו'",
+  "7-8": "כיתות ז'-ח'",
+  "9-10": "כיתות ט'-י'",
+  "11-12": 'כיתות י"א-י"ב',
 };
 
 export interface QuizQuestion {
@@ -22,7 +28,7 @@ export interface QuizQuestion {
   prompt: string;
   choices: [string, string, string, string];
   correctIndex: 0 | 1 | 2 | 3;
-  level: QuizLevel;
+  band: QuizBand;
 }
 
 export const QUIZ_LENGTH = 5;

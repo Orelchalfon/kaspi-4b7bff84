@@ -15,10 +15,10 @@ import { ListSkeleton } from "@/components/loading-skeletons";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  LEVEL_LABELS_HE,
+  BAND_LABELS_HE,
   SUBJECT_LABELS_HE,
+  bandForBirthdate,
   isQuizSubject,
-  levelForBirthdate,
   type QuizSubject,
 } from "@/lib/quiz-bank";
 
@@ -62,7 +62,7 @@ function attemptDateKey(iso: string): string {
 
 function ChildEducate() {
   const { childProfileId, householdId, childBirthdate } = useAuth();
-  const level = useMemo(() => levelForBirthdate(childBirthdate), [childBirthdate]);
+  const band = useMemo(() => bandForBirthdate(childBirthdate), [childBirthdate]);
   const [subjects, setSubjects] = useState<QuizSubject[]>([]);
   const [reward, setReward] = useState<number>(5);
   const [attempts, setAttempts] = useState<AttemptRow[]>([]);
@@ -142,7 +142,7 @@ function ChildEducate() {
                             {SUBJECT_LABELS_HE[s]}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            חידון של 5 שאלות · רמת {LEVEL_LABELS_HE[level]}
+                            חידון של 5 שאלות · רמת {BAND_LABELS_HE[band]}
                           </p>
                         </div>
                       </div>

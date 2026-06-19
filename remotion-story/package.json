@@ -1,0 +1,27 @@
+{
+  "name": "kaspii-remotion-story",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Kaspii core-story explainer video (vertical 9:16, Hebrew RTL).",
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render KaspiiStory out/kaspii-story.mp4",
+    "still": "remotion still KaspiiStory",
+    "upgrade": "remotion upgrade"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.479",
+    "@remotion/google-fonts": "4.0.479",
+    "@remotion/transitions": "4.0.479",
+    "lucide-react": "^0.575.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "remotion": "4.0.479"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "typescript": "^5.8.3"
+  }
+}

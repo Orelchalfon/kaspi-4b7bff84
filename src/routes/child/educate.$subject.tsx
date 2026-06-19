@@ -17,12 +17,12 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  LEVEL_LABELS_HE,
+  BAND_LABELS_HE,
   QUIZ_LENGTH,
   SUBJECT_LABELS_HE,
+  bandForBirthdate,
   getRandomQuiz,
   isQuizSubject,
-  levelForBirthdate,
   type QuizQuestion,
   type QuizSubject,
 } from "@/lib/quiz-bank";
@@ -66,7 +66,7 @@ function ChildQuizPage() {
   const [result, setResult] = useState<Result | null>(null);
 
   const validSubject: QuizSubject | null = isQuizSubject(subject) ? subject : null;
-  const level = useMemo(() => levelForBirthdate(childBirthdate), [childBirthdate]);
+  const band = useMemo(() => bandForBirthdate(childBirthdate), [childBirthdate]);
 
   useEffect(() => {
     // Wait for the child profile too — the birthdate decides the quiz level.
@@ -86,13 +86,13 @@ function ChildQuizPage() {
         setPhase("invalid");
         return;
       }
-      const qs = getRandomQuiz(validSubject, level, QUIZ_LENGTH);
+      const qs = getRandomQuiz(validSubject, band, QUIZ_LENGTH);
       setQuestions(qs);
       setPicked(Array<null>(qs.length).fill(null));
       setCurrentIdx(0);
       setPhase("quiz");
     })();
-  }, [householdId, childProfileId, validSubject, level]);
+  }, [householdId, childProfileId, validSubject, band]);
 
   const subjectLabel = validSubject ? SUBJECT_LABELS_HE[validSubject] : "";
 
@@ -157,7 +157,7 @@ function ChildQuizPage() {
 
   const retry = () => {
     if (!validSubject) return;
-    const qs = getRandomQuiz(validSubject, level, QUIZ_LENGTH);
+    const qs = getRandomQuiz(validSubject, band, QUIZ_LENGTH);
     setQuestions(qs);
     setPicked(Array<null>(qs.length).fill(null));
     setCurrentIdx(0);
@@ -207,7 +207,7 @@ function ChildQuizPage() {
         </Link>
         <div className="text-center">
           <div className="text-sm font-medium text-foreground">{subjectLabel}</div>
-          <div className="text-[11px] text-muted-foreground">{LEVEL_LABELS_HE[level]}</div>
+          <div className="text-[11px] text-muted-foreground">{BAND_LABELS_HE[band]}</div>
         </div>
         <span
           className="text-xs font-medium tabular-nums text-muted-foreground"

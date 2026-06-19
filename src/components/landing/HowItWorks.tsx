@@ -1,11 +1,22 @@
-import { AnimatePresence, m, useInView, useReducedMotion } from "framer-motion";
+import {
+  AnimatePresence,
+  m,
+  useInView,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from "framer-motion";
 import { Check, Coins, PiggyBank } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { easeOutSoft, fadeUp, fadeUpItem, staggerContainer, viewportOnce } from "./motion/variants";
 import { useCountUp } from "./use-count-up";
 import { useStepCycle } from "./use-step-cycle";
+
+type Step = (typeof steps)[number];
 
 const steps = [
   {
@@ -30,13 +41,15 @@ const steps = [
 
 export function HowItWorks() {
   const reduceMotion = useReducedMotion() ?? false;
+  const isMobile = useIsMobile();
   const olRef = useRef<HTMLOListElement>(null);
   const inView = useInView(olRef, { amount: 0.4 });
-  const run = !reduceMotion && inView;
-  const cycle = useStepCycle(steps.length, { run });
-  // Reduced motion → no single active step, every card rests in its final state.
-  const activeStep = reduceMotion ? -1 : cycle;
-  const progress = activeStep <= 0 ? 0 : activeStep / (steps.length - 1);
+
+  const loopRun = !reduceMotion && !isMobile && inView;
+  const cycle = useStepCycle(steps.length, { run: loopRun });
+
+  const loopActiveStep = reduceMotion || isMobile ? -1 : cycle;
+  const progress = loopActiveStep <= 0 ? 0 : loopActiveStep / (steps.length - 1);
 
   return (
     <section id="how-it-works" aria-labelledby="how-headline" className="relative py-20 md:py-28">
@@ -69,43 +82,95 @@ export function HowItWorks() {
           className="relative mt-12 grid grid-cols-1 gap-8 md:mt-16 md:grid-cols-3 md:gap-6"
         >
           <DesktopConnector progress={progress} reduceMotion={reduceMotion} />
-          {steps.map((step, i) => {
-            const active = activeStep === i;
-            return (
-              <m.li
-                key={step.n}
-                variants={fadeUpItem}
-                className={cn(
-                  "relative flex flex-col rounded-2xl border border-foreground/5 bg-card p-6",
-                  "transition-shadow duration-300 motion-reduce:transition-none",
-                  active ? "shadow-lg ring-1 ring-primary/25" : "shadow-none",
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <span
-                    className={cn(
-                      "flex h-9 w-9 items-center justify-center rounded-lg text-base font-bold transition-colors duration-300 motion-reduce:transition-none",
-                      active
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-[color:var(--ks-navy-deep)] text-background",
-                    )}
-                    style={{ fontFeatureSettings: '"tnum"' }}
-                    aria-hidden
-                  >
-                    {step.n}
-                  </span>
-                  <h3 className="text-lg font-semibold text-foreground md:text-xl">{step.title}</h3>
-                </div>
-                <p className="mt-3 text-sm text-muted-foreground md:text-base">{step.body}</p>
-                <div className="mt-6 flex-1 overflow-hidden rounded-xl border border-foreground/5 bg-muted/40 p-3">
-                  <step.Illustration active={active} />
-                </div>
-              </m.li>
-            );
-          })}
+          {steps.map((step, i) => (
+            <StepCard
+              key={step.n}
+              step={step}
+              isMobile={isMobile}
+              reduceMotion={reduceMotion}
+              loopActive={loopActiveStep === i}
+            />
+          ))}
         </m.ol>
       </div>
     </section>
+  );
+}
+
+// On mobile the highlight is fully reached ~60% through the scrub (so the card
+// sits lit while centered); the one-shot micro-actions fire at this point.
+const MICRO_THRESHOLD = 0.55;
+
+function StepCard({
+  step,
+  isMobile,
+  reduceMotion,
+  loopActive,
+}: {
+  step: Step;
+  isMobile: boolean;
+  reduceMotion: boolean;
+  loopActive: boolean;
+}) {
+  const ref = useRef<HTMLLIElement>(null);
+
+  // Mobile: scroll-LINKED. scrollYProgress runs 0 when the card's top hits the
+  // viewport vertical center → 1 when its bottom hits the center.
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start center", "end center"],
+  });
+  // Continuous highlight intensity, eased to full by ~60% of the scrub.
+  const scrollGlow = useTransform(scrollYProgress, [0, 0.6], [0, 1], { clamp: true });
+
+  // Discrete micro-actions fire once when the scrub crosses the threshold; they
+  // never play in reverse (the keyframe/count-up actions just re-fire forward
+  // on a later pass). Desktop ignores this and uses the shared loop index.
+  const [scrolledActive, setScrolledActive] = useState(false);
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    setScrolledActive(v >= MICRO_THRESHOLD);
+  });
+
+  const active = reduceMotion ? false : isMobile ? scrolledActive : loopActive;
+
+  return (
+    <m.li
+      ref={ref}
+      variants={fadeUpItem}
+      className="relative flex flex-col rounded-2xl border border-foreground/5 bg-card p-6"
+    >
+      {/* Highlight overlay (paint-only: primary ring + lift). Opacity is
+          scrubbed by scroll on mobile, boolean-animated by the loop on desktop. */}
+      {!reduceMotion && (
+        <m.span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 rounded-2xl shadow-lg ring-1 ring-primary"
+          style={isMobile ? { opacity: scrollGlow } : undefined}
+          initial={false}
+          animate={isMobile ? undefined : { opacity: loopActive ? 1 : 0 }}
+          transition={isMobile ? undefined : { duration: 0.4, ease: easeOutSoft }}
+        />
+      )}
+      <div className="relative flex items-center gap-3">
+        <span
+          className={cn(
+            "flex h-9 w-9 items-center justify-center rounded-lg text-base font-bold transition-colors duration-300 motion-reduce:transition-none",
+            active
+              ? "bg-primary text-primary-foreground"
+              : "bg-[color:var(--ks-navy-deep)] text-background",
+          )}
+          style={{ fontFeatureSettings: '"tnum"' }}
+          aria-hidden
+        >
+          {step.n}
+        </span>
+        <h3 className="text-lg font-semibold text-foreground md:text-xl">{step.title}</h3>
+      </div>
+      <p className="mt-3 text-sm text-muted-foreground md:text-base">{step.body}</p>
+      <div className="mt-6 flex-1 overflow-hidden rounded-xl border border-foreground/5 bg-muted/40 p-3">
+        <step.Illustration active={active} />
+      </div>
+    </m.li>
   );
 }
 

@@ -19,7 +19,7 @@ import { Pencil, UserPlus, Users } from "lucide-react";
 import { ListSkeleton } from "@/components/loading-skeletons";
 import { ChildAvatar } from "@/components/child-avatar";
 import { AvatarPicker } from "@/components/avatar-picker";
-import { LEVEL_LABELS_HE, ageInYears, levelForBirthdate } from "@/lib/quiz-bank";
+import { BAND_LABELS_HE, DEFAULT_BAND, ageInYears, bandForBirthdate } from "@/lib/quiz-bank";
 import { DEFAULT_COLOR_KEY, DEFAULT_ICON_KEY, parseAvatar, serializeAvatar } from "@/lib/avatars";
 
 export const Route = createFileRoute("/parent/children/")({
@@ -134,13 +134,13 @@ function ChildrenList() {
 }
 
 function BirthdateSummary({ birthdate }: { birthdate: string | null }) {
-  if (!birthdate) return <>תאריך לידה לא הוגדר · רמת {LEVEL_LABELS_HE.middle}</>;
+  if (!birthdate) return <>תאריך לידה לא הוגדר · רמת {BAND_LABELS_HE[DEFAULT_BAND]}</>;
   const age = ageInYears(birthdate);
-  const level = levelForBirthdate(birthdate);
-  if (age === null) return <>תאריך לידה לא הוגדר · רמת {LEVEL_LABELS_HE.middle}</>;
+  const band = bandForBirthdate(birthdate);
+  if (age === null) return <>תאריך לידה לא הוגדר · רמת {BAND_LABELS_HE[DEFAULT_BAND]}</>;
   return (
     <>
-      גיל {age} · רמת {LEVEL_LABELS_HE[level]}
+      גיל {age} · {BAND_LABELS_HE[band]}
     </>
   );
 }

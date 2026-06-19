@@ -85,7 +85,7 @@ Assets can be also referenced as remote URLs:
 import { Video } from "@remotion/media";
 
 export const MyComposition = () => {
-  return <Video src="https://remotion.media/video.mp4" />
+  return <Video src="https://remotion.media/video.mp4" />;
 };
 ```
 
@@ -114,7 +114,7 @@ export const Subtitle = () => {
 };
 
 const Main = () => {
-  const {fps} = useVideoConfig();
+  const { fps } = useVideoConfig();
 
   return (
     <AbsoluteFill>
@@ -129,7 +129,7 @@ const Main = () => {
       </Sequence>
     </AbsoluteFill>
   );
-}
+};
 ```
 
 The width, height, fps, and duration of a video is defined in `src/Root.tsx`:
@@ -158,9 +158,10 @@ Metadata can also be calculated dynamically:
 import { Composition, CalculateMetadataFunction } from "remotion";
 import { MyComposition, MyCompositionProps } from "./MyComposition";
 
-const calculateMetadata: CalculateMetadataFunction<
-  MyCompositionProps
-> = async ({ props, abortSignal }) => {
+const calculateMetadata: CalculateMetadataFunction<MyCompositionProps> = async ({
+  props,
+  abortSignal,
+}) => {
   const data = await fetch(`https://api.example.com/video/${props.videoId}`, {
     signal: abortSignal,
   }).then((res) => res.json());

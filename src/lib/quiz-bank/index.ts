@@ -1,17 +1,17 @@
 import englishQuestions from "./english";
 import financeQuestions from "./finance";
-import { ageInYears, levelForBirthdate } from "./levels";
+import { ageInYears, bandForBirthdate, gradeForBirthdate, DEFAULT_BAND } from "./levels";
 import mathQuestions from "./math";
 import torahQuestions from "./torah";
 import {
-  LEVEL_LABELS_HE,
+  BAND_LABELS_HE,
+  QUIZ_BANDS,
   QUIZ_LENGTH,
-  QUIZ_LEVELS,
   QUIZ_PASS_THRESHOLD_PCT,
   SUBJECT_LABELS_HE,
   SUBJECTS,
   isQuizSubject,
-  type QuizLevel,
+  type QuizBand,
   type QuizQuestion,
   type QuizSubject,
 } from "./types";
@@ -23,12 +23,17 @@ const BANK: Record<QuizSubject, QuizQuestion[]> = {
   finance: financeQuestions,
 };
 
-// When a level's pool is too thin, top up from the nearest tiers first.
-const LEVEL_FALLBACK: Record<QuizLevel, QuizLevel[]> = {
-  young: ["middle", "older"],
-  middle: ["young", "older"],
-  older: ["middle", "young"],
-};
+/** Bands ordered by nearness to `band`; ties resolve to the easier (lower) band. */
+function fallbackOrder(band: QuizBand): QuizBand[] {
+  const target = QUIZ_BANDS.indexOf(band);
+  return QUIZ_BANDS.filter((b) => b !== band).sort((a, b) => {
+    const da = Math.abs(QUIZ_BANDS.indexOf(a) - target);
+    const db = Math.abs(QUIZ_BANDS.indexOf(b) - target);
+    if (da !== db) return da - db;
+    // Same distance (one easier, one harder) → prefer the easier (lower index).
+    return QUIZ_BANDS.indexOf(a) - QUIZ_BANDS.indexOf(b);
+  });
+}
 
 function shuffle<T>(arr: readonly T[]): T[] {
   const copy = arr.slice();
@@ -41,13 +46,14 @@ function shuffle<T>(arr: readonly T[]): T[] {
 
 export function getRandomQuiz(
   subject: QuizSubject,
-  level: QuizLevel,
+  band: QuizBand,
   n: number = QUIZ_LENGTH,
 ): QuizQuestion[] {
-  const pool = shuffle(BANK[subject].filter((q) => q.level === level));
-  for (const fallbackLevel of LEVEL_FALLBACK[level]) {
+  const pool = shuffle(BANK[subject].filter((q) => q.band === band));
+  // When a band's own pool is too thin, top up from the nearest bands first.
+  for (const fallbackBand of fallbackOrder(band)) {
     if (pool.length >= n) break;
-    for (const q of shuffle(BANK[subject].filter((qq) => qq.level === fallbackLevel))) {
+    for (const q of shuffle(BANK[subject].filter((qq) => qq.band === fallbackBand))) {
       if (pool.length >= n) break;
       pool.push(q);
     }
@@ -66,22 +72,24 @@ export function getRandomQuiz(
   });
 }
 
-export function bankSize(subject: QuizSubject, level?: QuizLevel): number {
-  if (!level) return BANK[subject].length;
-  return BANK[subject].filter((q) => q.level === level).length;
+export function bankSize(subject: QuizSubject, band?: QuizBand): number {
+  if (!band) return BANK[subject].length;
+  return BANK[subject].filter((q) => q.band === band).length;
 }
 
 export {
-  LEVEL_LABELS_HE,
+  BAND_LABELS_HE,
+  DEFAULT_BAND,
+  QUIZ_BANDS,
   QUIZ_LENGTH,
-  QUIZ_LEVELS,
   QUIZ_PASS_THRESHOLD_PCT,
   SUBJECT_LABELS_HE,
   SUBJECTS,
   ageInYears,
+  bandForBirthdate,
+  gradeForBirthdate,
   isQuizSubject,
-  levelForBirthdate,
-  type QuizLevel,
+  type QuizBand,
   type QuizQuestion,
   type QuizSubject,
 };
