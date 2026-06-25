@@ -12,7 +12,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "test:e2e": "vitest run tests/e2e",
+    "test:e2e": "vitest run tests/e2e", 
     "deploy": "vite build && pnpm exec wrangler deploy"
   },
   "dependencies": {
