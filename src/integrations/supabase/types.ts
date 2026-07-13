@@ -339,6 +339,120 @@ export type Database = {
           },
         ];
       };
+      tutor_sessions: {
+        Row: {
+          child_id: string;
+          created_at: string;
+          elevenlabs_conversation_id: string | null;
+          ended_at: string | null;
+          household_id: string;
+          id: string;
+          started_at: string;
+          status: string;
+          transcript: Json | null;
+          transcript_source: string | null;
+          tutor_id: string;
+        };
+        Insert: {
+          child_id: string;
+          created_at?: string;
+          elevenlabs_conversation_id?: string | null;
+          ended_at?: string | null;
+          household_id: string;
+          id?: string;
+          started_at?: string;
+          status?: string;
+          transcript?: Json | null;
+          transcript_source?: string | null;
+          tutor_id: string;
+        };
+        Update: {
+          child_id?: string;
+          created_at?: string;
+          elevenlabs_conversation_id?: string | null;
+          ended_at?: string | null;
+          household_id?: string;
+          id?: string;
+          started_at?: string;
+          status?: string;
+          transcript?: Json | null;
+          transcript_source?: string | null;
+          tutor_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tutor_sessions_child_id_fkey";
+            columns: ["child_id"];
+            isOneToOne: false;
+            referencedRelation: "child_profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tutor_sessions_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tutor_sessions_tutor_id_fkey";
+            columns: ["tutor_id"];
+            isOneToOne: false;
+            referencedRelation: "tutors";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      tutors: {
+        Row: {
+          active: boolean;
+          created_at: string;
+          created_by: string;
+          household_id: string;
+          id: string;
+          name: string;
+          personality: string;
+          subject: string;
+          topic: string;
+          updated_at: string;
+          voice_id: string;
+        };
+        Insert: {
+          active?: boolean;
+          created_at?: string;
+          created_by: string;
+          household_id: string;
+          id?: string;
+          name: string;
+          personality?: string;
+          subject: string;
+          topic: string;
+          updated_at?: string;
+          voice_id: string;
+        };
+        Update: {
+          active?: boolean;
+          created_at?: string;
+          created_by?: string;
+          household_id?: string;
+          id?: string;
+          name?: string;
+          personality?: string;
+          subject?: string;
+          topic?: string;
+          updated_at?: string;
+          voice_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tutors_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       user_roles: {
         Row: {
           created_at: string | null;

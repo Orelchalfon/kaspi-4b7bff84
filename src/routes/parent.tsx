@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { AppHeader, type NavItem } from "@/components/app-header";
-import { LayoutDashboard, Receipt, Users } from "lucide-react";
+import { Bot, LayoutDashboard, Receipt, Users } from "lucide-react";
 
 export const Route = createFileRoute("/parent")({
   component: ParentLayout,
@@ -11,6 +11,7 @@ export const Route = createFileRoute("/parent")({
 const PARENT_NAV: readonly NavItem[] = [
   { to: "/parent/dashboard", label: "ראשי", icon: LayoutDashboard },
   { to: "/parent/children", label: "ילדים", icon: Users },
+  { to: "/parent/tutors", label: "חונכים", icon: Bot },
   { to: "/parent/transactions", label: "תנועות", icon: Receipt },
 ];
 

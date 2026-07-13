@@ -12,11 +12,12 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "test:e2e": "vitest run tests/e2e", 
+    "test:e2e": "vitest run tests/e2e",
     "deploy": "vite build && pnpm exec wrangler deploy"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.25.5",
+    "@elevenlabs/react": "1.9.1",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",

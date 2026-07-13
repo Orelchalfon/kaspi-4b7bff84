@@ -70,6 +70,8 @@ export async function deleteUser(userId: string): Promise<void> {
 export async function purgeHousehold(householdId: string): Promise<void> {
   await admin.from("transactions").delete().eq("household_id", householdId);
   await admin.from("quiz_attempts").delete().eq("household_id", householdId);
+  await admin.from("tutor_sessions").delete().eq("household_id", householdId);
+  await admin.from("tutors").delete().eq("household_id", householdId);
   await admin.from("goals").delete().eq("household_id", householdId);
   await admin.from("tasks").delete().eq("household_id", householdId);
   await admin.from("household_settings").delete().eq("household_id", householdId);

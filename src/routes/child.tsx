@@ -1,7 +1,7 @@
 import { AppHeader, type NavItem } from "@/components/app-header";
 import { useAuth } from "@/hooks/use-auth";
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
-import { GraduationCap, Home, PiggyBank, Wallet } from "lucide-react";
+import { Bot, GraduationCap, Home, PiggyBank, Wallet } from "lucide-react";
 import { useEffect } from "react";
 
 export const Route = createFileRoute("/child")({
@@ -11,6 +11,7 @@ export const Route = createFileRoute("/child")({
 const CHILD_NAV: readonly NavItem[] = [
   { to: "/child/dashboard", label: "ראשי", icon: Home },
   { to: "/child/educate", label: "לימוד", icon: GraduationCap },
+  { to: "/child/tutors", label: "חונך", icon: Bot },
   { to: "/child/savings", label: "חיסכון", icon: PiggyBank },
   { to: "/child/wallet", label: "ארנק", icon: Wallet },
 ];

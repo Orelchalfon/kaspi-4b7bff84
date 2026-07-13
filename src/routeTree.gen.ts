@@ -23,13 +23,19 @@ import { Route as ChildSavingsRouteImport } from './routes/child/savings'
 import { Route as ChildEducateRouteImport } from './routes/child/educate'
 import { Route as ChildDashboardRouteImport } from './routes/child/dashboard'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as ParentTutorsIndexRouteImport } from './routes/parent/tutors.index'
 import { Route as ParentChildrenIndexRouteImport } from './routes/parent/children.index'
+import { Route as ChildTutorsIndexRouteImport } from './routes/child/tutors.index'
 import { Route as ChildEducateIndexRouteImport } from './routes/child/educate.index'
+import { Route as ParentTutorsNewRouteImport } from './routes/parent/tutors.new'
+import { Route as ParentTutorsTutorIdRouteImport } from './routes/parent/tutors.$tutorId'
 import { Route as ParentTasksNewRouteImport } from './routes/parent/tasks.new'
 import { Route as ParentTasksTaskIdRouteImport } from './routes/parent/tasks.$taskId'
 import { Route as ParentChildrenNewRouteImport } from './routes/parent/children.new'
+import { Route as ChildTutorsTutorIdRouteImport } from './routes/child/tutors.$tutorId'
 import { Route as ChildTasksTaskIdRouteImport } from './routes/child/tasks.$taskId'
 import { Route as ChildEducateSubjectRouteImport } from './routes/child/educate.$subject'
+import { Route as ParentTutorsTutorIdSessionsSessionIdRouteImport } from './routes/parent/tutors.$tutorId.sessions.$sessionId'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -101,15 +107,35 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ParentTutorsIndexRoute = ParentTutorsIndexRouteImport.update({
+  id: '/tutors/',
+  path: '/tutors/',
+  getParentRoute: () => ParentRoute,
+} as any)
 const ParentChildrenIndexRoute = ParentChildrenIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ParentChildrenRoute,
 } as any)
+const ChildTutorsIndexRoute = ChildTutorsIndexRouteImport.update({
+  id: '/tutors/',
+  path: '/tutors/',
+  getParentRoute: () => ChildRoute,
+} as any)
 const ChildEducateIndexRoute = ChildEducateIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ChildEducateRoute,
+} as any)
+const ParentTutorsNewRoute = ParentTutorsNewRouteImport.update({
+  id: '/tutors/new',
+  path: '/tutors/new',
+  getParentRoute: () => ParentRoute,
+} as any)
+const ParentTutorsTutorIdRoute = ParentTutorsTutorIdRouteImport.update({
+  id: '/tutors/$tutorId',
+  path: '/tutors/$tutorId',
+  getParentRoute: () => ParentRoute,
 } as any)
 const ParentTasksNewRoute = ParentTasksNewRouteImport.update({
   id: '/tasks/new',
@@ -126,6 +152,11 @@ const ParentChildrenNewRoute = ParentChildrenNewRouteImport.update({
   path: '/new',
   getParentRoute: () => ParentChildrenRoute,
 } as any)
+const ChildTutorsTutorIdRoute = ChildTutorsTutorIdRouteImport.update({
+  id: '/tutors/$tutorId',
+  path: '/tutors/$tutorId',
+  getParentRoute: () => ChildRoute,
+} as any)
 const ChildTasksTaskIdRoute = ChildTasksTaskIdRouteImport.update({
   id: '/tasks/$taskId',
   path: '/tasks/$taskId',
@@ -136,6 +167,12 @@ const ChildEducateSubjectRoute = ChildEducateSubjectRouteImport.update({
   path: '/$subject',
   getParentRoute: () => ChildEducateRoute,
 } as any)
+const ParentTutorsTutorIdSessionsSessionIdRoute =
+  ParentTutorsTutorIdSessionsSessionIdRouteImport.update({
+    id: '/sessions/$sessionId',
+    path: '/sessions/$sessionId',
+    getParentRoute: () => ParentTutorsTutorIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -154,11 +191,17 @@ export interface FileRoutesByFullPath {
   '/parent/transactions': typeof ParentTransactionsRoute
   '/child/educate/$subject': typeof ChildEducateSubjectRoute
   '/child/tasks/$taskId': typeof ChildTasksTaskIdRoute
+  '/child/tutors/$tutorId': typeof ChildTutorsTutorIdRoute
   '/parent/children/new': typeof ParentChildrenNewRoute
   '/parent/tasks/$taskId': typeof ParentTasksTaskIdRoute
   '/parent/tasks/new': typeof ParentTasksNewRoute
+  '/parent/tutors/$tutorId': typeof ParentTutorsTutorIdRouteWithChildren
+  '/parent/tutors/new': typeof ParentTutorsNewRoute
   '/child/educate/': typeof ChildEducateIndexRoute
+  '/child/tutors/': typeof ChildTutorsIndexRoute
   '/parent/children/': typeof ParentChildrenIndexRoute
+  '/parent/tutors/': typeof ParentTutorsIndexRoute
+  '/parent/tutors/$tutorId/sessions/$sessionId': typeof ParentTutorsTutorIdSessionsSessionIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -175,11 +218,17 @@ export interface FileRoutesByTo {
   '/parent/transactions': typeof ParentTransactionsRoute
   '/child/educate/$subject': typeof ChildEducateSubjectRoute
   '/child/tasks/$taskId': typeof ChildTasksTaskIdRoute
+  '/child/tutors/$tutorId': typeof ChildTutorsTutorIdRoute
   '/parent/children/new': typeof ParentChildrenNewRoute
   '/parent/tasks/$taskId': typeof ParentTasksTaskIdRoute
   '/parent/tasks/new': typeof ParentTasksNewRoute
+  '/parent/tutors/$tutorId': typeof ParentTutorsTutorIdRouteWithChildren
+  '/parent/tutors/new': typeof ParentTutorsNewRoute
   '/child/educate': typeof ChildEducateIndexRoute
+  '/child/tutors': typeof ChildTutorsIndexRoute
   '/parent/children': typeof ParentChildrenIndexRoute
+  '/parent/tutors': typeof ParentTutorsIndexRoute
+  '/parent/tutors/$tutorId/sessions/$sessionId': typeof ParentTutorsTutorIdSessionsSessionIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -199,11 +248,17 @@ export interface FileRoutesById {
   '/parent/transactions': typeof ParentTransactionsRoute
   '/child/educate/$subject': typeof ChildEducateSubjectRoute
   '/child/tasks/$taskId': typeof ChildTasksTaskIdRoute
+  '/child/tutors/$tutorId': typeof ChildTutorsTutorIdRoute
   '/parent/children/new': typeof ParentChildrenNewRoute
   '/parent/tasks/$taskId': typeof ParentTasksTaskIdRoute
   '/parent/tasks/new': typeof ParentTasksNewRoute
+  '/parent/tutors/$tutorId': typeof ParentTutorsTutorIdRouteWithChildren
+  '/parent/tutors/new': typeof ParentTutorsNewRoute
   '/child/educate/': typeof ChildEducateIndexRoute
+  '/child/tutors/': typeof ChildTutorsIndexRoute
   '/parent/children/': typeof ParentChildrenIndexRoute
+  '/parent/tutors/': typeof ParentTutorsIndexRoute
+  '/parent/tutors/$tutorId/sessions/$sessionId': typeof ParentTutorsTutorIdSessionsSessionIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -224,11 +279,17 @@ export interface FileRouteTypes {
     | '/parent/transactions'
     | '/child/educate/$subject'
     | '/child/tasks/$taskId'
+    | '/child/tutors/$tutorId'
     | '/parent/children/new'
     | '/parent/tasks/$taskId'
     | '/parent/tasks/new'
+    | '/parent/tutors/$tutorId'
+    | '/parent/tutors/new'
     | '/child/educate/'
+    | '/child/tutors/'
     | '/parent/children/'
+    | '/parent/tutors/'
+    | '/parent/tutors/$tutorId/sessions/$sessionId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -245,11 +306,17 @@ export interface FileRouteTypes {
     | '/parent/transactions'
     | '/child/educate/$subject'
     | '/child/tasks/$taskId'
+    | '/child/tutors/$tutorId'
     | '/parent/children/new'
     | '/parent/tasks/$taskId'
     | '/parent/tasks/new'
+    | '/parent/tutors/$tutorId'
+    | '/parent/tutors/new'
     | '/child/educate'
+    | '/child/tutors'
     | '/parent/children'
+    | '/parent/tutors'
+    | '/parent/tutors/$tutorId/sessions/$sessionId'
   id:
     | '__root__'
     | '/'
@@ -268,11 +335,17 @@ export interface FileRouteTypes {
     | '/parent/transactions'
     | '/child/educate/$subject'
     | '/child/tasks/$taskId'
+    | '/child/tutors/$tutorId'
     | '/parent/children/new'
     | '/parent/tasks/$taskId'
     | '/parent/tasks/new'
+    | '/parent/tutors/$tutorId'
+    | '/parent/tutors/new'
     | '/child/educate/'
+    | '/child/tutors/'
     | '/parent/children/'
+    | '/parent/tutors/'
+    | '/parent/tutors/$tutorId/sessions/$sessionId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -385,6 +458,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/parent/tutors/': {
+      id: '/parent/tutors/'
+      path: '/tutors'
+      fullPath: '/parent/tutors/'
+      preLoaderRoute: typeof ParentTutorsIndexRouteImport
+      parentRoute: typeof ParentRoute
+    }
     '/parent/children/': {
       id: '/parent/children/'
       path: '/'
@@ -392,12 +472,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ParentChildrenIndexRouteImport
       parentRoute: typeof ParentChildrenRoute
     }
+    '/child/tutors/': {
+      id: '/child/tutors/'
+      path: '/tutors'
+      fullPath: '/child/tutors/'
+      preLoaderRoute: typeof ChildTutorsIndexRouteImport
+      parentRoute: typeof ChildRoute
+    }
     '/child/educate/': {
       id: '/child/educate/'
       path: '/'
       fullPath: '/child/educate/'
       preLoaderRoute: typeof ChildEducateIndexRouteImport
       parentRoute: typeof ChildEducateRoute
+    }
+    '/parent/tutors/new': {
+      id: '/parent/tutors/new'
+      path: '/tutors/new'
+      fullPath: '/parent/tutors/new'
+      preLoaderRoute: typeof ParentTutorsNewRouteImport
+      parentRoute: typeof ParentRoute
+    }
+    '/parent/tutors/$tutorId': {
+      id: '/parent/tutors/$tutorId'
+      path: '/tutors/$tutorId'
+      fullPath: '/parent/tutors/$tutorId'
+      preLoaderRoute: typeof ParentTutorsTutorIdRouteImport
+      parentRoute: typeof ParentRoute
     }
     '/parent/tasks/new': {
       id: '/parent/tasks/new'
@@ -420,6 +521,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ParentChildrenNewRouteImport
       parentRoute: typeof ParentChildrenRoute
     }
+    '/child/tutors/$tutorId': {
+      id: '/child/tutors/$tutorId'
+      path: '/tutors/$tutorId'
+      fullPath: '/child/tutors/$tutorId'
+      preLoaderRoute: typeof ChildTutorsTutorIdRouteImport
+      parentRoute: typeof ChildRoute
+    }
     '/child/tasks/$taskId': {
       id: '/child/tasks/$taskId'
       path: '/tasks/$taskId'
@@ -433,6 +541,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/child/educate/$subject'
       preLoaderRoute: typeof ChildEducateSubjectRouteImport
       parentRoute: typeof ChildEducateRoute
+    }
+    '/parent/tutors/$tutorId/sessions/$sessionId': {
+      id: '/parent/tutors/$tutorId/sessions/$sessionId'
+      path: '/sessions/$sessionId'
+      fullPath: '/parent/tutors/$tutorId/sessions/$sessionId'
+      preLoaderRoute: typeof ParentTutorsTutorIdSessionsSessionIdRouteImport
+      parentRoute: typeof ParentTutorsTutorIdRoute
     }
   }
 }
@@ -457,6 +572,8 @@ interface ChildRouteChildren {
   ChildSavingsRoute: typeof ChildSavingsRoute
   ChildWalletRoute: typeof ChildWalletRoute
   ChildTasksTaskIdRoute: typeof ChildTasksTaskIdRoute
+  ChildTutorsTutorIdRoute: typeof ChildTutorsTutorIdRoute
+  ChildTutorsIndexRoute: typeof ChildTutorsIndexRoute
 }
 
 const ChildRouteChildren: ChildRouteChildren = {
@@ -465,6 +582,8 @@ const ChildRouteChildren: ChildRouteChildren = {
   ChildSavingsRoute: ChildSavingsRoute,
   ChildWalletRoute: ChildWalletRoute,
   ChildTasksTaskIdRoute: ChildTasksTaskIdRoute,
+  ChildTutorsTutorIdRoute: ChildTutorsTutorIdRoute,
+  ChildTutorsIndexRoute: ChildTutorsIndexRoute,
 }
 
 const ChildRouteWithChildren = ChildRoute._addFileChildren(ChildRouteChildren)
@@ -483,12 +602,27 @@ const ParentChildrenRouteWithChildren = ParentChildrenRoute._addFileChildren(
   ParentChildrenRouteChildren,
 )
 
+interface ParentTutorsTutorIdRouteChildren {
+  ParentTutorsTutorIdSessionsSessionIdRoute: typeof ParentTutorsTutorIdSessionsSessionIdRoute
+}
+
+const ParentTutorsTutorIdRouteChildren: ParentTutorsTutorIdRouteChildren = {
+  ParentTutorsTutorIdSessionsSessionIdRoute:
+    ParentTutorsTutorIdSessionsSessionIdRoute,
+}
+
+const ParentTutorsTutorIdRouteWithChildren =
+  ParentTutorsTutorIdRoute._addFileChildren(ParentTutorsTutorIdRouteChildren)
+
 interface ParentRouteChildren {
   ParentChildrenRoute: typeof ParentChildrenRouteWithChildren
   ParentDashboardRoute: typeof ParentDashboardRoute
   ParentTransactionsRoute: typeof ParentTransactionsRoute
   ParentTasksTaskIdRoute: typeof ParentTasksTaskIdRoute
   ParentTasksNewRoute: typeof ParentTasksNewRoute
+  ParentTutorsTutorIdRoute: typeof ParentTutorsTutorIdRouteWithChildren
+  ParentTutorsNewRoute: typeof ParentTutorsNewRoute
+  ParentTutorsIndexRoute: typeof ParentTutorsIndexRoute
 }
 
 const ParentRouteChildren: ParentRouteChildren = {
@@ -497,6 +631,9 @@ const ParentRouteChildren: ParentRouteChildren = {
   ParentTransactionsRoute: ParentTransactionsRoute,
   ParentTasksTaskIdRoute: ParentTasksTaskIdRoute,
   ParentTasksNewRoute: ParentTasksNewRoute,
+  ParentTutorsTutorIdRoute: ParentTutorsTutorIdRouteWithChildren,
+  ParentTutorsNewRoute: ParentTutorsNewRoute,
+  ParentTutorsIndexRoute: ParentTutorsIndexRoute,
 }
 
 const ParentRouteWithChildren =
