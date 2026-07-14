@@ -54,7 +54,7 @@ Required env vars (`.env` for dev, host env for prod):
 
 ### Database (live schema)
 
-> Most local files in `supabase/migrations/` were historically aspirational and have been deleted. The repo now contains only `20260518185128_add_savings_and_goals.sql` (the migration that backfills the savings/goals feature on top of the live schema). The earlier migrations that _actually_ shipped (`add_rls_policies`, `fix_handle_new_user_trigger`, `create_household_settings`, `swap_signup_trigger_to_handle_new_user`) live only in Supabase's tracking table — bootstrap a fresh env with `supabase db pull`.
+> Most of the *earliest* local files in `supabase/migrations/` were historically aspirational and have been deleted — the earliest shipped migrations (`add_rls_policies`, `fix_handle_new_user_trigger`, `create_household_settings`, `swap_signup_trigger_to_handle_new_user`) live only in Supabase's tracking table, so bootstrap a fresh env with `supabase db pull`. From `20260518185128_add_savings_and_goals.sql` onward, migrations applied via the Supabase MCP **are** committed locally as they land: `20260525120000_savings_transfer_rpcs.sql`, `20260612120000_add_child_birthdate.sql`, `20260710120000_add_ai_tutors.sql`, `20260713190000_manual_adjustment_and_wallet_formula_fix.sql`. Keep this current — add a local file for every migration applied via `apply_migration` from here on.
 
 **Tables** (text-based status/type fields throughout; no Postgres enums):
 
@@ -72,7 +72,10 @@ Required env vars (`.env` for dev, host env for prod):
 **RPCs:**
 
 - `approve_task_and_pay(p_task_id uuid) RETURNS boolean` — locks the task, idempotent on "transactions exist for this task". Inserts `task_reward (+full)`, and if `household_settings.savings_percentage > 0` also inserts `wallet_debit (-save)` + `savings_credit (+save)`. Updates `child_profiles.current_balance` to reflect wallet delta only.
-- `deposit_to_goal(_goal_id uuid, _amount integer) RETURNS jsonb` — child-owner or household-parent. Validates wallet ≥ amount and `deposited + amount ≤ target`. Inserts `wallet_debit (-amt)` + `goal_credit (+amt)`, updates cached balance, flips goal to `completed` when target reached. Returns `{ success: true, deposited, target }` or `{ error: '...' }`.
+- `deposit_to_goal(_goal_id uuid, _amount integer) RETURNS jsonb` — child-owner or household-parent. Validates wallet ≥ amount (wallet formula includes `quiz_reward` — fixed 2026-07, previously omitted it and caused false "insufficient balance" errors for quiz-only earners) and `deposited + amount ≤ target`. Inserts `wallet_debit (-amt)` + `goal_credit (+amt)`, updates cached balance, flips goal to `completed` when target reached. Returns `{ success: true, deposited, target }` or `{ error: '...' }`.
+- `deposit_to_savings(_amount integer) RETURNS jsonb` — child-only (caller resolved via `child_profiles.user_id = auth.uid()`, no `_child_id` param). Validates wallet ≥ amount (same fixed 4-type formula as `deposit_to_goal`). Inserts `wallet_debit (-amt)` + `savings_credit (+amt)`, updates cached balance. Returns `{ success: true, wallet, savings }` or `{ error: '...' }`. `supabase/migrations/20260525120000_savings_transfer_rpcs.sql` has the original (pre-`quiz_reward`-fix) version; the fix itself lives in `20260713190000_manual_adjustment_and_wallet_formula_fix.sql`.
+- `deposit_savings_to_goal(_goal_id uuid, _amount integer) RETURNS jsonb` — child-owner or household-parent. Validates savings balance (`SUM WHERE type='savings_credit'`) ≥ amount and `deposited + amount ≤ target`. Inserts `savings_credit (-amt)` + `goal_credit (+amt)` — does **not** touch `child_profiles.current_balance` (savings isn't part of the wallet). Flips goal to `completed` when target reached. Returns `{ success: true, deposited, target, savings_after }` or `{ error: '...' }`. Defined in `supabase/migrations/20260525120000_savings_transfer_rpcs.sql`; not touched by the `quiz_reward` fix (this RPC checks savings, not wallet, balance).
+- `manual_adjustment(_child_id uuid, _amount integer) RETURNS jsonb` — household-parent-only. `_amount` any non-zero integer (positive = give, negative = take); a negative amount is rejected if it would drive the wallet balance below zero. Inserts one `manual_adjustment` transaction, updates cached balance. Returns `{ success: true, amount }` or `{ error: '...' }`. Used by the "+/−" control on `/parent/dashboard`. Defined in `supabase/migrations/20260713190000_manual_adjustment_and_wallet_formula_fix.sql`.
 - `set_child_birthdate(_child_id uuid, _birthdate date) RETURNS jsonb` — household-parent-only edit of `child_profiles.birthdate` (range-validated, NULL allowed to clear). Used by the edit dialog on `/parent/children`; deliberately an RPC rather than a client-side UPDATE so parents never get a broad UPDATE path to `current_balance`.
 - `set_child_avatar(_child_id uuid, _avatar text) RETURNS jsonb` — household-parent-only edit of `child_profiles.avatar` (empty string clears to NULL). Same edit dialog on `/parent/children`, same reason for being an RPC as `set_child_birthdate`.
 - `complete_quiz_and_pay(_subject text, _correct int, _total int) RETURNS jsonb` — called by the authenticated child after a quiz. Records the attempt; pass = ≥80%. Pays out only the first passing attempt per subject per Asia/Jerusalem day: inserts `quiz_reward (+reward)`, applies the savings split exactly like `approve_task_and_pay`, updates `child_profiles.current_balance`. Returns `{ passed, paid, wallet_delta, savings_delta, reward, attempt_id }` on payout, `{ passed: false, paid: false, reason }` on fail or already-paid, or `{ error: '...' }`.
@@ -116,13 +119,15 @@ Educational quizzes serve **age-appropriate questions** chosen entirely **client
 
 ### Testing
 
-`tests/helpers/supabase.ts` defines `admin`, `userClient(token)`, `createAdHocUser`, `purgeHousehold`, `deleteUser`. The three e2e files exercise:
+`tests/helpers/supabase.ts` defines `admin`, `userClient(token)`, `createAdHocUser`, `purgeHousehold`, `deleteUser`, and `assertWalletInvariant(childId)` (asserts `child_profiles.current_balance` matches `computeWalletBalance` over that child's `transactions` — call after any mutating flow). The e2e files exercise:
 
 - `parent-child-flow.test.ts` — full happy-path + idempotency of `approve_task_and_pay`
 - `rls-isolation.test.ts` — cross-household leakage
 - `task-status-transitions.test.ts` — status transitions
+- `goals-savings-flow.test.ts` — `deposit_to_goal`/`deposit_to_savings`/`deposit_savings_to_goal`: happy path, insufficient balance, target exceeded, completion flip, plus a regression case proving the `quiz_reward` wallet-formula fix
+- `manual-adjustment.test.ts` — `manual_adjustment`: give, take, take-would-overdraw rejection, cross-household rejection
 
-`parent-child-flow` also covers the savings split on approval; `child-birthdate.test.ts` covers the birthdate trigger + `set_child_birthdate`. Goal-deposit flows are still uncovered — worth adding when touching that code. Note: `households`/`user_roles` have SELECT-only RLS — tests rely on the signup trigger to create households (`householdOf`/`createChildUser` in `tests/helpers/supabase.ts`).
+`parent-child-flow` also covers the savings split on approval; `child-birthdate.test.ts` covers the birthdate trigger + `set_child_birthdate`. Note: `households`/`user_roles` have SELECT-only RLS — tests rely on the signup trigger to create households (`householdOf`/`createChildUser` in `tests/helpers/supabase.ts`).
 
 ---
 
@@ -144,7 +149,7 @@ Educational quizzes serve **age-appropriate questions** chosen entirely **client
 
 1. **Parent transactions tx-type labels** — `parent/transactions.tsx` needs a per-type label/tone helper for the six tx types.
 2. **Proof-image upload** — the original plan called for required image proofs. The live schema doesn't carry `proof_image_path` or a `task-proofs` Storage bucket, and `approve_task_and_pay` doesn't enforce it. If proofs are desired, that's a follow-up: add column, add bucket + policies, gate approval, add upload UI in `src/routes/child/tasks.$taskId.tsx`.
-3. **e2e coverage for savings + goals** — extend the test helpers to seed a goal and exercise `deposit_to_goal` (happy path + insufficient balance + target exceeded + completion).
+3. ~~e2e coverage for savings + goals~~ — done, see `tests/e2e/goals-savings-flow.test.ts` and `tests/e2e/manual-adjustment.test.ts`.
 
 ### When extending the parent dashboard
 

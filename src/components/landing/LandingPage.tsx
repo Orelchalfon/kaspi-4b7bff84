@@ -6,6 +6,7 @@ import { LandingNav } from "./LandingNav";
 
 const HowItWorks = lazy(() => import("./HowItWorks").then((m) => ({ default: m.HowItWorks })));
 const FeatureRows = lazy(() => import("./FeatureRows").then((m) => ({ default: m.FeatureRows })));
+const AiTutor = lazy(() => import("./AiTutor").then((m) => ({ default: m.AiTutor })));
 const RoleSplit = lazy(() => import("./RoleSplit").then((m) => ({ default: m.RoleSplit })));
 const TrustStrip = lazy(() => import("./TrustStrip").then((m) => ({ default: m.TrustStrip })));
 const Faq = lazy(() => import("./Faq").then((m) => ({ default: m.Faq })));
@@ -26,6 +27,7 @@ export function LandingPage() {
       <Suspense fallback={null}>
         <HowItWorks />
         <FeatureRows />
+        <AiTutor />
         <RoleSplit />
         <TrustStrip />
         <Faq />

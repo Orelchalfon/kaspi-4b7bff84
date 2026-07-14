@@ -1,5 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { expect } from "vitest";
 import type { Database } from "@/integrations/supabase/types";
+import { computeWalletBalance } from "@/lib/transactions";
 
 const SUPABASE_URL = process.env.SUPABASE_URL!;
 const SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -146,4 +148,32 @@ export async function createChildUser(
     accessToken: signed.session.access_token,
     childProfileId: profile.id,
   };
+}
+
+/**
+ * Asserts the ledger invariant that backs every wallet-mutating RPC:
+ * `child_profiles.current_balance` must always equal the derived wallet
+ * balance (`computeWalletBalance` over that child's `transactions`).
+ * Reads via the service-role client (bypasses RLS) so it can be called
+ * regardless of which actor performed the mutation under test.
+ */
+export async function assertWalletInvariant(childId: string): Promise<void> {
+  const { data: txs, error: txErr } = await admin
+    .from("transactions")
+    .select("amount, type")
+    .eq("child_id", childId);
+  if (txErr) {
+    throw new Error(`assertWalletInvariant: failed to read transactions: ${txErr.message}`);
+  }
+
+  const { data: profile, error: pErr } = await admin
+    .from("child_profiles")
+    .select("current_balance")
+    .eq("id", childId)
+    .single();
+  if (pErr || !profile) {
+    throw new Error(`assertWalletInvariant: failed to read child_profiles: ${pErr?.message}`);
+  }
+
+  expect(profile.current_balance).toBe(computeWalletBalance(txs ?? []));
 }

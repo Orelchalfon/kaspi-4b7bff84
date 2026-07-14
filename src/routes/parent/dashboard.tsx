@@ -25,14 +25,33 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ChildrenStack } from "@/components/children-stack";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { SUBJECTS, SUBJECT_LABELS_HE, isQuizSubject, type QuizSubject } from "@/lib/quiz-bank";
 import { isWalletTx } from "@/lib/transactions";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookOpen, Check, Inbox, PiggyBank, Plus, Receipt, UserPlus, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import {
+  BookOpen,
+  Check,
+  Inbox,
+  Minus,
+  Pencil,
+  PiggyBank,
+  Plus,
+  Receipt,
+  UserPlus,
+  X,
+} from "lucide-react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/parent/dashboard")({
@@ -70,6 +89,7 @@ function ParentDashboard() {
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState<string | null>(null);
+  const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
   const [savingsPct, setSavingsPct] = useState<number>(0);
   const [pctInput, setPctInput] = useState<string>("0");
   const [savingPct, setSavingPct] = useState(false);
@@ -451,6 +471,16 @@ function ParentDashboard() {
               <span className="flex items-center gap-2">
                 <span>יתרה:</span>
                 <CoinAmount value={balances[selectedChild.id] ?? 0} size="lg" animate />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  aria-label={`עדכון יתרה ידני עבור ${selectedChild.display_name}`}
+                  onClick={() => setAdjustDialogOpen(true)}
+                >
+                  <Pencil className="h-3.5 w-3.5" aria-hidden />
+                </Button>
               </span>
             </div>
           </div>
@@ -589,7 +619,11 @@ function ParentDashboard() {
                               : "—"}
                           </TableCell>
                           <TableCell>
-                            <CoinAmount value={tx.amount} signed tone="success" />
+                            <CoinAmount
+                              value={tx.amount}
+                              signed
+                              tone={tx.amount >= 0 ? "success" : "destructive"}
+                            />
                           </TableCell>
                         </TableRow>
                       ))}
@@ -601,6 +635,122 @@ function ParentDashboard() {
           </div>
         </section>
       )}
+
+      <ManualAdjustmentDialog
+        child={selectedChild}
+        open={adjustDialogOpen}
+        onOpenChange={setAdjustDialogOpen}
+        onSaved={() => (householdId ? loadAll(householdId) : Promise.resolve())}
+      />
     </div>
+  );
+}
+
+function ManualAdjustmentDialog({
+  child,
+  open,
+  onOpenChange,
+  onSaved,
+}: {
+  child: { id: string; display_name: string } | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSaved: () => Promise<void>;
+}) {
+  const [direction, setDirection] = useState<"add" | "subtract">("add");
+  const [amountInput, setAmountInput] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setDirection("add");
+      setAmountInput("");
+    }
+  }, [open]);
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!child) return;
+    const n = Number(amountInput);
+    if (!Number.isFinite(n) || !Number.isInteger(n) || n <= 0) {
+      toast.error("סכום חייב להיות מספר שלם חיובי");
+      return;
+    }
+    setSubmitting(true);
+    const signedAmount = direction === "add" ? n : -n;
+    const { data, error } = await supabase.rpc("manual_adjustment", {
+      _child_id: child.id,
+      _amount: signedAmount,
+    });
+    setSubmitting(false);
+
+    const payload = data as { success?: boolean; error?: string } | null;
+    if (error || payload?.error) {
+      console.error("[manual_adjustment]", error ?? payload?.error);
+      const hebrew =
+        payload?.error === "Adjustment would make wallet negative"
+          ? "הפעולה תגרום ליתרה שלילית"
+          : "לא ניתן לבצע את הפעולה";
+      toast.error(hebrew);
+      return;
+    }
+
+    toast.success("היתרה עודכנה");
+    onOpenChange(false);
+    await onSaved();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent dir="rtl">
+        <DialogHeader>
+          <DialogTitle>עדכון יתרה — {child?.display_name}</DialogTitle>
+          <DialogDescription>הוסיפו או הפחיתו מטבעות מהארנק של הילד באופן ידני.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={submit} className="space-y-4" noValidate>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant={direction === "add" ? "default" : "outline"}
+              className="min-h-10 flex-1"
+              onClick={() => setDirection("add")}
+              aria-pressed={direction === "add"}
+            >
+              <Plus className="h-4 w-4" aria-hidden />
+              <span className="ms-1.5">הוסף</span>
+            </Button>
+            <Button
+              type="button"
+              variant={direction === "subtract" ? "default" : "outline"}
+              className="min-h-10 flex-1"
+              onClick={() => setDirection("subtract")}
+              aria-pressed={direction === "subtract"}
+            >
+              <Minus className="h-4 w-4" aria-hidden />
+              <span className="ms-1.5">הפחת</span>
+            </Button>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="adjust-amount">סכום</Label>
+            <Input
+              id="adjust-amount"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              value={amountInput}
+              onChange={(e) => setAmountInput(e.target.value)}
+              className="tabular-nums"
+              dir="ltr"
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button type="submit" className="min-h-11 w-full" disabled={submitting}>
+              {submitting ? "מעדכן..." : "עדכון יתרה"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

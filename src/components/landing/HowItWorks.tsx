@@ -66,7 +66,7 @@ export function HowItWorks() {
             id="how-headline"
             className="mt-2 text-3xl font-semibold tracking-tight text-foreground md:text-4xl"
           >
-            לולאה אחת, ברורה לכולם.
+            שגרה אחת, ברורה לכולם.
           </h2>
           <p className="mt-4 text-base text-muted-foreground md:text-lg">
             שלושה שלבים, חוזרים מדי שבוע — בלי ניירת, בלי לוחות שיש לתחזק.
@@ -81,7 +81,6 @@ export function HowItWorks() {
           variants={staggerContainer}
           className="relative mt-12 grid grid-cols-1 gap-8 md:mt-16 md:grid-cols-3 md:gap-6"
         >
-          <DesktopConnector progress={progress} reduceMotion={reduceMotion} />
           {steps.map((step, i) => (
             <StepCard
               key={step.n}
@@ -174,41 +173,6 @@ function StepCard({
   );
 }
 
-function DesktopConnector({ progress, reduceMotion }: { progress: number; reduceMotion: boolean }) {
-  return (
-    <svg
-      aria-hidden
-      className="pointer-events-none absolute start-[12%] end-[12%] top-[4.5rem] hidden h-1 -translate-y-1/2 md:block"
-      preserveAspectRatio="none"
-      viewBox="0 0 100 1"
-    >
-      {/* Dashed track (drawn once on enter), right-to-left for RTL. */}
-      <m.path
-        d="M 100 0.5 L 0 0.5"
-        fill="none"
-        stroke="var(--ks-navy-deep)"
-        strokeOpacity="0.18"
-        strokeWidth="1"
-        strokeDasharray="3 4"
-        initial={{ pathLength: 0 }}
-        whileInView={{ pathLength: 1 }}
-        viewport={viewportOnce}
-        transition={{ duration: 0.7, ease: "easeOut" }}
-      />
-      {/* Primary progress overlay that flows with the active step. */}
-      <m.path
-        d="M 100 0.5 L 0 0.5"
-        fill="none"
-        stroke="var(--primary)"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        initial={false}
-        animate={{ pathLength: reduceMotion ? 1 : progress }}
-        transition={{ duration: reduceMotion ? 0 : 0.6, ease: easeOutSoft }}
-      />
-    </svg>
-  );
-}
 
 function ParentTaskIllustration({ active }: { active: boolean }) {
   return (

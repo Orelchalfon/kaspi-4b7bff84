@@ -504,6 +504,10 @@ export type Database = {
         Returns: Json;
       };
       deposit_to_savings: { Args: { _amount: number }; Returns: Json };
+      manual_adjustment: {
+        Args: { _amount: number; _child_id: string };
+        Returns: Json;
+      };
       set_child_avatar: {
         Args: { _avatar: string; _child_id: string };
         Returns: Json;

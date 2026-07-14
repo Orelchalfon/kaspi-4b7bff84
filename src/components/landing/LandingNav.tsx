@@ -17,6 +17,7 @@ const navLinks = [
   { label: "חיסכון", href: "#savings" },
   { label: "מטרות", href: "#goals" },
   { label: "לימוד", href: "#educate" },
+  { label: "חונך קולי", href: "#ai-tutor" },
 ];
 
 export function LandingNav() {

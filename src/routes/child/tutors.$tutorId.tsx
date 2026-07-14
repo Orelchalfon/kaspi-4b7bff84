@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowLeft, Bot, Loader2, Mic, MicOff, PhoneOff } from "lucide-react";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ConversationProvider, useConversation } from "@elevenlabs/react";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,6 +13,31 @@ import type { Json } from "@/integrations/supabase/types";
 import { mintTutorSignedUrl } from "@/server/tutor-session";
 import { type TutorPersonality } from "@/lib/tutors";
 import { cn } from "@/lib/utils";
+
+// Heavy WebGL dependency - only this route needs it, so it's split out of
+// the main bundle rather than eagerly imported.
+const Spline = lazy(() => import("@splinetool/react-spline"));
+
+const TUTOR_AVATAR_SCENE = "https://prod.spline.design/LDGLw9lCDGGf-YiO/scene.splinecode";
+
+// A blocked network request or unsupported WebGL context is a realistic
+// failure mode for a third-party CDN asset - fall back to the plain icon
+// rather than breaking the whole session UI.
+class SplineErrorBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: unknown) {
+    console.error("[tutor avatar] Spline scene failed to load", error);
+  }
+  render() {
+    return this.state.hasError ? this.props.fallback : this.props.children;
+  }
+}
 
 export const Route = createFileRoute("/child/tutors/$tutorId")({
   component: ChildTutorSessionPage,
@@ -185,6 +210,7 @@ function TutorSession({
   };
 
   const isSpeaking = conversation.isSpeaking;
+  const reducedMotion = useReducedMotion();
 
   return (
     <div className="space-y-5">
@@ -205,13 +231,69 @@ function TutorSession({
 
       <Card>
         <CardContent className="flex flex-col items-center gap-6 py-10">
-          <motion.div
-            className="flex h-28 w-28 items-center justify-center rounded-full bg-primary/10 text-primary"
-            animate={isSpeaking ? { scale: [1, 1.08, 1] } : { scale: 1 }}
-            transition={{ duration: 1, repeat: isSpeaking ? Infinity : 0, ease: "easeInOut" }}
-          >
-            <Bot className="h-12 w-12" aria-hidden />
-          </motion.div>
+          <div className="relative flex h-48 w-48 items-center justify-center">
+            {/* Speaking glow - the scene itself keeps orbiting regardless of
+                speaking state, so the "it's talking" cue comes from this
+                pulse instead of anything inside the scene. */}
+            <motion.div
+              aria-hidden
+              className="absolute inset-0 rounded-full bg-primary/25 blur-2xl"
+              animate={
+                reducedMotion
+                  ? { opacity: 0.25 }
+                  : isSpeaking
+                    ? { opacity: [0.25, 0.55, 0.25], scale: [0.92, 1.08, 0.92] }
+                    : { opacity: 0.2, scale: 0.95 }
+              }
+              transition={{
+                duration: 1,
+                repeat: isSpeaking && !reducedMotion ? Infinity : 0,
+                ease: "easeInOut",
+              }}
+            />
+            <motion.div
+              className="relative h-40 w-40 overflow-hidden rounded-full bg-primary/10 text-primary"
+              animate={
+                reducedMotion ? { scale: 1 } : isSpeaking ? { scale: [1, 1.06, 1] } : { scale: 1 }
+              }
+              transition={{
+                duration: 0.9,
+                repeat: isSpeaking && !reducedMotion ? Infinity : 0,
+                ease: "easeInOut",
+              }}
+            >
+              <SplineErrorBoundary
+                fallback={
+                  <div className="flex h-full w-full items-center justify-center">
+                    <Bot className="h-12 w-12" aria-hidden />
+                  </div>
+                }
+              >
+                <Suspense
+                  fallback={
+                    <div className="flex h-full w-full items-center justify-center">
+                      <Loader2 className="h-8 w-8 animate-spin" aria-hidden />
+                    </div>
+                  }
+                >
+                  <Spline
+                    scene={TUTOR_AVATAR_SCENE}
+                    style={{
+                      width: "138%",
+                      height: "138%",
+                      position: "absolute",
+                      top: "50%",
+                      left: "50%",
+                      transform: "translate(-50%, -50%)",
+                    }}
+                  />
+                </Suspense>
+              </SplineErrorBoundary>
+            </motion.div>
+            <span className="sr-only" role="status" aria-live="polite">
+              {isSpeaking ? "החונך מדבר" : ""}
+            </span>
+          </div>
 
           <div className="text-center">
             <p className="text-lg font-semibold text-foreground">{tutor.name}</p>
