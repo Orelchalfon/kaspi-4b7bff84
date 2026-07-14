@@ -49,7 +49,6 @@ export function HowItWorks() {
   const cycle = useStepCycle(steps.length, { run: loopRun });
 
   const loopActiveStep = reduceMotion || isMobile ? -1 : cycle;
-  const progress = loopActiveStep <= 0 ? 0 : loopActiveStep / (steps.length - 1);
 
   return (
     <section id="how-it-works" aria-labelledby="how-headline" className="relative py-20 md:py-28">
@@ -172,7 +171,6 @@ function StepCard({
     </m.li>
   );
 }
-
 
 function ParentTaskIllustration({ active }: { active: boolean }) {
   return (
