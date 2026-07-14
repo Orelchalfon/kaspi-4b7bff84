@@ -1,18 +1,18 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
-import { ArrowLeft, Bot, Loader2, Mic, MicOff, PhoneOff } from "lucide-react";
-import { toast } from "sonner";
-import { motion, useReducedMotion } from "framer-motion";
 import { ConversationProvider, useConversation } from "@elevenlabs/react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { motion, useReducedMotion } from "framer-motion";
+import { ArrowLeft, Bot, Loader2, Mic, MicOff, PhoneOff } from "lucide-react";
+import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
-import { mintTutorSignedUrl } from "@/server/tutor-session";
 import { type TutorPersonality } from "@/lib/tutors";
 import { cn } from "@/lib/utils";
+import { mintTutorSignedUrl } from "@/server/tutor-session";
 
 // Heavy WebGL dependency - only this route needs it, so it's split out of
 // the main bundle rather than eagerly imported.
@@ -125,6 +125,10 @@ function TutorSession({
   const { session } = useAuth();
   const [phase, setPhase] = useState<Phase>("idle");
   const [transcript, setTranscript] = useState<TranscriptMessage[]>([]);
+  // Bridges the multi-second gap between the child finishing a turn and the
+  // agent's TTS audio starting - driven by ElevenLabs' own `agent_typing`
+  // signal (`onAgentTyping`) rather than inferring it from message roles.
+  const [isThinking, setIsThinking] = useState(false);
   const sessionIdRef = useRef<string | null>(null);
   const transcriptRef = useRef<TranscriptMessage[]>([]);
 
@@ -159,6 +163,7 @@ function TutorSession({
     },
     onDisconnect: async () => {
       setPhase("ended");
+      setIsThinking(false);
       await finishSession("completed");
     },
     onMessage: ({ message, role }) => {
@@ -167,10 +172,14 @@ function TutorSession({
         { role: role === "agent" ? "assistant" : "user", content: message },
       ]);
     },
+    onAgentTyping: ({ is_typing }) => {
+      setIsThinking(is_typing);
+    },
     onError: async (message) => {
       console.error("[tutor session]", message);
       toast.error("אירעה שגיאה בשיחה");
       setPhase("ended");
+      setIsThinking(false);
       await finishSession("failed");
     },
   });
@@ -212,6 +221,22 @@ function TutorSession({
   const isSpeaking = conversation.isSpeaking;
   const reducedMotion = useReducedMotion();
 
+  // Safety nets so the "thinking" indicator can never get stuck true across
+  // a session, even if an `agent_typing: false` event is missed.
+  useEffect(() => {
+    if (isSpeaking) {
+      setIsThinking(false);
+    }
+  }, [isSpeaking]);
+
+  useEffect(() => {
+    if (phase !== "active") {
+      setIsThinking(false);
+    }
+  }, [phase]);
+
+  const isThinkingVisible = phase === "active" && isThinking && !isSpeaking;
+
   return (
     <div className="space-y-5">
       <header className="flex items-center justify-between gap-3">
@@ -243,11 +268,13 @@ function TutorSession({
                   ? { opacity: 0.25 }
                   : isSpeaking
                     ? { opacity: [0.25, 0.55, 0.25], scale: [0.92, 1.08, 0.92] }
-                    : { opacity: 0.2, scale: 0.95 }
+                    : isThinkingVisible
+                      ? { opacity: [0.15, 0.32, 0.15], scale: [0.95, 1.03, 0.95] }
+                      : { opacity: 0.2, scale: 0.95 }
               }
               transition={{
-                duration: 1,
-                repeat: isSpeaking && !reducedMotion ? Infinity : 0,
+                duration: isSpeaking ? 1 : 1.8,
+                repeat: (isSpeaking || isThinkingVisible) && !reducedMotion ? Infinity : 0,
                 ease: "easeInOut",
               }}
             />
@@ -291,9 +318,15 @@ function TutorSession({
               </SplineErrorBoundary>
             </motion.div>
             <span className="sr-only" role="status" aria-live="polite">
-              {isSpeaking ? "החונך מדבר" : ""}
+              {isSpeaking ? "החונך מדבר" : isThinkingVisible ? "החונך חושב..." : ""}
             </span>
           </div>
+
+          {isThinkingVisible && (
+            <p className="text-xs font-medium text-muted-foreground" aria-hidden>
+              החונך חושב...
+            </p>
+          )}
 
           <div className="text-center">
             <p className="text-lg font-semibold text-foreground">{tutor.name}</p>

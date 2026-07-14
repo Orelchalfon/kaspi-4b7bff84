@@ -21,22 +21,38 @@ export const mintTutorSignedUrl = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { userId, supabase } = context;
 
-    const { data: roleRow, error: roleError } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .maybeSingle();
+    // Env vars are needed immediately below to kick off the ElevenLabs
+    // fetch, which depends on nothing else in this handler - start it now
+    // and only await the response once we're ready to build the return value.
+    const apiKey = process.env.ELEVENLABS_API_KEY;
+    const agentId = process.env.ELEVENLABS_AGENT_ID;
+    if (!apiKey || !agentId) {
+      throw new Error("Missing ELEVENLABS_API_KEY / ELEVENLABS_AGENT_ID env vars");
+    }
+
+    const signedUrlPromise = fetch(
+      `${SIGNED_URL_ENDPOINT}?agent_id=${encodeURIComponent(agentId)}`,
+      { headers: { "xi-api-key": apiKey } },
+    );
+    signedUrlPromise.catch(() => {});
+
+    // `user_roles` and `tutors` lookups don't depend on each other - run
+    // them concurrently. RLS on `tutors` already scopes it to the caller's
+    // household.
+    const [roleResult, tutorResult] = await Promise.all([
+      supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
+      supabase
+        .from("tutors")
+        .select("id, name, subject, topic, personality, voice_id, active")
+        .eq("id", data.tutorId)
+        .maybeSingle(),
+    ]);
+    const { data: roleRow, error: roleError } = roleResult;
+    const { data: tutor, error: tutorError } = tutorResult;
 
     if (roleError || !roleRow) {
       throw new Error("Forbidden: no role found for user");
     }
-
-    // RLS on `tutors` already scopes this to the caller's household.
-    const { data: tutor, error: tutorError } = await supabase
-      .from("tutors")
-      .select("id, name, subject, topic, personality, voice_id, active")
-      .eq("id", data.tutorId)
-      .maybeSingle();
 
     if (tutorError || !tutor) {
       throw new Error("Tutor not found");
@@ -83,15 +99,7 @@ export const mintTutorSignedUrl = createServerFn({ method: "POST" })
     };
     const overrides = buildTutorOverrides(tutorConfig);
 
-    const apiKey = process.env.ELEVENLABS_API_KEY;
-    const agentId = process.env.ELEVENLABS_AGENT_ID;
-    if (!apiKey || !agentId) {
-      throw new Error("Missing ELEVENLABS_API_KEY / ELEVENLABS_AGENT_ID env vars");
-    }
-
-    const res = await fetch(`${SIGNED_URL_ENDPOINT}?agent_id=${encodeURIComponent(agentId)}`, {
-      headers: { "xi-api-key": apiKey },
-    });
+    const res = await signedUrlPromise;
     if (!res.ok) {
       throw new Error(`Failed to mint ElevenLabs signed URL: ${res.status}`);
     }

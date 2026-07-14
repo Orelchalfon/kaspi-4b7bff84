@@ -27,8 +27,8 @@ export interface TutorVoiceOption {
 // deliberately do not look like real ElevenLabs ids so they can't be
 // mistaken for working ones.
 export const TUTOR_VOICES: readonly TutorVoiceOption[] = [
-  { id: "REPLACE_WITH_ELEVENLABS_VOICE_ID__MALE_1", label: "אבי", gender: "male" },
-  { id: "REPLACE_WITH_ELEVENLABS_VOICE_ID__FEMALE_1", label: "נועה", gender: "female" },
+  { id: "v3p1kjzUvro6S76qmYmH", label: "אבי", gender: "male" },
+  { id: "PoHUWWWMHFrA8z7Q88pu", label: "נועה", gender: "female" },
 ];
 
 export const DEFAULT_VOICE_ID = TUTOR_VOICES[0].id;
