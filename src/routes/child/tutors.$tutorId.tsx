@@ -161,7 +161,8 @@ function TutorSession({
           .eq("id", sid);
       }
     },
-    onDisconnect: async () => {
+    onDisconnect: async (details) => {
+      console.error("[tutor session] disconnected", details);
       setPhase("ended");
       setIsThinking(false);
       await finishSession("completed");
@@ -175,8 +176,8 @@ function TutorSession({
     onAgentTyping: ({ is_typing }) => {
       setIsThinking(is_typing);
     },
-    onError: async (message) => {
-      console.error("[tutor session]", message);
+    onError: async (message, context) => {
+      console.error("[tutor session]", message, context);
       toast.error("אירעה שגיאה בשיחה");
       setPhase("ended");
       setIsThinking(false);
@@ -306,8 +307,8 @@ function TutorSession({
                   <Spline
                     scene={TUTOR_AVATAR_SCENE}
                     style={{
-                      width: "138%",
-                      height: "138%",
+                      width: "170%",
+                      height: "170%",
                       position: "absolute",
                       top: "50%",
                       left: "50%",

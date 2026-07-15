@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { Bot, ChevronLeft } from "lucide-react";
@@ -15,6 +15,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { DetailSkeleton, ListSkeleton } from "@/components/loading-skeletons";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -54,9 +65,11 @@ const SESSION_STATUS_LABELS_HE: Record<string, string> = {
 
 function TutorDetail() {
   const { tutorId } = Route.useParams();
+  const navigate = useNavigate();
   const [tutor, setTutor] = useState<TutorRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
   const [sessions, setSessions] = useState<SessionRow[]>([]);
@@ -129,6 +142,25 @@ function TutorDetail() {
       return;
     }
     toast.success("הפרטים נשמרו");
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    const { error: deleteError } = await supabase
+      .from("tutors")
+      .update({ active: false })
+      .eq("id", tutorId);
+
+    setDeleting(false);
+    if (deleteError) {
+      console.error("[tutors.$tutorId] delete failed:", deleteError);
+      toast.error(
+        import.meta.env.DEV ? `שגיאה במחיקה: ${deleteError.message}` : "שגיאה במחיקת החונך",
+      );
+      return;
+    }
+    toast.success("החונך הוסר");
+    navigate({ to: "/parent/tutors" });
   };
 
   if (loading) return <DetailSkeleton />;
@@ -232,6 +264,32 @@ function TutorDetail() {
           </form>
         </CardContent>
       </Card>
+
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="destructive" className="min-h-11 w-full" disabled={deleting}>
+            {deleting ? "מוחק..." : "מחק חונך"}
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>למחוק את החונך?</AlertDialogTitle>
+            <AlertDialogDescription>
+              החונך יוסתר מהילדים ולא יופיע להם יותר ברשימת החונכים. ניתן להפעיל אותו מחדש דרך
+              העריכה בכל שלב.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              מחק חונך
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <section aria-label="שיחות קודמות" className="space-y-3">
         <h2 className="text-lg font-semibold">שיחות קודמות</h2>

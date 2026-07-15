@@ -25,6 +25,7 @@ function TutorsList() {
   const { householdId } = useAuth();
   const [tutors, setTutors] = useState<TutorRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showInactive, setShowInactive] = useState(false);
 
   const load = useCallback(async () => {
     if (!householdId) return;
@@ -40,6 +41,9 @@ function TutorsList() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const inactiveCount = tutors.filter((t) => !t.active).length;
+  const visibleTutors = showInactive ? tutors : tutors.filter((t) => t.active);
 
   if (loading) {
     return (
@@ -64,21 +68,32 @@ function TutorsList() {
         </Link>
       </div>
 
-      {tutors.length === 0 ? (
+      {visibleTutors.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground">
             <Bot className="h-10 w-10 opacity-40" aria-hidden />
-            <p>עדיין לא יצרתם חונכים.</p>
-            <Link to="/parent/tutors/new">
-              <Button variant="link" className="mt-1">
-                צרו חונך ראשון
-              </Button>
-            </Link>
+            {tutors.length === 0 ? (
+              <>
+                <p>עדיין לא יצרתם חונכים.</p>
+                <Link to="/parent/tutors/new">
+                  <Button variant="link" className="mt-1">
+                    צרו חונך ראשון
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <p>כל החונכים הוסרו.</p>
+                <Button variant="link" className="mt-1" onClick={() => setShowInactive(true)}>
+                  הצג חונכים שהוסרו ({inactiveCount})
+                </Button>
+              </>
+            )}
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-2">
-          {tutors.map((tutor) => (
+          {visibleTutors.map((tutor) => (
             <Link key={tutor.id} to="/parent/tutors/$tutorId" params={{ tutorId: tutor.id }}>
               <Card className="transition-shadow hover:shadow-md">
                 <CardContent className="flex items-center justify-between py-4">
@@ -100,6 +115,17 @@ function TutorsList() {
             </Link>
           ))}
         </div>
+      )}
+
+      {inactiveCount > 0 && visibleTutors.length > 0 && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full text-muted-foreground"
+          onClick={() => setShowInactive((v) => !v)}
+        >
+          {showInactive ? "הסתר חונכים שהוסרו" : `הצג גם חונכים שהוסרו (${inactiveCount})`}
+        </Button>
       )}
     </div>
   );
