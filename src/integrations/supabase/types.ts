@@ -410,6 +410,7 @@ export type Database = {
           created_by: string;
           household_id: string;
           id: string;
+          language: string;
           name: string;
           personality: string;
           subject: string;
@@ -423,6 +424,7 @@ export type Database = {
           created_by: string;
           household_id: string;
           id?: string;
+          language?: string;
           name: string;
           personality?: string;
           subject: string;
@@ -436,6 +438,7 @@ export type Database = {
           created_by?: string;
           household_id?: string;
           id?: string;
+          language?: string;
           name?: string;
           personality?: string;
           subject?: string;

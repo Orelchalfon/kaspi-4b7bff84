@@ -16,10 +16,14 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  DEFAULT_LANGUAGE,
   DEFAULT_VOICE_ID,
+  LANGUAGE_LABELS_HE,
   PERSONALITY_LABELS_HE,
+  TUTOR_LANGUAGES,
   TUTOR_PERSONALITIES,
   TUTOR_VOICES,
+  type TutorLanguage,
   type TutorPersonality,
 } from "@/lib/tutors";
 
@@ -35,6 +39,7 @@ function NewTutor() {
   const [topic, setTopic] = useState("");
   const [personality, setPersonality] = useState<TutorPersonality>("friendly");
   const [voiceId, setVoiceId] = useState(DEFAULT_VOICE_ID);
+  const [language, setLanguage] = useState<TutorLanguage>(DEFAULT_LANGUAGE);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -52,6 +57,7 @@ function NewTutor() {
       topic,
       personality,
       voice_id: voiceId,
+      language,
     });
 
     if (insertError) {
@@ -146,6 +152,21 @@ function NewTutor() {
                   {TUTOR_VOICES.map((v) => (
                     <SelectItem key={v.id} value={v.id}>
                       {v.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tutor-language">שפת שיחה</Label>
+              <Select value={language} onValueChange={(v) => setLanguage(v as TutorLanguage)}>
+                <SelectTrigger id="tutor-language">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TUTOR_LANGUAGES.map((l) => (
+                    <SelectItem key={l} value={l}>
+                      {LANGUAGE_LABELS_HE[l]}
                     </SelectItem>
                   ))}
                 </SelectContent>

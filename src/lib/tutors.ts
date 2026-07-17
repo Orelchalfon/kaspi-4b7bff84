@@ -16,6 +16,19 @@ export const PERSONALITY_LABELS_HE: Record<TutorPersonality, string> = {
   strict: "רציני",
 };
 
+export const TUTOR_LANGUAGES = ["he", "en", "ar", "ru", "fr"] as const;
+export type TutorLanguage = (typeof TUTOR_LANGUAGES)[number];
+
+export const LANGUAGE_LABELS_HE: Record<TutorLanguage, string> = {
+  he: "עברית",
+  en: "אנגלית",
+  ar: "ערבית",
+  ru: "רוסית",
+  fr: "צרפתית",
+};
+
+export const DEFAULT_LANGUAGE: TutorLanguage = "he";
+
 export interface TutorVoiceOption {
   id: string;
   label: string;
@@ -39,6 +52,18 @@ export interface TutorConfig {
   topic: string;
   personality: TutorPersonality;
   voice_id: string;
+  language: TutorLanguage;
+}
+
+// Every tutor's conversation defaults to Hebrew-only. A tutor whose purpose
+// is practicing another language (e.g. an English-conversation tutor) needs
+// this one line swapped instead, or it can never actually speak the language
+// it's meant to teach - the rest of the safety floor stays untouched and
+// still applies regardless of which language the lesson is conducted in.
+function languageInstructionLine(language: TutorLanguage): string {
+  if (language === "he") return "- דברו רק בעברית.";
+  const label = LANGUAGE_LABELS_HE[language];
+  return `- נהלו את השיעור ותרגלו עם הילד/ה ב${label} - זו שפת התרגול של החונך הזה. אפשר להסביר מונחים בעברית במידת הצורך כדי לוודא הבנה, אך רוב השיחה צריכה להתנהל ב${label}.`;
 }
 
 /**
@@ -46,14 +71,16 @@ export interface TutorConfig {
  * the ElevenLabs agent's own base prompt (dashboard-configured), so a child
  * session stays safe even if a specific override toggle is left disabled.
  */
-const SAFETY_FLOOR_HE = `
+function buildSafetyFloorHe(language: TutorLanguage): string {
+  return `
 כללי בטיחות (חובה תמיד):
-- דברו רק בעברית.
+${languageInstructionLine(language)}
 - ההתאמה היא לילדים - השתמשו בשפה פשוטה ומתאימה לגיל.
 - אין לבקש פרטים אישיים (כתובת, טלפון, סיסמאות, מיקום).
-- אם הילד/ה משתפים מצוקה, פחד או בקשת עזרה - הפנו אותם בעדינות לפנות להורה או למבוגר אחראי.
+- אם הילד/ה משתפים מצוקה, פחד או בקשת עזרה - הפנו אותם בעדינות בעברית לפנות להורה או למבוגר אחראי, גם אם שאר השיחה מתנהלת בשפה אחרת.
 - אין להזכיר תוכן אלים, מיני או לא הולם.
 `.trim();
+}
 
 export function buildTutorSystemPrompt(tutor: TutorConfig): string {
   const personalityHe = PERSONALITY_LABELS_HE[tutor.personality];
@@ -69,7 +96,7 @@ export function buildTutorSystemPrompt(tutor: TutorConfig): string {
 - שמרו על תשובות קצרות, כמו בשיחת קול אמיתית.
 - אל תשתמשו בתווים מיוחדים בתשובות - זו שיחה קולית.
 
-${SAFETY_FLOOR_HE}
+${buildSafetyFloorHe(tutor.language)}
 `.trim();
 }
 
@@ -86,7 +113,7 @@ export function buildTutorOverrides(tutor: TutorConfig): TutorAgentOverrides {
     agent: {
       prompt: { prompt: buildTutorSystemPrompt(tutor) },
       firstMessage: buildTutorFirstMessage(tutor),
-      language: "he",
+      language: tutor.language,
     },
     // A placeholder voice_id (not yet replaced with a real ElevenLabs voice)
     // must not be sent — omitting the override falls back to the agent's own

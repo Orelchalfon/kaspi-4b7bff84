@@ -29,9 +29,12 @@ import {
 import { DetailSkeleton, ListSkeleton } from "@/components/loading-skeletons";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  LANGUAGE_LABELS_HE,
   PERSONALITY_LABELS_HE,
+  TUTOR_LANGUAGES,
   TUTOR_PERSONALITIES,
   TUTOR_VOICES,
+  type TutorLanguage,
   type TutorPersonality,
 } from "@/lib/tutors";
 
@@ -46,6 +49,7 @@ interface TutorRow {
   topic: string;
   personality: TutorPersonality;
   voice_id: string;
+  language: TutorLanguage;
   active: boolean;
 }
 
@@ -79,7 +83,7 @@ function TutorDetail() {
   const load = useCallback(async () => {
     const { data } = await supabase
       .from("tutors")
-      .select("id, name, subject, topic, personality, voice_id, active")
+      .select("id, name, subject, topic, personality, voice_id, language, active")
       .eq("id", tutorId)
       .maybeSingle();
     setTutor((data as TutorRow) ?? null);
@@ -131,6 +135,7 @@ function TutorDetail() {
         topic: tutor.topic,
         personality: tutor.personality,
         voice_id: tutor.voice_id,
+        language: tutor.language,
         active: tutor.active,
       })
       .eq("id", tutorId);
@@ -243,6 +248,24 @@ function TutorDetail() {
                   {TUTOR_VOICES.map((v) => (
                     <SelectItem key={v.id} value={v.id}>
                       {v.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-language">שפת שיחה</Label>
+              <Select
+                value={tutor.language}
+                onValueChange={(v) => setTutor({ ...tutor, language: v as TutorLanguage })}
+              >
+                <SelectTrigger id="edit-language">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TUTOR_LANGUAGES.map((l) => (
+                    <SelectItem key={l} value={l}>
+                      {LANGUAGE_LABELS_HE[l]}
                     </SelectItem>
                   ))}
                 </SelectContent>

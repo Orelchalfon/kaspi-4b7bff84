@@ -43,7 +43,7 @@ export const mintTutorSignedUrl = createServerFn({ method: "POST" })
       supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
       supabase
         .from("tutors")
-        .select("id, name, subject, topic, personality, voice_id, active")
+        .select("id, name, subject, topic, personality, voice_id, language, active")
         .eq("id", data.tutorId)
         .maybeSingle(),
     ]);
@@ -96,6 +96,7 @@ export const mintTutorSignedUrl = createServerFn({ method: "POST" })
       topic: tutor.topic,
       personality: tutor.personality as TutorConfig["personality"],
       voice_id: tutor.voice_id,
+      language: tutor.language as TutorConfig["language"],
     };
     const overrides = buildTutorOverrides(tutorConfig);
 
