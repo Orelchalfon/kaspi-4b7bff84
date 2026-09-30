@@ -71,7 +71,7 @@ function SignupPage() {
 
   if (emailSent) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-background px-4">
+      <main className="flex min-h-dvh items-center justify-center bg-background px-4">
         <Card className="w-full max-w-sm">
           <CardHeader className="text-center">
             <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -102,12 +102,12 @@ function SignupPage() {
             </Button>
           </CardContent>
         </Card>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-background px-4">
+    <main className="flex min-h-dvh items-center justify-center bg-background px-4">
       <h1 className="sr-only">הרשמה ל-Kaspii</h1>
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
@@ -193,6 +193,6 @@ function SignupPage() {
           </p>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 }

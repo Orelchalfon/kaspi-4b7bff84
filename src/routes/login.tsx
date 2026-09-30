@@ -87,7 +87,7 @@ function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-background px-4">
+    <main className="flex min-h-dvh items-center justify-center bg-background px-4">
       <h1 className="sr-only">התחברות ל-Kaspii</h1>
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
@@ -178,6 +178,6 @@ function LoginPage() {
           </p>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 }

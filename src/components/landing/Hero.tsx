@@ -43,7 +43,6 @@ function useDemoLoop(run: boolean, staticDone: boolean): boolean {
 export function Hero() {
   return (
     <section
-      id="main"
       aria-labelledby="hero-headline"
       className="relative overflow-hidden pt-28 pb-20 md:pt-36 md:pb-28"
     >

@@ -48,17 +48,17 @@ function Index() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-background">
+      <main className="flex min-h-dvh items-center justify-center bg-background">
         <div className="animate-pulse text-lg text-muted-foreground">טוען...</div>
-      </div>
+      </main>
     );
   }
 
   if (isAuthenticated) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-background">
+      <main className="flex min-h-dvh items-center justify-center bg-background">
         <div className="animate-pulse text-lg text-muted-foreground">מעביר...</div>
-      </div>
+      </main>
     );
   }
 

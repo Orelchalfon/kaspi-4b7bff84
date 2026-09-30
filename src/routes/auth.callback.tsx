@@ -48,7 +48,7 @@ function AuthCallback() {
   }, [navigate, refreshRole]);
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-background px-4">
+    <main className="flex min-h-dvh items-center justify-center bg-background px-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -66,6 +66,6 @@ function AuthCallback() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 }

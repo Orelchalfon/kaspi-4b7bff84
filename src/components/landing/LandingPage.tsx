@@ -25,17 +25,22 @@ export function LandingPage() {
           דלג לתוכן
         </a>
         <LandingNav />
-        <Hero />
+        {/* tabIndex lets the skip link move keyboard focus here, not just scroll. */}
+        <main id="main" tabIndex={-1} className="outline-none">
+          <Hero />
+          <Suspense fallback={null}>
+            <HowItWorks />
+            <FeatureRows />
+            <AiTutor />
+            <RoleSplit />
+            <TrustStrip />
+            <Faq />
+            <ClosingCta />
+            <ScrollToHashOnReady />
+          </Suspense>
+        </main>
         <Suspense fallback={null}>
-          <HowItWorks />
-          <FeatureRows />
-          <AiTutor />
-          <RoleSplit />
-          <TrustStrip />
-          <Faq />
-          <ClosingCta />
           <Footer />
-          <ScrollToHashOnReady />
         </Suspense>
       </MotionConfig>
     </LazyMotion>
