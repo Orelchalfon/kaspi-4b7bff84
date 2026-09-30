@@ -161,4 +161,20 @@
   a[href] {
     cursor: pointer;
   }
+
+  /* Honor the OS "reduce motion" setting app-wide: pulses, spins, scale-on-press,
+     enter/exit transitions and smooth anchor scrolling all collapse to instant. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }

@@ -87,7 +87,7 @@ export function AppHeader({ brand, navItems, onSignOut }: AppHeaderProps) {
             </SheetTrigger>
             <SheetContent side="right" className="w-72 p-0">
               <SheetHeader className="border-b px-4 py-4 text-start">
-                <SheetTitle className="flex items-center justify-end gap-2">
+                <SheetTitle className="flex items-center justify-start gap-2">
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Coins className="h-4 w-4" aria-hidden />
                   </span>

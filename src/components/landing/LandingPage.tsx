@@ -1,4 +1,4 @@
-import { LazyMotion, domAnimation } from "framer-motion";
+import { LazyMotion, MotionConfig, domAnimation } from "framer-motion";
 import { lazy, Suspense } from "react";
 
 import { Hero } from "./Hero";
@@ -16,24 +16,27 @@ const Footer = lazy(() => import("./ClosingCta").then((m) => ({ default: m.Foote
 export function LandingPage() {
   return (
     <LazyMotion features={domAnimation} strict>
-      <a
-        href="#main"
-        className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground"
-      >
-        דלג לתוכן
-      </a>
-      <LandingNav />
-      <Hero />
-      <Suspense fallback={null}>
-        <HowItWorks />
-        <FeatureRows />
-        <AiTutor />
-        <RoleSplit />
-        <TrustStrip />
-        <Faq />
-        <ClosingCta />
-        <Footer />
-      </Suspense>
+      {/* "user" drops transform/layout motion (keeps opacity fades) when the OS asks for reduced motion. */}
+      <MotionConfig reducedMotion="user">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground"
+        >
+          דלג לתוכן
+        </a>
+        <LandingNav />
+        <Hero />
+        <Suspense fallback={null}>
+          <HowItWorks />
+          <FeatureRows />
+          <AiTutor />
+          <RoleSplit />
+          <TrustStrip />
+          <Faq />
+          <ClosingCta />
+          <Footer />
+        </Suspense>
+      </MotionConfig>
     </LazyMotion>
   );
 }
