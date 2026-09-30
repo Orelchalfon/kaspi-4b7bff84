@@ -1,16 +1,11 @@
-import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Separator } from "@/components/ui/separator";
 import { Link } from "@tanstack/react-router";
-import { Coins, LogOut, Menu, type LucideIcon } from "lucide-react";
-import { useState } from "react";
+import { AnimatePresence, LazyMotion, domAnimation, m, useReducedMotion } from "framer-motion";
+import { Coins, LogOut, type LucideIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
+import { Separator } from "@/components/ui/separator";
 
 export type NavItem = {
   to: string;
@@ -24,105 +19,155 @@ type AppHeaderProps = {
   onSignOut: () => void;
 };
 
+const linkBase =
+  "flex items-center gap-2 rounded-lg font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+const linkActive = { className: "bg-accent font-semibold text-primary" };
+
+/**
+ * In-app navbar for the parent and child layouts. Same visual language as the landing
+ * page's LandingNav: a floating rounded bar (sticky here, since app pages scroll their
+ * content under it) and, below `md`, an animated toggle that opens a dropdown panel.
+ */
 export function AppHeader({ brand, navItems, onSignOut }: AppHeaderProps) {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+  const reduceMotion = useReducedMotion();
+  const headerRef = useRef<HTMLElement>(null);
+
+  // Lock body scroll while the mobile menu is open.
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  // Close on Escape or on a tap/click outside the header while open.
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    const onPointerDown = (e: PointerEvent) => {
+      if (!headerRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [open]);
 
   return (
-    <header className="border-b bg-card">
-      <a
-        href="#main"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:start-2 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground"
-      >
-        דלג לתוכן הראשי
-      </a>
-      <div className="mx-auto flex flex-row-reverse max-w-4xl items-center justify-between gap-2 px-4 py-3">
-        <Link
-          to={brand.to}
-          className="flex shrink-0 items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    <LazyMotion features={domAnimation} strict>
+      <header ref={headerRef} className="sticky top-0 z-40 px-4 pt-3">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:start-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground"
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Coins className="h-4 w-4" aria-hidden />
-          </span>
-          <span className="text-lg font-bold text-foreground">{brand.name}</span>
-        </Link>
+          דלג לתוכן הראשי
+        </a>
 
-        {/* Tablet and up: inline navigation */}
-        <nav className="hidden items-center gap-1 md:flex">
-          {navItems.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className="flex min-h-12 items-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              activeProps={{ className: "bg-accent font-semibold text-primary" }}
-            >
-              <item.icon className="h-4 w-4" aria-hidden />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="flex items-center gap-1">
-          {/* Tablet and up: sign out */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onSignOut}
-            className="hidden md:inline-flex"
-            aria-label="יציאה"
+        <div className="mx-auto flex h-14 max-w-4xl flex-row-reverse items-center justify-between gap-2 rounded-2xl border border-border bg-background/85 px-3 shadow-lg backdrop-blur md:px-5">
+          <Link
+            to={brand.to}
+            onClick={() => setOpen(false)}
+            className="flex shrink-0 items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <LogOut className="h-4 w-4" aria-hidden />
-            <span className="ms-1">יציאה</span>
-          </Button>
+            <span className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Coins className="size-5" aria-hidden />
+            </span>
+            <span className="text-base font-semibold tracking-tight text-foreground">
+              <bdi>{brand.name}</bdi>
+            </span>
+          </Link>
 
-          {/* Below tablet: hamburger menu */}
-          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-            <SheetTrigger asChild>
+          {/* Tablet and up: inline navigation */}
+          <nav className="hidden md:block" aria-label="ניווט ראשי">
+            <ul className="flex items-center gap-1">
+              {navItems.map((item) => (
+                <li key={item.to}>
+                  <Link
+                    to={item.to}
+                    className={`${linkBase} min-h-11 px-3 text-sm`}
+                    activeProps={linkActive}
+                  >
+                    <item.icon className="size-4" aria-hidden />
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <div className="flex items-center gap-1">
+            {/* Tablet and up: sign out */}
+            <Button variant="ghost" onClick={onSignOut} className="hidden h-11 md:inline-flex">
+              <LogOut aria-hidden />
+              יציאה
+            </Button>
+
+            {/* Below tablet: animated menu toggle */}
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              aria-label={open ? "סגירת תפריט" : "פתיחת תפריט"}
+              aria-expanded={open}
+              aria-controls="app-mobile-menu"
+              className="inline-flex size-11 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
+            >
+              <MenuToggleIcon open={open} className="size-6" duration={reduceMotion ? 0 : 300} />
+            </button>
+          </div>
+        </div>
+
+        {/* Below tablet: dropdown panel under the bar (overlays the page, doesn't push it). */}
+        <AnimatePresence>
+          {open ? (
+            <m.div
+              id="app-mobile-menu"
+              key="app-mobile-menu"
+              initial={reduceMotion ? false : { opacity: 0, y: -8, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.98 }}
+              transition={{ duration: reduceMotion ? 0.12 : 0.2, ease: "easeOut" }}
+              className="absolute inset-x-4 top-full mx-auto mt-2 max-w-4xl overflow-hidden rounded-2xl border border-border bg-background/95 p-3 shadow-lg backdrop-blur md:hidden"
+            >
+              <nav aria-label="ניווט ראשי (נייד)">
+                <ul className="flex flex-col gap-1">
+                  {navItems.map((item) => (
+                    <li key={item.to}>
+                      <Link
+                        to={item.to}
+                        onClick={() => setOpen(false)}
+                        className={`${linkBase} min-h-12 gap-3 px-4 text-base`}
+                        activeProps={linkActive}
+                      >
+                        {/* Icon first in the DOM → renders to the right of the label in RTL. */}
+                        <item.icon className="size-5 shrink-0" aria-hidden />
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+              <Separator className="my-3" />
               <Button
                 variant="ghost"
-                size="icon"
-                className="size-12 md:hidden"
-                aria-label="פתיחת תפריט"
+                size="touch"
+                onClick={() => {
+                  setOpen(false);
+                  onSignOut();
+                }}
+                className="min-h-12 w-full justify-start gap-3 text-base text-destructive hover:bg-destructive/10 hover:text-destructive [&_svg]:size-5"
               >
-                <Menu className="h-5 w-5" aria-hidden />
+                <LogOut aria-hidden />
+                יציאה
               </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-72 p-0">
-              <SheetHeader className="border-b px-4 py-4 text-start">
-                <SheetTitle className="flex items-center justify-start gap-2">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <Coins className="h-4 w-4" aria-hidden />
-                  </span>
-                  {brand.name}
-                </SheetTitle>
-              </SheetHeader>
-              <nav className="flex flex-col gap-1 p-3">
-                {navItems.map((item) => (
-                  <SheetClose asChild key={item.to}>
-                    <Link
-                      to={item.to}
-                      className="flex min-h-12 items-center gap-2 rounded-md px-4 py-2.5 text-base font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      activeProps={{ className: "bg-accent font-semibold text-primary" }}
-                    >
-                      <item.icon className="h-5 w-5" aria-hidden />
-                      {item.label}
-                    </Link>
-                  </SheetClose>
-                ))}
-                <Separator className="my-2" />
-                <Button
-                  variant="ghost"
-                  size="touch"
-                  onClick={onSignOut}
-                  className="justify-start text-base text-destructive hover:bg-destructive/10 hover:text-destructive [&_svg]:size-5"
-                >
-                  <LogOut aria-hidden />
-                  יציאה
-                </Button>
-              </nav>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
-    </header>
+            </m.div>
+          ) : null}
+        </AnimatePresence>
+      </header>
+    </LazyMotion>
   );
 }

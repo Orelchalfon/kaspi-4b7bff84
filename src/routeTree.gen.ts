@@ -10,10 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ParentRouteImport } from './routes/parent'
-import { Route as LoginRouteImport } from './routes/login'
 import { Route as ChildRouteImport } from './routes/child'
+import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ParentTransactionsRouteImport } from './routes/parent/transactions'
 import { Route as ParentDashboardRouteImport } from './routes/parent/dashboard'
@@ -23,6 +22,8 @@ import { Route as ChildSavingsRouteImport } from './routes/child/savings'
 import { Route as ChildEducateRouteImport } from './routes/child/educate'
 import { Route as ChildDashboardRouteImport } from './routes/child/dashboard'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AuthSignupRouteImport } from './routes/_auth/signup'
+import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as ParentTutorsIndexRouteImport } from './routes/parent/tutors.index'
 import { Route as ParentChildrenIndexRouteImport } from './routes/parent/children.index'
 import { Route as ChildTutorsIndexRouteImport } from './routes/child/tutors.index'
@@ -42,24 +43,18 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ParentRoute = ParentRouteImport.update({
   id: '/parent',
   path: '/parent',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ChildRoute = ChildRouteImport.update({
   id: '/child',
   path: '/child',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/_auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -106,6 +101,16 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthSignupRoute = AuthSignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AuthRoute,
 } as any)
 const ParentTutorsIndexRoute = ParentTutorsIndexRouteImport.update({
   id: '/tutors/',
@@ -177,10 +182,10 @@ const ParentTutorsTutorIdSessionsSessionIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/child': typeof ChildRouteWithChildren
-  '/login': typeof LoginRoute
   '/parent': typeof ParentRouteWithChildren
-  '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/login': typeof AuthLoginRoute
+  '/signup': typeof AuthSignupRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/child/dashboard': typeof ChildDashboardRoute
   '/child/educate': typeof ChildEducateRouteWithChildren
@@ -206,10 +211,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/child': typeof ChildRouteWithChildren
-  '/login': typeof LoginRoute
   '/parent': typeof ParentRouteWithChildren
-  '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/login': typeof AuthLoginRoute
+  '/signup': typeof AuthSignupRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/child/dashboard': typeof ChildDashboardRoute
   '/child/savings': typeof ChildSavingsRoute
@@ -233,11 +238,12 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_auth': typeof AuthRouteWithChildren
   '/child': typeof ChildRouteWithChildren
-  '/login': typeof LoginRoute
   '/parent': typeof ParentRouteWithChildren
-  '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/_auth/login': typeof AuthLoginRoute
+  '/_auth/signup': typeof AuthSignupRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/child/dashboard': typeof ChildDashboardRoute
   '/child/educate': typeof ChildEducateRouteWithChildren
@@ -265,10 +271,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/child'
-    | '/login'
     | '/parent'
-    | '/signup'
     | '/sitemap.xml'
+    | '/login'
+    | '/signup'
     | '/auth/callback'
     | '/child/dashboard'
     | '/child/educate'
@@ -294,10 +300,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/child'
-    | '/login'
     | '/parent'
-    | '/signup'
     | '/sitemap.xml'
+    | '/login'
+    | '/signup'
     | '/auth/callback'
     | '/child/dashboard'
     | '/child/savings'
@@ -320,11 +326,12 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/_auth'
     | '/child'
-    | '/login'
     | '/parent'
-    | '/signup'
     | '/sitemap.xml'
+    | '/_auth/login'
+    | '/_auth/signup'
     | '/auth/callback'
     | '/child/dashboard'
     | '/child/educate'
@@ -350,10 +357,9 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRouteWithChildren
   ChildRoute: typeof ChildRouteWithChildren
-  LoginRoute: typeof LoginRoute
   ParentRoute: typeof ParentRouteWithChildren
-  SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
 }
@@ -367,13 +373,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/parent': {
       id: '/parent'
       path: '/parent'
@@ -381,18 +380,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ParentRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/child': {
       id: '/child'
       path: '/child'
       fullPath: '/child'
       preLoaderRoute: typeof ChildRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -457,6 +456,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/callback'
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_auth/signup': {
+      id: '/_auth/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof AuthSignupRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/login': {
+      id: '/_auth/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/parent/tutors/': {
       id: '/parent/tutors/'
@@ -552,6 +565,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthRouteChildren {
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthSignupRoute: typeof AuthSignupRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthLoginRoute: AuthLoginRoute,
+  AuthSignupRoute: AuthSignupRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 interface ChildEducateRouteChildren {
   ChildEducateSubjectRoute: typeof ChildEducateSubjectRoute
   ChildEducateIndexRoute: typeof ChildEducateIndexRoute
@@ -641,10 +666,9 @@ const ParentRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRouteWithChildren,
   ChildRoute: ChildRouteWithChildren,
-  LoginRoute: LoginRoute,
   ParentRoute: ParentRouteWithChildren,
-  SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   AuthCallbackRoute: AuthCallbackRoute,
 }
