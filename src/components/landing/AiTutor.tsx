@@ -6,7 +6,11 @@ import { TutorAvatarScene } from "./TutorAvatarScene";
 
 export function AiTutor() {
   return (
-    <section id="ai-tutor" aria-labelledby="ai-tutor-headline" className="relative py-20 md:py-28">
+    <section
+      id="ai-tutor"
+      aria-labelledby="ai-tutor-headline"
+      className="relative scroll-mt-20 py-20 md:py-28"
+    >
       <div className="mx-auto max-w-6xl px-5 md:px-8">
         <m.div
           initial="hidden"

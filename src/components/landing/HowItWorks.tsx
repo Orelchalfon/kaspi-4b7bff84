@@ -51,7 +51,11 @@ export function HowItWorks() {
   const loopActiveStep = reduceMotion || isMobile ? -1 : cycle;
 
   return (
-    <section id="how-it-works" aria-labelledby="how-headline" className="relative py-20 md:py-28">
+    <section
+      id="how-it-works"
+      aria-labelledby="how-headline"
+      className="relative scroll-mt-20 py-20 md:py-28"
+    >
       <div className="mx-auto max-w-6xl px-5 md:px-8">
         <m.div
           initial="hidden"
@@ -153,9 +157,7 @@ function StepCard({
         <span
           className={cn(
             "flex h-9 w-9 items-center justify-center rounded-lg text-base font-bold transition-colors duration-300 motion-reduce:transition-none",
-            active
-              ? "bg-primary text-primary-foreground"
-              : "bg-[color:var(--ks-navy-deep)] text-background",
+            active ? "bg-primary text-primary-foreground" : "bg-ks-navy-deep text-background",
           )}
           style={{ fontFeatureSettings: '"tnum"' }}
           aria-hidden
@@ -165,7 +167,10 @@ function StepCard({
         <h3 className="text-lg font-semibold text-foreground md:text-xl">{step.title}</h3>
       </div>
       <p className="mt-3 text-sm text-muted-foreground md:text-base">{step.body}</p>
-      <div className="mt-6 flex-1 overflow-hidden rounded-xl border border-foreground/5 bg-muted/40 p-3">
+      <div
+        aria-hidden
+        className="mt-6 flex-1 overflow-hidden rounded-xl border border-foreground/5 bg-muted/40 p-3"
+      >
         <step.Illustration active={active} />
       </div>
     </m.li>
@@ -185,7 +190,7 @@ function ParentTaskIllustration({ active }: { active: boolean }) {
           <div className="flex-1 rounded-md border border-border bg-background px-2.5 py-1.5">
             <p className="text-[10px] text-muted-foreground">תגמול</p>
             <p className="flex items-center gap-1 text-xs font-semibold text-foreground">
-              <Coins className="h-3 w-3 text-[color:var(--coin)]" aria-hidden />
+              <Coins className="h-3 w-3 text-coin" aria-hidden />
               <span style={{ fontFeatureSettings: '"tnum"' }}>10</span>
             </p>
           </div>
@@ -232,7 +237,7 @@ function ChildDoneIllustration({ active }: { active: boolean }) {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0, scale: 0.6 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute inset-0 flex items-center justify-center rounded-full bg-warning/15 px-2 text-[9px] font-medium text-[color:var(--warning-foreground)]"
+                  className="absolute inset-0 flex items-center justify-center rounded-full bg-warning/15 px-2 text-[9px] font-medium text-warning-foreground"
                 >
                   פעיל
                 </m.span>
@@ -261,7 +266,7 @@ function SplitPayoutIllustration({ active }: { active: boolean }) {
     <div className="grid grid-cols-2 gap-2">
       <div className="rounded-lg border border-foreground/5 bg-card p-3">
         <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-          <Coins className="h-3 w-3 text-[color:var(--coin)]" aria-hidden />
+          <Coins className="h-3 w-3 text-coin" aria-hidden />
           ארנק
         </div>
         <p

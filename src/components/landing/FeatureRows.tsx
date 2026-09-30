@@ -58,7 +58,7 @@ function FeatureRow({
       whileInView="visible"
       viewport={viewportOnce}
       variants={staggerContainer}
-      className="grid grid-cols-1 items-center gap-10 md:grid-cols-2 md:gap-16"
+      className="grid scroll-mt-28 grid-cols-1 items-center gap-10 md:grid-cols-2 md:gap-16"
     >
       <m.div variants={fadeUpItem} className={reversed ? "md:order-2" : "md:order-1"}>
         <p className="text-sm font-medium text-primary">{eyebrow}</p>
@@ -73,6 +73,7 @@ function FeatureRow({
         variants={fadeUpItem}
         {...cardHoverLift}
         className={reversed ? "md:order-1" : "md:order-2"}
+        aria-hidden
       >
         {illustration}
       </m.div>
@@ -282,7 +283,7 @@ function QuizChoice({ label, selected = false }: { label: string; selected?: boo
 function Callout({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div
-      className={`absolute z-10 flex flex-col items-center rounded-2xl border border-primary/15 bg-[color:var(--ks-cyan-soft)] px-3.5 py-2 text-[color:var(--ks-navy-deep)] shadow-[0_8px_24px_-12px_rgba(20,30,60,0.18)] ${className}`}
+      className={`absolute z-10 flex flex-col items-center rounded-2xl border border-primary/15 bg-ks-cyan-soft px-3.5 py-2 text-ks-navy-deep shadow-[0_8px_24px_-12px_rgba(20,30,60,0.18)] ${className}`}
     >
       {children}
     </div>

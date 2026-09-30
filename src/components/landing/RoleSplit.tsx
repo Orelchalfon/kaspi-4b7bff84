@@ -78,11 +78,9 @@ function RoleCard({
     accent === "cyan"
       ? { backgroundColor: "var(--ks-cyan-soft)" }
       : { backgroundColor: "var(--coin)" };
-  const iconColor = accent === "cyan" ? "text-primary" : "text-[color:var(--coin-foreground)]";
+  const iconColor = accent === "cyan" ? "text-primary" : "text-coin-foreground";
   const badgeBg =
-    accent === "cyan"
-      ? "bg-primary/10 text-primary"
-      : "bg-[color:var(--coin)]/15 text-[color:var(--coin-foreground)]";
+    accent === "cyan" ? "bg-primary/10 text-primary" : "bg-coin/15 text-coin-foreground";
 
   return (
     <article className="relative overflow-hidden rounded-3xl border border-foreground/5 bg-card p-6 md:p-8">

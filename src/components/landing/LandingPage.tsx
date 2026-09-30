@@ -1,5 +1,5 @@
 import { LazyMotion, MotionConfig, domAnimation } from "framer-motion";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 
 import { Hero } from "./Hero";
 import { LandingNav } from "./LandingNav";
@@ -35,8 +35,22 @@ export function LandingPage() {
           <Faq />
           <ClosingCta />
           <Footer />
+          <ScrollToHashOnReady />
         </Suspense>
       </MotionConfig>
     </LazyMotion>
   );
+}
+
+/**
+ * Sections below the hero are lazy, so on a deep link like `/#savings` the target
+ * doesn't exist when the browser tries to scroll. Rendered last inside the same
+ * Suspense boundary, this mounts only once every lazy section has resolved.
+ */
+function ScrollToHashOnReady() {
+  useEffect(() => {
+    const id = decodeURIComponent(window.location.hash.slice(1));
+    if (id) document.getElementById(id)?.scrollIntoView();
+  }, []);
+  return null;
 }

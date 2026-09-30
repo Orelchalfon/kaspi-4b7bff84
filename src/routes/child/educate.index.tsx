@@ -147,7 +147,7 @@ function ChildEducate() {
                         </div>
                       </div>
                       <span
-                        className="inline-flex items-center gap-1 rounded-full bg-[color:var(--coin)]/15 px-2.5 py-1 text-xs font-semibold text-[color:var(--coin-foreground)]"
+                        className="inline-flex items-center gap-1 rounded-full bg-coin/15 px-2.5 py-1 text-xs font-semibold text-coin-foreground"
                         style={{ fontFeatureSettings: '"tnum"' }}
                       >
                         <Coins className="h-3 w-3" aria-hidden />+{reward}

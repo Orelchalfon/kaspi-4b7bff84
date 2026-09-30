@@ -120,7 +120,7 @@ function HeroDevice() {
   const toast = <ApprovalToast />;
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative" aria-hidden>
       <DeviceFrame done={done} balance={balance} />
 
       {reduceMotion ? (
@@ -161,7 +161,7 @@ function DeviceFrame({ done, balance }: { done: boolean; balance: number }) {
   return (
     <div
       className={cn(
-        "relative isolate rounded-[1.75rem] border border-[color:var(--ks-navy-deep)]/10 bg-card p-3 shadow-[0_1px_2px_rgba(20,30,60,0.06),0_24px_60px_-30px_rgba(20,30,60,0.18)]",
+        "relative isolate rounded-[1.75rem] border border-ks-navy-deep/10 bg-card p-3 shadow-[0_1px_2px_rgba(20,30,60,0.06),0_24px_60px_-30px_rgba(20,30,60,0.18)]",
       )}
     >
       <div className="overflow-hidden rounded-2xl bg-background">
@@ -188,7 +188,7 @@ function DeviceFrame({ done, balance }: { done: boolean; balance: number }) {
               {balance}
             </span>
             <span className="text-sm font-medium text-muted-foreground">מטבעות</span>
-            <span className="ms-auto flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--coin)]/15 text-[color:var(--coin-foreground)]">
+            <span className="ms-auto flex h-8 w-8 items-center justify-center rounded-full bg-coin/15 text-coin-foreground">
               <Coins className="h-4 w-4" aria-hidden />
             </span>
           </div>
@@ -271,7 +271,7 @@ function ApprovalToast() {
       <div className="leading-tight">
         <p className="text-sm font-semibold text-foreground">המשימה אושרה</p>
         <p className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
-          <span className="inline-flex items-center gap-1 font-semibold text-[color:var(--coin-foreground)]">
+          <span className="inline-flex items-center gap-1 font-semibold text-coin-foreground">
             <Coins className="h-3 w-3" aria-hidden />
             <span style={{ fontFeatureSettings: '"tnum"' }}>+9</span> ארנק
           </span>
