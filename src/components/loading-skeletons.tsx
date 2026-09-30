@@ -44,6 +44,35 @@ export function DashboardSkeleton() {
   );
 }
 
+/** Mirrors /parent/dashboard: header, two settings cards, avatar stack, child section. */
+export function ParentDashboardSkeleton() {
+  return (
+    <div className="flex flex-col gap-6" aria-busy="true" aria-label="טוען">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-8 w-32" />
+        <div className="flex gap-2">
+          <Skeleton className="h-11 w-28" />
+          <Skeleton className="h-11 w-24" />
+        </div>
+      </div>
+      <Skeleton className="h-24 rounded-xl" />
+      <Skeleton className="h-36 rounded-xl" />
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-5 w-20" />
+        <div className="flex gap-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="size-14 rounded-full" />
+          ))}
+        </div>
+      </div>
+      <div className="flex flex-col gap-3 border-t pt-6">
+        <Skeleton className="h-6 w-28" />
+        <ListSkeleton rows={2} />
+      </div>
+    </div>
+  );
+}
+
 export function DetailSkeleton() {
   return (
     <div className="mx-auto max-w-sm" aria-busy="true" aria-label="טוען">
