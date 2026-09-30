@@ -39,7 +39,7 @@ function ParentLayout() {
   return (
     <div className="min-h-dvh bg-background">
       <AppHeader
-        brand={{ name: "KidCoin", to: "/parent/dashboard" }}
+        brand={{ name: "Kaspii", to: "/parent/dashboard" }}
         navItems={PARENT_NAV}
         onSignOut={signOut}
       />

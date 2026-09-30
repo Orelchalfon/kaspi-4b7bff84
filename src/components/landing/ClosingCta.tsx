@@ -2,31 +2,39 @@ import { Link } from "@tanstack/react-router";
 import { m } from "framer-motion";
 import { Coins } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import { GradientBorderCard } from "@/components/ui/gradient-border-card";
+
 import { ctaInteractions, fadeUp, viewportOnce } from "./motion/variants";
 
 export function ClosingCta() {
   return (
-    <section
-      aria-labelledby="closing-headline"
-      className="relative overflow-hidden bg-[color:var(--ks-navy-deep)] text-background"
-    >
-      <div className="mx-auto max-w-3xl px-5 py-20 text-center md:py-24">
-        <m.div initial="hidden" whileInView="visible" viewport={viewportOnce} variants={fadeUp}>
-          <h2 id="closing-headline" className="text-3xl font-semibold tracking-tight md:text-5xl">
-            מוכנים להתחיל את השגרה החדשה?
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-background/70 md:text-base">
-            הרשמה לוקחת פחות מדקה, ולא דורשת פרטי תשלום.
-          </p>
+    <section aria-labelledby="closing-headline" className="relative overflow-hidden bg-background">
+      {/* Soft brand-blue glows behind the card give the frosted glass something to blur. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 m-auto size-[28rem] max-w-full rounded-full bg-primary/15 blur-3xl" />
+        <div className="absolute start-[15%] top-[20%] size-64 rounded-full bg-ks-cyan-soft blur-3xl" />
+      </div>
 
-          <m.div {...ctaInteractions} className="mt-8 inline-block">
-            <Link
-              to="/signup"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-background px-6 text-base font-semibold text-[color:var(--ks-navy-deep)] shadow-sm transition-colors hover:bg-background/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-background focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--ks-navy-deep)]"
+      <div className="relative mx-auto max-w-3xl px-5 py-20 md:py-24">
+        <m.div initial="hidden" whileInView="visible" viewport={viewportOnce} variants={fadeUp}>
+          <GradientBorderCard contentClassName="px-6 py-12 text-center md:px-12 md:py-16">
+            <h2
+              id="closing-headline"
+              className="text-3xl font-semibold tracking-tight text-foreground md:text-5xl"
             >
-              התחל בחינם
-            </Link>
-          </m.div>
+              מוכנים להתחיל את השגרה החדשה?
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
+              הרשמה לוקחת פחות מדקה, ולא דורשת פרטי תשלום.
+            </p>
+
+            <m.div {...ctaInteractions} className="mt-8 inline-block">
+              <Button asChild size="lg" className="h-12 rounded-xl px-8 text-base font-semibold">
+                <Link to="/signup">התחל בחינם</Link>
+              </Button>
+            </m.div>
+          </GradientBorderCard>
         </m.div>
       </div>
     </section>

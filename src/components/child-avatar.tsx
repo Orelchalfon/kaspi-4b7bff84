@@ -42,7 +42,7 @@ export function ChildAvatar({
   const initial = name?.trim().charAt(0).toUpperCase() || "?";
   const resolved = seed !== undefined ? parseAvatar(avatar, seed) : null;
   return (
-    <div className={cn("relative inline-block shrink-0", className)} aria-label={name}>
+    <div role="img" aria-label={name} className={cn("relative inline-block shrink-0", className)}>
       <Avatar className={sizeMap[size]}>
         {resolved ? (
           <AvatarFallback className={cn(resolved.color.bg, iconSizeMap[size])}>

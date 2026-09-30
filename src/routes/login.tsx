@@ -11,13 +11,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "התחברות — KidCoin" },
+      { title: "התחברות — Kaspii" },
       {
         name: "description",
-        content: "התחברו לחשבון KidCoin שלכם כדי לנהל משימות, מטבעות וחיסכון של המשפחה.",
+        content: "התחברו לחשבון Kaspii שלכם כדי לנהל משימות, מטבעות וחיסכון של המשפחה.",
       },
-      { property: "og:title", content: "התחברות — KidCoin" },
-      { property: "og:description", content: "התחברו לחשבון KidCoin שלכם." },
+      { property: "og:title", content: "התחברות — Kaspii" },
+      { property: "og:description", content: "התחברו לחשבון Kaspii שלכם." },
       { property: "og:url", content: "https://kidcoin.app/login" },
       { name: "robots", content: "noindex" },
     ],
@@ -88,14 +88,14 @@ function LoginPage() {
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background px-4">
-      <h1 className="sr-only">התחברות ל-KidCoin</h1>
+      <h1 className="sr-only">התחברות ל-Kaspii</h1>
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
             <Coins className="h-7 w-7" aria-hidden />
           </div>
           <CardTitle className="text-2xl">התחברות</CardTitle>
-          <CardDescription>הכנסו לחשבון KidCoin שלכם</CardDescription>
+          <CardDescription>הכנסו לחשבון Kaspii שלכם</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>

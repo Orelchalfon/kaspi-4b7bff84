@@ -7,6 +7,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
 import { Link } from "@tanstack/react-router";
 import { Coins, LogOut, Menu, type LucideIcon } from "lucide-react";
 import { useState } from "react";
@@ -70,7 +71,7 @@ export function AppHeader({ brand, navItems, onSignOut }: AppHeaderProps) {
             aria-label="יציאה"
           >
             <LogOut className="h-4 w-4" aria-hidden />
-            <span className="ms-1 hidden sm:inline">יציאה</span>
+            <span className="ms-1">יציאה</span>
           </Button>
 
           {/* Below tablet: hamburger menu */}
@@ -107,9 +108,15 @@ export function AppHeader({ brand, navItems, onSignOut }: AppHeaderProps) {
                     </Link>
                   </SheetClose>
                 ))}
-                <Button variant="ghost" size="sm" onClick={onSignOut} aria-label="יציאה">
-                  <LogOut className="h-4 w-4" aria-hidden />
-                  <span className="ms-1">יציאה</span>
+                <Separator className="my-2" />
+                <Button
+                  variant="ghost"
+                  size="touch"
+                  onClick={onSignOut}
+                  className="justify-start text-base text-destructive hover:bg-destructive/10 hover:text-destructive [&_svg]:size-5"
+                >
+                  <LogOut aria-hidden />
+                  יציאה
                 </Button>
               </nav>
             </SheetContent>

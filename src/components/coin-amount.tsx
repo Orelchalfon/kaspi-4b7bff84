@@ -46,10 +46,14 @@ export function CoinAmount({
         toneMap[tone],
         className,
       )}
-      aria-label={`${value} מטבעות`}
     >
       <Coins className={cn(sizes.icon, "text-coin", iconClassName)} aria-hidden />
-      {animate ? <AnimatedNumber value={value} formatter={format} /> : <span>{format(value)}</span>}
+      {/* Visible (possibly animating) number is hidden from AT; screen readers get the
+          final signed value once, e.g. "+5 מטבעות". */}
+      <span aria-hidden>
+        {animate ? <AnimatedNumber value={value} formatter={format} /> : format(value)}
+      </span>
+      <span className="sr-only">{`${format(value)} מטבעות`}</span>
     </span>
   );
 }

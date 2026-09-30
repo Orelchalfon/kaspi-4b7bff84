@@ -11,13 +11,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const Route = createFileRoute("/signup")({
   head: () => ({
     meta: [
-      { title: "הרשמה — KidCoin" },
+      { title: "הרשמה — Kaspii" },
       {
         name: "description",
-        content: "פתחו חשבון הורה ב-KidCoin והתחילו לנהל משימות, מטבעות וחיסכון של הילדים.",
+        content: "פתחו חשבון הורה ב-Kaspii והתחילו לנהל משימות, מטבעות וחיסכון של הילדים.",
       },
-      { property: "og:title", content: "הרשמה — KidCoin" },
-      { property: "og:description", content: "פתחו חשבון הורה חדש ב-KidCoin." },
+      { property: "og:title", content: "הרשמה — Kaspii" },
+      { property: "og:description", content: "פתחו חשבון הורה חדש ב-Kaspii." },
       { property: "og:url", content: "https://kidcoin.app/signup" },
       { name: "robots", content: "noindex" },
     ],
@@ -108,7 +108,7 @@ function SignupPage() {
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background px-4">
-      <h1 className="sr-only">הרשמה ל-KidCoin</h1>
+      <h1 className="sr-only">הרשמה ל-Kaspii</h1>
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">

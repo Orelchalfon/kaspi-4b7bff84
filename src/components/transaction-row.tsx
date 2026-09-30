@@ -59,7 +59,7 @@ export function TransactionRow({
           )}
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">{primaryLabel ?? label}</p>
-            <p className="text-[11px] tabular-nums text-muted-foreground">
+            <p className="text-xs tabular-nums text-muted-foreground">
               {tx.created_at ? new Date(tx.created_at).toLocaleDateString("he-IL") : "—"}
             </p>
           </div>

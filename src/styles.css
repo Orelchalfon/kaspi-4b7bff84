@@ -54,7 +54,21 @@
   --color-ks-cyan-soft: var(--ks-cyan-soft);
 }
 
-/* KidCoin — Cluely-inspired blue + cool-slate palette with gold coin accent */
+/* Registered so the conic-gradient angle can be interpolated by @keyframes.
+   Browsers without @property support simply show a static gradient border. */
+@property --border-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes border-spin {
+  to {
+    --border-angle: 360deg;
+  }
+}
+
+/* Kaspii — Cluely-inspired blue + cool-slate palette with gold coin accent */
 :root {
   --radius: 0.75rem;
   --background: oklch(0.99 0.004 264);
@@ -160,6 +174,22 @@
   [role="button"]:not([aria-disabled="true"]),
   a[href] {
     cursor: pointer;
+  }
+
+  /* Gradient-border frame (see components/ui/gradient-border-card.tsx): a conic
+     gradient grayish-white → silver → brand blue whose start angle is animated
+     through a registered custom property, so the highlight circles the card. */
+  .gradient-border-frame {
+    background: conic-gradient(
+      from var(--border-angle),
+      oklch(0.97 0.004 264),
+      oklch(0.84 0.012 264) 22%,
+      var(--primary) 38%,
+      oklch(0.84 0.012 264) 54%,
+      oklch(0.97 0.004 264) 72%,
+      oklch(0.97 0.004 264)
+    );
+    animation: border-spin 6s linear infinite;
   }
 
   /* Honor the OS "reduce motion" setting app-wide: pulses, spins, scale-on-press,
