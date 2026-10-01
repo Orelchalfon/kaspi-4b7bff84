@@ -2,10 +2,32 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { PiggyBank, Target, Plus, CheckCircle2, Coins, ArrowLeftRight } from "lucide-react";
+import {
+  ArrowLeftRight,
+  CheckCircle2,
+  Coins,
+  Loader2,
+  PiggyBank,
+  Plus,
+  RotateCw,
+  Target,
+} from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { StaggerItem, StaggerList } from "@/components/ui/stagger-list";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -94,6 +116,7 @@ function ChildSavings() {
   const [goalTitles, setGoalTitles] = useState<Record<string, string>>({});
   const [savingsPct, setSavingsPct] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   // Add-goal dialog
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -110,7 +133,7 @@ function ChildSavings() {
   const [moveOpen, setMoveOpen] = useState(false);
 
   async function loadAll(cpId: string, hhId: string) {
-    const [{ data: gData }, { data: tData }, { data: sData }] = await Promise.all([
+    const [gRes, tRes, sRes] = await Promise.all([
       supabase
         .from("goals")
         .select("id, title, target_amount, cycle_amount, cycle_period, status")
@@ -127,12 +150,18 @@ function ChildSavings() {
         .eq("household_id", hhId)
         .maybeSingle(),
     ]);
+    if (gRes.error || tRes.error || sRes.error) {
+      console.error("[child/savings] load failed", gRes.error ?? tRes.error ?? sRes.error);
+      setLoadFailed(true);
+      return;
+    }
+    setLoadFailed(false);
 
-    const goalList = (gData ?? []) as GoalRow[];
-    const txList = (tData ?? []) as TxRow[];
+    const goalList = (gRes.data ?? []) as GoalRow[];
+    const txList = (tRes.data ?? []) as TxRow[];
     setGoals(goalList);
     setTransactions(txList);
-    setSavingsPct(sData?.savings_percentage ?? 0);
+    setSavingsPct(sRes.data?.savings_percentage ?? 0);
 
     // Goal titles come straight from the goals we already fetched.
     const goalMap: Record<string, string> = {};
@@ -160,10 +189,15 @@ function ChildSavings() {
     }
   }
 
-  useEffect(() => {
+  const reload = () => {
     if (!childProfileId || !householdId) return;
     setLoading(true);
     loadAll(childProfileId, householdId).finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reload is recreated each render
   }, [childProfileId, householdId]);
 
   const savingsBalance = useMemo(() => computeSavingsBalance(transactions), [transactions]);
@@ -234,20 +268,36 @@ function ChildSavings() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col gap-6">
+        <h1 className="sr-only">חיסכון</h1>
         <BalanceHeroSkeleton tall />
         <ListSkeleton rows={3} />
       </div>
     );
   }
 
+  if (loadFailed) {
+    return (
+      <div className="flex flex-col gap-4">
+        <h1 className="sr-only">חיסכון</h1>
+        <Alert variant="destructive" role="alert">
+          <AlertDescription>
+            אופס, לא הצלחנו לטעון את החיסכון. בדקו את האינטרנט ונסו שוב.
+          </AlertDescription>
+        </Alert>
+        <Button size="touch" variant="outline" onClick={reload}>
+          <RotateCw aria-hidden />
+          נסו שוב
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
+      <h1 className="sr-only">חיסכון</h1>
       {/* A. Savings pot card with wallet chip + move action */}
-      <Card
-        className="bg-primary text-primary-foreground shadow-md"
-        aria-label={`חיסכון: ${savingsBalance} מטבעות`}
-      >
+      <Card className="bg-primary text-primary-foreground shadow-md">
         <CardContent className="space-y-4 py-6">
           <div className="flex flex-col items-center gap-2 text-center">
             <div className="flex items-center gap-2 text-sm opacity-80">
@@ -255,8 +305,11 @@ function ChildSavings() {
               <span>החיסכון שלי</span>
             </div>
             <p className="flex items-center gap-2 text-4xl font-bold tabular-nums">
-              <Coins className="h-8 w-8 text-coin" aria-hidden />
-              <AnimatedNumber value={savingsBalance} />
+              <Coins className="size-8 text-coin" aria-hidden />
+              <span aria-hidden>
+                <AnimatedNumber value={savingsBalance} />
+              </span>
+              <span className="sr-only">{`${savingsBalance} מטבעות`}</span>
             </p>
             <p className="text-xs opacity-80">
               {savingsPct > 0
@@ -265,24 +318,24 @@ function ChildSavings() {
             </p>
           </div>
 
-          <div className="flex items-center justify-center gap-2">
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/15 px-3 py-1.5 text-xs"
-              aria-label={`יתרה בארנק ${walletBalance} מטבעות`}
-            >
-              <Coins className="h-3.5 w-3.5 text-coin" aria-hidden />
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <span className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-primary-foreground/15 px-3 text-sm">
+              <Coins className="size-4 text-coin" aria-hidden />
               <span>בארנק</span>
-              <AnimatedNumber value={walletBalance} className="font-semibold" />
+              <span aria-hidden>
+                <AnimatedNumber value={walletBalance} className="font-semibold" />
+              </span>
+              <span className="sr-only">{`${walletBalance} מטבעות`}</span>
             </span>
             <Button
-              size="sm"
+              size="touch"
               variant="secondary"
               onClick={() => setMoveOpen(true)}
               disabled={walletBalance <= 0}
-              className="min-h-9 gap-1.5 transition-transform active:scale-[0.97]"
+              className="transition-transform active:scale-[0.97]"
             >
-              <ArrowLeftRight className="h-4 w-4" aria-hidden />
-              <span>העבר לחיסכון</span>
+              <ArrowLeftRight aria-hidden />
+              העבר לחיסכון
             </Button>
           </div>
         </CardContent>
@@ -296,25 +349,30 @@ function ChildSavings() {
       />
 
       {recentSavings.length > 0 && (
-        <section aria-label="חיסכון אחרון">
-          <h2 className="mb-3 text-base font-semibold">חיסכון אחרון</h2>
-          <div className="space-y-2">
-            {recentSavings.map((tx) => (
-              <TransactionRow
-                key={tx.id}
-                tx={tx}
-                taskTitle={tx.reference_task_id ? taskTitles[tx.reference_task_id] : undefined}
-                goalTitle={tx.goal_id ? goalTitles[tx.goal_id] : undefined}
-              />
+        <section aria-labelledby="recent-savings-heading">
+          <h2 id="recent-savings-heading" className="mb-3 text-lg font-semibold">
+            חיסכון אחרון
+          </h2>
+          <StaggerList className="flex flex-col gap-2">
+            {recentSavings.map((tx, i) => (
+              <StaggerItem key={tx.id} index={i}>
+                <TransactionRow
+                  tx={tx}
+                  taskTitle={tx.reference_task_id ? taskTitles[tx.reference_task_id] : undefined}
+                  goalTitle={tx.goal_id ? goalTitles[tx.goal_id] : undefined}
+                />
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerList>
         </section>
       )}
 
       {/* B. Goals board */}
-      <section aria-label="המטרות שלי">
+      <section aria-labelledby="goals-heading">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">המטרות שלי</h2>
+          <h2 id="goals-heading" className="text-lg font-semibold">
+            המטרות שלי
+          </h2>
           <Dialog
             open={dialogOpen}
             onOpenChange={(o) => {
@@ -323,9 +381,9 @@ function ChildSavings() {
             }}
           >
             <DialogTrigger asChild>
-              <Button size="sm" className="min-h-10 transition-transform active:scale-[0.97]">
-                <Plus className="h-4 w-4" aria-hidden />
-                <span className="ms-1.5">הוסף מטרה</span>
+              <Button size="touch" className="transition-transform active:scale-[0.97]">
+                <Plus aria-hidden />
+                הוסף מטרה
               </Button>
             </DialogTrigger>
             <DialogContent dir="rtl">
@@ -343,9 +401,12 @@ function ChildSavings() {
                     placeholder="אופניים חדשות"
                     maxLength={60}
                     autoFocus
+                    className="h-11"
+                    aria-invalid={!!formErrors.title || undefined}
+                    aria-describedby={formErrors.title ? "goal-title-error" : undefined}
                   />
                   {formErrors.title && (
-                    <p role="alert" className="text-xs text-destructive">
+                    <p id="goal-title-error" role="alert" className="text-xs text-destructive">
                       {formErrors.title}
                     </p>
                   )}
@@ -360,13 +421,15 @@ function ChildSavings() {
                     min={1}
                     max={100000}
                     dir="ltr"
-                    className="tabular-nums"
+                    className="h-11 tabular-nums"
+                    aria-invalid={!!formErrors.target_amount || undefined}
+                    aria-describedby={formErrors.target_amount ? "goal-target-error" : undefined}
                     value={targetInput}
                     onChange={(e) => setTargetInput(e.target.value)}
                     placeholder="500"
                   />
                   {formErrors.target_amount && (
-                    <p role="alert" className="text-xs text-destructive">
+                    <p id="goal-target-error" role="alert" className="text-xs text-destructive">
                       {formErrors.target_amount}
                     </p>
                   )}
@@ -381,13 +444,15 @@ function ChildSavings() {
                       inputMode="numeric"
                       min={1}
                       dir="ltr"
-                      className="tabular-nums"
+                      className="h-11 tabular-nums"
+                      aria-invalid={!!formErrors.cycle_amount || undefined}
+                      aria-describedby={formErrors.cycle_amount ? "goal-cycle-error" : undefined}
                       value={cycleInput}
                       onChange={(e) => setCycleInput(e.target.value)}
                       placeholder="20"
                     />
                     {formErrors.cycle_amount && (
-                      <p role="alert" className="text-xs text-destructive">
+                      <p id="goal-cycle-error" role="alert" className="text-xs text-destructive">
                         {formErrors.cycle_amount}
                       </p>
                     )}
@@ -398,7 +463,7 @@ function ChildSavings() {
                       value={periodInput}
                       onValueChange={(v) => setPeriodInput(v as CyclePeriod)}
                     >
-                      <SelectTrigger id="goal-period">
+                      <SelectTrigger id="goal-period" className="h-11">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -411,7 +476,8 @@ function ChildSavings() {
                 </div>
 
                 <DialogFooter>
-                  <Button type="submit" disabled={submitting} className="min-h-11 w-full">
+                  <Button type="submit" size="touch" disabled={submitting} className="w-full">
+                    {submitting && <Loader2 className="animate-spin" aria-hidden />}
                     {submitting ? "שומר..." : "צור מטרה"}
                   </Button>
                 </DialogFooter>
@@ -423,23 +489,33 @@ function ChildSavings() {
         {goals.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground">
-              <Target className="h-10 w-10 opacity-40" aria-hidden />
-              <p>עדיין אין מטרות. הוסיפו אחת!</p>
+              <Target className="size-10 opacity-40" aria-hidden />
+              <p>עדיין אין מטרות. על מה תרצו לחסוך?</p>
+              <Button
+                size="touch"
+                variant="outline"
+                className="mt-1"
+                onClick={() => setDialogOpen(true)}
+              >
+                <Plus aria-hidden />
+                הוסיפו מטרה ראשונה
+              </Button>
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {goals.map((goal) => (
-              <GoalCard
-                key={goal.id}
-                goal={goal}
-                deposited={depositedByGoal[goal.id] ?? 0}
-                walletBalance={walletBalance}
-                savingsBalance={savingsBalance}
-                onChanged={refresh}
-              />
+          <StaggerList className="grid gap-3 sm:grid-cols-2">
+            {goals.map((goal, i) => (
+              <StaggerItem key={goal.id} index={i}>
+                <GoalCard
+                  goal={goal}
+                  deposited={depositedByGoal[goal.id] ?? 0}
+                  walletBalance={walletBalance}
+                  savingsBalance={savingsBalance}
+                  onChanged={refresh}
+                />
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerList>
         )}
       </section>
     </div>
@@ -463,6 +539,8 @@ function GoalCard({
   const [useCustom, setUseCustom] = useState(false);
   const [customInput, setCustomInput] = useState("");
   const [acting, setActing] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [depositError, setDepositError] = useState("");
 
   const remaining = Math.max(0, goal.target_amount - deposited);
   const isCompleted = goal.status === "completed";
@@ -480,6 +558,7 @@ function GoalCard({
   async function deposit() {
     if (!canDeposit || acting) return;
     setActing(true);
+    setDepositError("");
     const rpc = source === "wallet" ? "deposit_to_goal" : "deposit_savings_to_goal";
     const { data, error } = await supabase.rpc(rpc, {
       _goal_id: goal.id,
@@ -489,11 +568,14 @@ function GoalCard({
 
     if (error) {
       console.error(`[${rpc}]`, error);
-      toast.error(import.meta.env.DEV ? `שגיאה: ${error.message}` : "שגיאה בהפקדה");
+      setDepositError(
+        import.meta.env.DEV ? `שגיאה: ${error.message}` : "ההפקדה לא הצליחה. נסו שוב.",
+      );
       return;
     }
     if (data && typeof data === "object" && "error" in (data as Record<string, unknown>)) {
-      toast.error(String((data as Record<string, unknown>).error));
+      console.error(`[${rpc}]`, (data as Record<string, unknown>).error);
+      setDepositError("ההפקדה לא הצליחה. ייתכן שהיתרה השתנתה — רעננו ונסו שוב.");
       return;
     }
     toast.success("הפקדה הצליחה!");
@@ -525,15 +607,12 @@ function GoalCard({
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
             {isCompleted && (
-              <span
-                className="inline-flex h-6 items-center gap-1 rounded-full bg-success/15 px-2 text-xs font-semibold text-success"
-                aria-label="הושלם"
-              >
-                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+              <span className="inline-flex h-6 items-center gap-1 rounded-full bg-success/15 px-2 text-xs font-semibold text-success">
+                <CheckCircle2 className="size-3.5" aria-hidden />
                 הושלם
               </span>
             )}
-            <p className="font-semibold">{goal.title}</p>
+            <h3 className="font-semibold">{goal.title}</h3>
           </div>
           <CoinAmount value={goal.target_amount} />
         </div>
@@ -557,62 +636,47 @@ function GoalCard({
             <AnimatedNumber value={deposited} className="font-semibold text-foreground" /> מתוך{" "}
             {goal.target_amount}
           </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px]">
+          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs">
             {goal.cycle_amount} כל {periodLabel[goal.cycle_period]}
           </span>
         </div>
 
         {!isCompleted && (
           <>
-            <div
-              role="radiogroup"
+            {/* Radix ToggleGroup: real radio semantics + arrow-key roving focus. */}
+            <ToggleGroup
+              type="single"
+              value={source}
+              onValueChange={(v) => {
+                if (v === "wallet" || v === "savings") setSource(v);
+              }}
+              disabled={acting}
               aria-label="מקור ההפקדה"
               className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1"
             >
-              <SourceOption
-                active={source === "wallet"}
-                disabled={acting}
-                label="ארנק"
-                balance={walletBalance}
-                onClick={() => setSource("wallet")}
-              />
-              <SourceOption
-                active={source === "savings"}
-                disabled={acting}
-                label="חיסכון"
-                balance={savingsBalance}
-                onClick={() => setSource("savings")}
-              />
-            </div>
+              <SourceOption value="wallet" label="ארנק" balance={walletBalance} />
+              <SourceOption value="savings" label="חיסכון" balance={savingsBalance} />
+            </ToggleGroup>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setUseCustom(false)}
-                disabled={acting}
-                className={cn(
-                  "inline-flex min-h-9 items-center rounded-full px-3 text-xs font-medium transition-colors",
-                  !useCustom
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:text-foreground",
-                )}
-              >
+            <ToggleGroup
+              type="single"
+              value={useCustom ? "custom" : "cycle"}
+              onValueChange={(v) => {
+                if (v === "cycle" || v === "custom") setUseCustom(v === "custom");
+              }}
+              disabled={acting}
+              aria-label="סכום ההפקדה"
+              className="flex flex-wrap justify-start gap-2"
+            >
+              <ToggleGroupItem value="cycle" className={amountChipClass}>
+                {!useCustom && <CheckCircle2 aria-hidden />}
                 סכום מחזורי {goal.cycle_amount}
-              </button>
-              <button
-                type="button"
-                onClick={() => setUseCustom(true)}
-                disabled={acting}
-                className={cn(
-                  "inline-flex min-h-9 items-center rounded-full px-3 text-xs font-medium transition-colors",
-                  useCustom
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:text-foreground",
-                )}
-              >
+              </ToggleGroupItem>
+              <ToggleGroupItem value="custom" className={amountChipClass}>
+                {useCustom && <CheckCircle2 aria-hidden />}
                 סכום אחר
-              </button>
-            </div>
+              </ToggleGroupItem>
+            </ToggleGroup>
 
             {useCustom && (
               <div className="space-y-1">
@@ -626,7 +690,7 @@ function GoalCard({
                   min={1}
                   max={Math.max(1, Math.min(sourceBalance, remaining))}
                   dir="ltr"
-                  className="tabular-nums"
+                  className="h-11 tabular-nums"
                   value={customInput}
                   onChange={(e) => setCustomInput(e.target.value)}
                   placeholder={`עד ${Math.min(sourceBalance, remaining)}`}
@@ -637,13 +701,38 @@ function GoalCard({
             )}
 
             <Button
-              className="min-h-11 w-full transition-transform active:scale-[0.98]"
-              onClick={deposit}
+              size="touch"
+              className="w-full transition-transform active:scale-[0.98]"
+              onClick={() => setConfirmOpen(true)}
               disabled={!canDeposit || acting}
-              aria-label={ctaLabel}
             >
+              {acting && <Loader2 className="animate-spin" aria-hidden />}
               {ctaLabel}
             </Button>
+            {depositError && (
+              <p role="alert" className="text-xs text-destructive">
+                {depositError}
+              </p>
+            )}
+
+            {/* Money moves are confirmed before they happen. */}
+            <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+              <AlertDialogContent dir="rtl">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    להפקיד {amount} מטבעות למטרה &quot;{goal.title}&quot;?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    המטבעות יעברו {sourceWord} למטרה. אחרי ההפקדה יישארו לך {sourceBalance - amount}{" "}
+                    מטבעות ב{source === "wallet" ? "ארנק" : "חיסכון"}.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>ביטול</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => void deposit()}>כן, להפקיד</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </>
         )}
       </CardContent>
@@ -651,39 +740,26 @@ function GoalCard({
   );
 }
 
+const amountChipClass =
+  "min-h-11 rounded-full bg-muted px-4 text-sm font-medium text-muted-foreground hover:text-foreground data-[state=on]:bg-primary data-[state=on]:text-primary-foreground [&_svg]:size-4";
+
 function SourceOption({
-  active,
-  disabled,
+  value,
   label,
   balance,
-  onClick,
 }: {
-  active: boolean;
-  disabled?: boolean;
+  value: DepositSource;
   label: string;
   balance: number;
-  onClick: () => void;
 }) {
   return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={active}
-      onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        "flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-md px-3 py-1.5 text-sm transition-all",
-        active
-          ? "bg-background text-foreground shadow-sm"
-          : "text-muted-foreground hover:text-foreground",
-        disabled && "opacity-60",
-      )}
+    <ToggleGroupItem
+      value={value}
+      className="flex h-auto min-h-11 flex-col items-center justify-center gap-0.5 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-transparent hover:text-foreground data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm"
     >
       <span className="font-medium">{label}</span>
-      <span className="text-[11px] tabular-nums opacity-70">
-        זמין <AnimatedNumber value={balance} />
-      </span>
-    </button>
+      <span className="text-xs tabular-nums opacity-70">זמין {balance}</span>
+    </ToggleGroupItem>
   );
 }
 
@@ -701,24 +777,33 @@ function MoveToSavingsDialog({
   const [amount, setAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  // Two steps: enter an amount, then confirm the move before any coins change pots.
+  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     if (!open) {
       setAmount("");
       setErr(null);
       setSubmitting(false);
+      setConfirming(false);
     }
   }, [open]);
 
   const num = Number(amount);
   const valid = amount !== "" && Number.isInteger(num) && num > 0 && num <= walletBalance;
 
-  async function submit(e: FormEvent) {
+  function review(e: FormEvent) {
     e.preventDefault();
     if (!valid) {
       setErr(num > walletBalance ? `אין מספיק בארנק (${walletBalance})` : "סכום לא תקין");
       return;
     }
+    setErr(null);
+    setConfirming(true);
+  }
+
+  async function submit() {
+    if (!valid || submitting) return;
     setSubmitting(true);
     setErr(null);
     const { data, error } = await supabase.rpc("deposit_to_savings", { _amount: num });
@@ -726,11 +811,14 @@ function MoveToSavingsDialog({
 
     if (error) {
       console.error("[deposit_to_savings]", error);
-      setErr(import.meta.env.DEV ? error.message : "שגיאה בהעברה");
+      setErr(import.meta.env.DEV ? error.message : "ההעברה לא הצליחה. נסו שוב.");
+      setConfirming(false);
       return;
     }
     if (data && typeof data === "object" && "error" in (data as Record<string, unknown>)) {
-      setErr(String((data as Record<string, unknown>).error));
+      console.error("[deposit_to_savings]", (data as Record<string, unknown>).error);
+      setErr("ההעברה לא הצליחה. ייתכן שהיתרה השתנתה — נסו שוב.");
+      setConfirming(false);
       return;
     }
     toast.success("ההעברה הצליחה");
@@ -750,55 +838,90 @@ function MoveToSavingsDialog({
           <DialogTitle>העברה לחיסכון</DialogTitle>
           <DialogDescription>העבירו מטבעות מהארנק לחיסכון שלכם.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={submit} className="space-y-4" noValidate>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="move-amount">סכום</Label>
-              <button
-                type="button"
-                onClick={setMax}
-                className="text-xs font-medium text-primary hover:underline"
-                disabled={submitting || walletBalance <= 0}
-              >
-                העבר הכל ({walletBalance})
-              </button>
-            </div>
-            <Input
-              id="move-amount"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={walletBalance}
-              dir="ltr"
-              className="tabular-nums text-lg"
-              value={amount}
-              onChange={(e) => {
-                setAmount(e.target.value);
-                if (err) setErr(null);
-              }}
-              placeholder="50"
-              autoFocus
-              disabled={submitting}
-            />
-            <p className="text-xs text-muted-foreground">
-              בארנק: <span className="tabular-nums font-semibold">{walletBalance}</span> מטבעות
-            </p>
-            {err && (
-              <p role="alert" className="text-xs text-destructive">
-                {err}
+        {confirming ? (
+          <div className="flex flex-col gap-4">
+            <div className="rounded-xl bg-muted/50 p-4 text-center">
+              <p className="text-sm text-muted-foreground">להעביר מהארנק לחיסכון</p>
+              <p className="mt-1 flex items-center justify-center gap-2 text-3xl font-bold tabular-nums">
+                <Coins className="size-7 text-coin" aria-hidden />
+                {num}
+                <span className="sr-only"> מטבעות</span>
               </p>
-            )}
+              <p className="mt-2 text-xs text-muted-foreground">
+                אחרי ההעברה יישארו בארנק{" "}
+                <span className="font-semibold tabular-nums">{walletBalance - num}</span> מטבעות
+              </p>
+            </div>
+            <DialogFooter className="flex-col gap-2 sm:flex-col">
+              <Button
+                size="touch"
+                className="w-full"
+                onClick={() => void submit()}
+                disabled={submitting}
+              >
+                {submitting && <Loader2 className="animate-spin" aria-hidden />}
+                {submitting ? "מעביר..." : "כן, להעביר"}
+              </Button>
+              <Button
+                size="touch"
+                variant="ghost"
+                className="w-full"
+                onClick={() => setConfirming(false)}
+                disabled={submitting}
+              >
+                שינוי הסכום
+              </Button>
+            </DialogFooter>
           </div>
-          <DialogFooter>
-            <Button
-              type="submit"
-              className="min-h-11 w-full transition-transform active:scale-[0.98]"
-              disabled={submitting || !valid}
-            >
-              {submitting ? "מעביר..." : "העבר"}
-            </Button>
-          </DialogFooter>
-        </form>
+        ) : (
+          <form onSubmit={review} className="flex flex-col gap-4" noValidate>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="move-amount">סכום</Label>
+                <Button
+                  type="button"
+                  variant="link"
+                  onClick={setMax}
+                  className="h-11 px-2"
+                  disabled={submitting || walletBalance <= 0}
+                >
+                  העבר הכל ({walletBalance})
+                </Button>
+              </div>
+              <Input
+                id="move-amount"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={walletBalance}
+                dir="ltr"
+                className="h-11 text-lg tabular-nums"
+                value={amount}
+                onChange={(e) => {
+                  setAmount(e.target.value);
+                  if (err) setErr(null);
+                }}
+                placeholder="50"
+                autoFocus
+                aria-invalid={!!err || undefined}
+                aria-describedby={err ? "move-hint move-error" : "move-hint"}
+              />
+              <p id="move-hint" className="text-xs text-muted-foreground">
+                בארנק: <span className="font-semibold tabular-nums">{walletBalance}</span> מטבעות
+              </p>
+              {err && (
+                <p id="move-error" role="alert" className="text-xs text-destructive">
+                  {err}
+                </p>
+              )}
+            </div>
+            <DialogFooter>
+              <Button type="submit" size="touch" className="w-full" disabled={!valid}>
+                המשך
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -1,8 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Bot, MessageCircle } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Bot, MessageCircle, RotateCw } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { StaggerItem, StaggerList } from "@/components/ui/stagger-list";
 import { ListSkeleton } from "@/components/loading-skeletons";
+import { PageHeader } from "@/components/page-header";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { PERSONALITY_LABELS_HE, type TutorPersonality } from "@/lib/tutors";
@@ -23,43 +27,63 @@ function ChildTutors() {
   const { householdId } = useAuth();
   const [tutors, setTutors] = useState<TutorRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
 
-  useEffect(() => {
+  const load = useCallback(async () => {
     if (!householdId) return;
     setLoading(true);
-    supabase
+    setLoadFailed(false);
+    const { data, error } = await supabase
       .from("tutors")
       .select("id, name, subject, topic, personality")
       .eq("household_id", householdId)
       .eq("active", true)
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        setTutors((data ?? []) as TutorRow[]);
-        setLoading(false);
-      });
+      .order("created_at", { ascending: false });
+    if (error) {
+      console.error("[child/tutors] load failed", error);
+      setLoadFailed(true);
+    } else {
+      setTutors((data ?? []) as TutorRow[]);
+    }
+    setLoading(false);
   }, [householdId]);
 
+  useEffect(() => {
+    void load();
+  }, [load]);
+
   const header = (
-    <header className="space-y-1">
-      <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
-        <Bot className="h-6 w-6 text-primary" aria-hidden />
-        חונך AI
-      </h1>
-      <p className="text-sm text-muted-foreground">בחרו חונך והתחילו שיחת קול.</p>
-    </header>
+    <PageHeader title="חונך AI" icon={Bot} description="בחרו חונך והתחילו שיחת קול." />
   );
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col gap-6">
         {header}
         <ListSkeleton rows={3} />
       </div>
     );
   }
 
+  if (loadFailed) {
+    return (
+      <div className="flex flex-col gap-4">
+        {header}
+        <Alert variant="destructive" role="alert">
+          <AlertDescription>
+            אופס, לא הצלחנו לטעון את החונכים. בדקו את האינטרנט ונסו שוב.
+          </AlertDescription>
+        </Alert>
+        <Button size="touch" variant="outline" onClick={() => void load()}>
+          <RotateCw aria-hidden />
+          נסו שוב
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       {header}
 
       {tutors.length === 0 ? (
@@ -70,36 +94,35 @@ function ChildTutors() {
           </CardContent>
         </Card>
       ) : (
-        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {tutors.map((tutor) => (
-            <li key={tutor.id}>
+        <StaggerList className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {tutors.map((tutor, i) => (
+            <StaggerItem key={tutor.id} index={i}>
               <Card className="h-full">
                 <CardContent className="flex h-full flex-col gap-4 py-5">
                   <div className="flex items-center gap-3">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                      <Bot className="h-5 w-5" aria-hidden />
+                    <span className="flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                      <Bot className="size-5" aria-hidden />
                     </span>
                     <div className="leading-tight">
-                      <p className="text-lg font-semibold text-foreground">{tutor.name}</p>
+                      <h2 className="text-lg font-semibold text-foreground">{tutor.name}</h2>
                       <p className="text-xs text-muted-foreground">
                         {tutor.subject} · {PERSONALITY_LABELS_HE[tutor.personality]}
                       </p>
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground">{tutor.topic}</p>
-                  <Link
-                    to="/child/tutors/$tutorId"
-                    params={{ tutorId: tutor.id }}
-                    className="mt-auto inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                  >
-                    <MessageCircle className="h-4 w-4" aria-hidden />
-                    התחל שיחה
-                  </Link>
+                  <Button asChild size="touch" className="mt-auto w-full font-semibold">
+                    <Link to="/child/tutors/$tutorId" params={{ tutorId: tutor.id }}>
+                      <MessageCircle aria-hidden />
+                      התחל שיחה
+                      <span className="sr-only"> עם {tutor.name}</span>
+                    </Link>
+                  </Button>
                 </CardContent>
               </Card>
-            </li>
+            </StaggerItem>
           ))}
-        </ul>
+        </StaggerList>
       )}
     </div>
   );

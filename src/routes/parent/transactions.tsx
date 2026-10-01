@@ -11,6 +11,7 @@ import { CoinAmount } from "@/components/coin-amount";
 import { ListSkeleton } from "@/components/loading-skeletons";
 import { ChildAvatar } from "@/components/child-avatar";
 import { TransactionRow } from "@/components/transaction-row";
+import { MonthlySummary } from "@/components/monthly-summary";
 import { StaggerItem, StaggerList } from "@/components/ui/stagger-list";
 
 export const Route = createFileRoute("/parent/transactions")({
@@ -208,6 +209,10 @@ function ParentTransactions() {
         <ListSkeleton rows={4} />
       ) : (
         <>
+          {householdId && (
+            <MonthlySummary householdId={householdId} childId={filter === ALL ? null : filter} />
+          )}
+
           {visibleChildren.length > 0 && (
             <Card className="bg-muted/40">
               <CardHeader className="pb-2">

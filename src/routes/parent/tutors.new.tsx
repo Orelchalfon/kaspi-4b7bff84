@@ -1,7 +1,10 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,7 +48,7 @@ function NewTutor() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!householdId || !user) return;
+    if (!householdId || !user || loading) return;
     setError("");
     setLoading(true);
 
@@ -74,22 +77,21 @@ function NewTutor() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-sm">
+    <div className="mx-auto flex w-full max-w-sm flex-col gap-4">
+      <PageHeader
+        title="חונך חדש"
+        description="חונך קולי שהילדים יוכלו לשוחח איתו"
+        back={{ to: "/parent/tutors", label: "חזרה לחונכים" }}
+      />
       <Card>
-        <CardHeader>
-          <CardTitle>חונך חדש</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        <CardContent className="pt-6">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
             {error && (
-              <div
-                role="alert"
-                className="rounded-md bg-destructive/10 p-3 text-sm text-destructive"
-              >
-                {error}
-              </div>
+              <Alert variant="destructive" role="alert">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="tutor-name">שם החונך</Label>
               <Input
                 id="tutor-name"
@@ -99,9 +101,10 @@ function NewTutor() {
                 maxLength={60}
                 required
                 autoComplete="off"
+                className="h-11"
               />
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="tutor-subject">מקצוע</Label>
               <Input
                 id="tutor-subject"
@@ -111,9 +114,10 @@ function NewTutor() {
                 maxLength={60}
                 required
                 autoComplete="off"
+                className="h-11"
               />
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="tutor-topic">נושא השיחה</Label>
               <Textarea
                 id="tutor-topic"
@@ -122,15 +126,22 @@ function NewTutor() {
                 placeholder="שיחון באנגלית לחיי היומיום"
                 maxLength={200}
                 required
+                aria-describedby="tutor-topic-count"
               />
+              <p
+                id="tutor-topic-count"
+                className="text-end text-xs tabular-nums text-muted-foreground"
+              >
+                {topic.length}/200
+              </p>
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="tutor-personality">סגנון</Label>
               <Select
                 value={personality}
                 onValueChange={(v) => setPersonality(v as TutorPersonality)}
               >
-                <SelectTrigger id="tutor-personality">
+                <SelectTrigger id="tutor-personality" className="h-11">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -142,10 +153,10 @@ function NewTutor() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="tutor-voice">קול</Label>
               <Select value={voiceId} onValueChange={setVoiceId}>
-                <SelectTrigger id="tutor-voice">
+                <SelectTrigger id="tutor-voice" className="h-11">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -157,10 +168,10 @@ function NewTutor() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="tutor-language">שפת שיחה</Label>
               <Select value={language} onValueChange={(v) => setLanguage(v as TutorLanguage)}>
-                <SelectTrigger id="tutor-language">
+                <SelectTrigger id="tutor-language" className="h-11">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -172,9 +183,15 @@ function NewTutor() {
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit" className="min-h-11 w-full" disabled={loading}>
-              {loading ? "יוצר..." : "צור חונך"}
-            </Button>
+            <div className="flex flex-col gap-2 pt-2">
+              <Button type="submit" size="touch" className="w-full" disabled={loading}>
+                {loading && <Loader2 className="animate-spin" aria-hidden />}
+                {loading ? "יוצר..." : "צור חונך"}
+              </Button>
+              <Button asChild variant="ghost" size="touch" className="w-full">
+                <Link to="/parent/tutors">ביטול</Link>
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>

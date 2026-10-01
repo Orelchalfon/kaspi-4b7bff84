@@ -1,14 +1,17 @@
-import { AnimatedNumber } from "@/components/animated-number";
+import { BalanceHero } from "@/components/balance-hero";
 import { CoinAmount } from "@/components/coin-amount";
 import { ChildDashboardSkeleton } from "@/components/loading-skeletons";
 import { StatusBadge } from "@/components/status-badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { StaggerItem, StaggerList } from "@/components/ui/stagger-list";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { computeWalletBalance } from "@/lib/transactions";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Coins, Sparkles } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ChevronLeft, RotateCw, Sparkles } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
 export const Route = createFileRoute("/child/dashboard")({
   component: ChildDashboard,
@@ -27,70 +30,99 @@ function ChildDashboard() {
   const [balance, setBalance] = useState(0);
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+
+  const load = useCallback(async () => {
+    if (!childProfileId) return;
+    setLoading(true);
+    setLoadFailed(false);
+    const [txRes, taskRes] = await Promise.all([
+      supabase.from("transactions").select("amount, type").eq("child_id", childProfileId),
+      supabase
+        .from("tasks")
+        .select("id, title, reward_amount, status, created_at")
+        .eq("child_id", childProfileId)
+        .order("created_at", { ascending: false }),
+    ]);
+    if (txRes.error || taskRes.error) {
+      console.error("[child/dashboard] load failed", txRes.error ?? taskRes.error);
+      setLoadFailed(true);
+    } else {
+      setBalance(computeWalletBalance(txRes.data || []));
+      setTasks((taskRes.data || []) as TaskRow[]);
+    }
+    setLoading(false);
+  }, [childProfileId]);
 
   useEffect(() => {
-    if (!childProfileId) return;
-
-    async function load() {
-      const [{ data: txData }, { data: taskData }] = await Promise.all([
-        supabase.from("transactions").select("amount, type").eq("child_id", childProfileId!),
-        supabase
-          .from("tasks")
-          .select("id, title, reward_amount, status, created_at")
-          .eq("child_id", childProfileId!)
-          .order("created_at", { ascending: false }),
-      ]);
-      setBalance(computeWalletBalance(txData || []));
-      setTasks((taskData || []) as TaskRow[]);
-      setLoading(false);
-    }
-
-    load();
-  }, [childProfileId]);
+    void load();
+  }, [load]);
 
   if (loading) {
     return <ChildDashboardSkeleton />;
   }
 
-  return (
-    <div className="space-y-6">
-      <Card className="bg-primary text-primary-foreground">
-        <CardContent className="py-6 text-center">
-          <p className="text-sm opacity-80">היתרה שלי</p>
-          <p className="mt-1 flex items-center justify-center gap-2 text-4xl font-bold tabular-nums">
-            <Coins className="h-8 w-8 text-coin" aria-hidden />
-            <AnimatedNumber value={balance} />
-          </p>
-        </CardContent>
-      </Card>
+  if (loadFailed) {
+    return (
+      <div className="flex flex-col gap-4">
+        <h1 className="sr-only">ראשי</h1>
+        <Alert variant="destructive" role="alert">
+          <AlertDescription>
+            אופס, לא הצלחנו לטעון את המסך. בדקו את האינטרנט ונסו שוב.
+          </AlertDescription>
+        </Alert>
+        <Button size="touch" variant="outline" onClick={() => void load()}>
+          <RotateCw aria-hidden />
+          נסו שוב
+        </Button>
+      </div>
+    );
+  }
 
-      <section className="space-y-4">
-        <h2 className="mb-3 text-lg font-semibold">המשימות שלי</h2>
+  return (
+    <div className="flex flex-col gap-6">
+      <h1 className="sr-only">ראשי</h1>
+      <BalanceHero value={balance} />
+
+      <section aria-labelledby="my-tasks-heading" className="flex flex-col gap-3">
+        <h2 id="my-tasks-heading" className="text-lg font-semibold">
+          המשימות שלי
+        </h2>
         {tasks.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground">
-              <Sparkles className="h-8 w-8 opacity-50" aria-hidden />
+              <Sparkles className="size-8 opacity-50" aria-hidden />
               <p>אין משימות עדיין. ההורים יוסיפו בקרוב!</p>
             </CardContent>
           </Card>
         ) : (
-          <div className="flex flex-col gap-4">
-            {tasks.map((task) => (
-              <Link key={task.id} to="/child/tasks/$taskId" params={{ taskId: task.id }}>
-                <Card className="cursor-pointer transition-colors hover:bg-accent/50">
-                  <CardContent className="flex min-h-16 items-center justify-between py-4">
-                    <div>
-                      <p className="text-base font-medium">{task.title}</p>
-                      <div className="mt-1.5">
-                        <StatusBadge status={task.status} />
+          <StaggerList className="flex flex-col gap-3">
+            {tasks.map((task, i) => (
+              <StaggerItem key={task.id} index={i}>
+                <Link
+                  to="/child/tasks/$taskId"
+                  params={{ taskId: task.id }}
+                  className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <Card className="transition-colors hover:bg-accent/50">
+                    <CardContent className="flex min-h-16 items-center justify-between gap-3 py-4">
+                      <div className="min-w-0">
+                        <p className="text-base font-medium">{task.title}</p>
+                        <div className="mt-1.5">
+                          <StatusBadge status={task.status} />
+                        </div>
                       </div>
-                    </div>
-                    <CoinAmount value={task.reward_amount} size="lg" />
-                  </CardContent>
-                </Card>
-              </Link>
+                      <span className="flex shrink-0 items-center gap-2">
+                        <CoinAmount value={task.reward_amount} size="lg" />
+                        {/* Forward in RTL points left. */}
+                        <ChevronLeft className="size-5 text-muted-foreground" aria-hidden />
+                      </span>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerList>
         )}
       </section>
     </div>

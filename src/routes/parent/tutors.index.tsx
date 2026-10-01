@@ -1,6 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Bot, ChevronLeft, Plus } from "lucide-react";
+import { ArrowLeft, Bot, ChevronLeft, EyeOff, Eye, Plus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { StaggerItem, StaggerList } from "@/components/ui/stagger-list";
+import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ListSkeleton } from "@/components/loading-skeletons";
@@ -47,7 +50,7 @@ function TutorsList() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">חונכים</h1>
         </div>
@@ -57,15 +60,15 @@ function TutorsList() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">חונכים</h1>
-        <Link to="/parent/tutors/new">
-          <Button size="sm" className="min-h-10">
-            <Plus className="h-4 w-4" aria-hidden />
-            <span className="ms-1.5">חונך חדש</span>
-          </Button>
-        </Link>
+        <Button asChild size="touch">
+          <Link to="/parent/tutors/new">
+            <Plus aria-hidden />
+            חונך חדש
+          </Link>
+        </Button>
       </div>
 
       {visibleTutors.length === 0 ? (
@@ -75,16 +78,17 @@ function TutorsList() {
             {tutors.length === 0 ? (
               <>
                 <p>עדיין לא יצרתם חונכים.</p>
-                <Link to="/parent/tutors/new">
-                  <Button variant="link" className="mt-1">
+                <Button asChild variant="link" className="mt-1 h-11">
+                  <Link to="/parent/tutors/new">
                     צרו חונך ראשון
-                  </Button>
-                </Link>
+                    <ArrowLeft aria-hidden />
+                  </Link>
+                </Button>
               </>
             ) : (
               <>
                 <p>כל החונכים הוסרו.</p>
-                <Button variant="link" className="mt-1" onClick={() => setShowInactive(true)}>
+                <Button variant="link" className="mt-1 h-11" onClick={() => setShowInactive(true)}>
                   הצג חונכים שהוסרו ({inactiveCount})
                 </Button>
               </>
@@ -92,38 +96,53 @@ function TutorsList() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-2">
-          {visibleTutors.map((tutor) => (
-            <Link key={tutor.id} to="/parent/tutors/$tutorId" params={{ tutorId: tutor.id }}>
-              <Card className="transition-shadow hover:shadow-md">
-                <CardContent className="flex items-center justify-between py-4">
-                  <span className="flex items-center gap-2">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                      <Bot className="h-5 w-5" aria-hidden />
-                    </span>
-                    <span className="leading-tight">
-                      <span className="block font-medium">{tutor.name}</span>
-                      <span className="block text-xs text-muted-foreground">
-                        {tutor.subject} · {PERSONALITY_LABELS_HE[tutor.personality]}
-                        {!tutor.active && " · לא פעיל"}
+        <StaggerList replayKey={String(showInactive)} className="flex flex-col gap-2">
+          {visibleTutors.map((tutor, i) => (
+            <StaggerItem key={tutor.id} index={i}>
+              <Link
+                to="/parent/tutors/$tutorId"
+                params={{ tutorId: tutor.id }}
+                className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Card className="transition-shadow hover:shadow-md">
+                  <CardContent className="flex items-center justify-between py-4">
+                    <span className={cn("flex items-center gap-2", !tutor.active && "opacity-60")}>
+                      <span className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <Bot className="size-5" aria-hidden />
+                      </span>
+                      <span className="leading-tight">
+                        <span className="block font-medium">{tutor.name}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          {tutor.subject} · {PERSONALITY_LABELS_HE[tutor.personality]}
+                        </span>
                       </span>
                     </span>
-                  </span>
-                  <ChevronLeft className="h-4 w-4 text-muted-foreground" aria-hidden />
-                </CardContent>
-              </Card>
-            </Link>
+                    <span className="flex items-center gap-2">
+                      {!tutor.active && (
+                        <Badge variant="secondary" className="font-medium">
+                          לא פעיל
+                        </Badge>
+                      )}
+                      {/* Forward in RTL points left. */}
+                      <ChevronLeft className="size-4 text-muted-foreground" aria-hidden />
+                    </span>
+                  </CardContent>
+                </Card>
+              </Link>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerList>
       )}
 
       {inactiveCount > 0 && visibleTutors.length > 0 && (
         <Button
           variant="ghost"
-          size="sm"
+          size="touch"
           className="w-full text-muted-foreground"
+          aria-pressed={showInactive}
           onClick={() => setShowInactive((v) => !v)}
         >
+          {showInactive ? <EyeOff aria-hidden /> : <Eye aria-hidden />}
           {showInactive ? "הסתר חונכים שהוסרו" : `הצג גם חונכים שהוסרו (${inactiveCount})`}
         </Button>
       )}

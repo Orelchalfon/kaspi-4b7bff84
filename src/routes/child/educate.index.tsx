@@ -1,21 +1,28 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BookOpen,
   Calculator,
   Check,
   Coins,
   Languages,
+  Play,
+  RotateCw,
   Sparkles,
   type LucideIcon,
 } from "lucide-react";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { StaggerItem, StaggerList } from "@/components/ui/stagger-list";
+import { PageHeader } from "@/components/page-header";
 import { ListSkeleton } from "@/components/loading-skeletons";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import {
   BAND_LABELS_HE,
+  QUIZ_LENGTH,
   SUBJECT_LABELS_HE,
   bandForBirthdate,
   isQuizSubject,
@@ -67,31 +74,41 @@ function ChildEducate() {
   const [reward, setReward] = useState<number>(5);
   const [attempts, setAttempts] = useState<AttemptRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
 
-  useEffect(() => {
+  const load = useCallback(async () => {
     if (!childProfileId || !householdId) return;
     setLoading(true);
-    (async () => {
-      const [{ data: sData }, { data: aData }] = await Promise.all([
-        supabase
-          .from("household_settings")
-          .select("quiz_subjects, quiz_reward_amount")
-          .eq("household_id", householdId)
-          .maybeSingle(),
-        supabase
-          .from("quiz_attempts")
-          .select("subject, paid, created_at")
-          .eq("child_id", childProfileId)
-          .order("created_at", { ascending: false })
-          .limit(50),
-      ]);
-      const raw = (sData?.quiz_subjects ?? []) as string[];
-      setSubjects(raw.filter(isQuizSubject));
-      setReward(sData?.quiz_reward_amount ?? 5);
-      setAttempts((aData ?? []) as AttemptRow[]);
+    setLoadFailed(false);
+    const [sRes, aRes] = await Promise.all([
+      supabase
+        .from("household_settings")
+        .select("quiz_subjects, quiz_reward_amount")
+        .eq("household_id", householdId)
+        .maybeSingle(),
+      supabase
+        .from("quiz_attempts")
+        .select("subject, paid, created_at")
+        .eq("child_id", childProfileId)
+        .order("created_at", { ascending: false })
+        .limit(50),
+    ]);
+    if (sRes.error || aRes.error) {
+      console.error("[child/educate] load failed", sRes.error ?? aRes.error);
+      setLoadFailed(true);
       setLoading(false);
-    })();
+      return;
+    }
+    const raw = (sRes.data?.quiz_subjects ?? []) as string[];
+    setSubjects(raw.filter(isQuizSubject));
+    setReward(sRes.data?.quiz_reward_amount ?? 5);
+    setAttempts((aRes.data ?? []) as AttemptRow[]);
+    setLoading(false);
   }, [childProfileId, householdId]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const today = todayKey();
   const paidToday = useMemo(() => {
@@ -103,28 +120,41 @@ function ChildEducate() {
   }, [attempts, today]);
 
   const header = (
-    <header className="space-y-1">
-      <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
-        <Sparkles className="h-6 w-6 text-primary" aria-hidden />
-        לימוד
-      </h1>
-      <p className="text-sm text-muted-foreground">
-        חידון אחד מכל נושא ביום. עברת — תקבל תגמול אוטומטי.
-      </p>
-    </header>
+    <PageHeader
+      title="לימוד"
+      icon={Sparkles}
+      description="חידון אחד מכל נושא ביום. עברת — תקבל תגמול אוטומטי."
+    />
   );
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col gap-6">
         {header}
         <ListSkeleton rows={3} />
       </div>
     );
   }
 
+  if (loadFailed) {
+    return (
+      <div className="flex flex-col gap-4">
+        {header}
+        <Alert variant="destructive" role="alert">
+          <AlertDescription>
+            אופס, לא הצלחנו לטעון את החידונים. בדקו את האינטרנט ונסו שוב.
+          </AlertDescription>
+        </Alert>
+        <Button size="touch" variant="outline" onClick={() => void load()}>
+          <RotateCw aria-hidden />
+          נסו שוב
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       {header}
 
       {subjects.length === 0 ? (
@@ -135,12 +165,12 @@ function ChildEducate() {
           </CardContent>
         </Card>
       ) : (
-        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {subjects.map((s) => {
+        <StaggerList className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {subjects.map((s, i) => {
             const Icon = SUBJECT_ICON[s];
             const done = paidToday.has(s);
             return (
-              <li key={s}>
+              <StaggerItem key={s} index={i}>
                 <Card className="h-full">
                   <CardContent className="flex h-full flex-col gap-4 py-5">
                     <div className="flex items-start justify-between gap-3">
@@ -153,21 +183,19 @@ function ChildEducate() {
                             {SUBJECT_LABELS_HE[s]}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            חידון של 5 שאלות · רמת {BAND_LABELS_HE[band]}
+                            חידון של {QUIZ_LENGTH} שאלות · רמת {BAND_LABELS_HE[band]}
                           </p>
                         </div>
                       </div>
-                      <span
-                        className="inline-flex items-center gap-1 rounded-full bg-coin/15 px-2.5 py-1 text-xs font-semibold text-coin-foreground"
-                        style={{ fontFeatureSettings: '"tnum"' }}
-                      >
-                        <Coins className="h-3 w-3" aria-hidden />+{reward}
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-coin/15 px-2.5 py-1 text-xs font-semibold tabular-nums text-coin-foreground">
+                        <Coins className="size-3" aria-hidden />+{reward}
+                        <span className="sr-only"> מטבעות</span>
                       </span>
                     </div>
 
                     <div className="mt-auto">
                       {done ? (
-                        <div className="flex items-center justify-between gap-2 rounded-lg bg-success/10 px-3 py-2 text-sm text-success">
+                        <div className="flex min-h-11 items-center justify-between gap-2 rounded-lg bg-success/10 px-3 py-2 text-sm text-success">
                           <span className="flex items-center gap-1.5 font-medium">
                             <Check className="h-4 w-4" aria-hidden />
                             נצבר היום
@@ -175,21 +203,20 @@ function ChildEducate() {
                           <span className="text-xs text-success/80">חזרו מחר</span>
                         </div>
                       ) : (
-                        <Link
-                          to="/child/educate/$subject"
-                          params={{ subject: s }}
-                          className="inline-flex h-11 w-full items-center justify-center rounded-lg bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                        >
-                          התחל חידון
-                        </Link>
+                        <Button asChild size="touch" className="w-full font-semibold">
+                          <Link to="/child/educate/$subject" params={{ subject: s }}>
+                            <Play aria-hidden />
+                            התחל חידון
+                          </Link>
+                        </Button>
                       )}
                     </div>
                   </CardContent>
                 </Card>
-              </li>
+              </StaggerItem>
             );
           })}
-        </ul>
+        </StaggerList>
       )}
 
       <p className="text-center text-xs text-muted-foreground">

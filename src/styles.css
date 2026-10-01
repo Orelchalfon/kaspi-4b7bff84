@@ -52,6 +52,9 @@
   --color-coin-foreground: var(--coin-foreground);
   --color-ks-navy-deep: var(--ks-navy-deep);
   --color-ks-cyan-soft: var(--ks-cyan-soft);
+  --color-viz-tasks: var(--viz-tasks);
+  --color-viz-quizzes: var(--viz-quizzes);
+  --color-viz-gifts: var(--viz-gifts);
 }
 
 /* Registered so the conic-gradient angle can be interpolated by @keyframes.
@@ -124,6 +127,12 @@
   --chart-3: oklch(0.8 0.15 85);
   --chart-4: oklch(0.55 0.02 264);
   --chart-5: oklch(0.3 0.035 264);
+  /* Categorical viz palette (earnings by source). Validated with the dataviz
+     validate_palette.js six checks: light = all PASS; dark = PASS except contrast WARN
+     on violet, relieved by the always-visible legend values. Order is fixed. */
+  --viz-tasks: oklch(0.62 0.19 258); /* #3082f6 brand blue */
+  --viz-quizzes: oklch(0.66 0.14 80); /* #be8700 deep coin amber */
+  --viz-gifts: oklch(0.5 0.14 300); /* #714ca6 violet */
   --sidebar: oklch(0.985 0.004 264);
   --sidebar-foreground: oklch(0.22 0.03 264);
   --sidebar-primary: oklch(0.62 0.19 258);
