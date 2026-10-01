@@ -1,3 +1,5 @@
+// Shared shapes for the child savings feature (/child/savings).
+
 export type CyclePeriod = "day" | "week" | "month";
 export type DepositSource = "wallet" | "savings";
 

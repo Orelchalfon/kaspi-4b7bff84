@@ -1,15 +1,25 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CoinAmount } from "@/components/coin-amount";
 import { AnimatedNumber } from "@/components/animated-number";
 import { cn } from "@/lib/utils";
-import { SourceOption } from "@/components/savings/source-option";
 import { periodLabel, type DepositSource, type GoalRow } from "@/components/savings/types";
 
 export function GoalCard({
@@ -29,6 +39,8 @@ export function GoalCard({
   const [useCustom, setUseCustom] = useState(false);
   const [customInput, setCustomInput] = useState("");
   const [acting, setActing] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [depositError, setDepositError] = useState("");
 
   const remaining = Math.max(0, goal.target_amount - deposited);
   const isCompleted = goal.status === "completed";
@@ -46,6 +58,7 @@ export function GoalCard({
   async function deposit() {
     if (!canDeposit || acting) return;
     setActing(true);
+    setDepositError("");
     const rpc = source === "wallet" ? "deposit_to_goal" : "deposit_savings_to_goal";
     const { data, error } = await supabase.rpc(rpc, {
       _goal_id: goal.id,
@@ -55,11 +68,14 @@ export function GoalCard({
 
     if (error) {
       console.error(`[${rpc}]`, error);
-      toast.error(import.meta.env.DEV ? `שגיאה: ${error.message}` : "שגיאה בהפקדה");
+      setDepositError(
+        import.meta.env.DEV ? `שגיאה: ${error.message}` : "ההפקדה לא הצליחה. נסו שוב.",
+      );
       return;
     }
     if (data && typeof data === "object" && "error" in (data as Record<string, unknown>)) {
-      toast.error(String((data as Record<string, unknown>).error));
+      console.error(`[${rpc}]`, (data as Record<string, unknown>).error);
+      setDepositError("ההפקדה לא הצליחה. ייתכן שהיתרה השתנתה — רעננו ונסו שוב.");
       return;
     }
     toast.success("הפקדה הצליחה!");
@@ -91,15 +107,12 @@ export function GoalCard({
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
             {isCompleted && (
-              <span
-                className="inline-flex h-6 items-center gap-1 rounded-full bg-success/15 px-2 text-xs font-semibold text-success"
-                aria-label="הושלם"
-              >
-                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+              <span className="inline-flex h-6 items-center gap-1 rounded-full bg-success/15 px-2 text-xs font-semibold text-success">
+                <CheckCircle2 className="size-3.5" aria-hidden />
                 הושלם
               </span>
             )}
-            <p className="font-semibold">{goal.title}</p>
+            <h3 className="font-semibold">{goal.title}</h3>
           </div>
           <CoinAmount value={goal.target_amount} />
         </div>
@@ -123,62 +136,47 @@ export function GoalCard({
             <AnimatedNumber value={deposited} className="font-semibold text-foreground" /> מתוך{" "}
             {goal.target_amount}
           </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px]">
+          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs">
             {goal.cycle_amount} כל {periodLabel[goal.cycle_period]}
           </span>
         </div>
 
         {!isCompleted && (
           <>
-            <div
-              role="radiogroup"
+            {/* Radix ToggleGroup: real radio semantics + arrow-key roving focus. */}
+            <ToggleGroup
+              type="single"
+              value={source}
+              onValueChange={(v) => {
+                if (v === "wallet" || v === "savings") setSource(v);
+              }}
+              disabled={acting}
               aria-label="מקור ההפקדה"
               className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1"
             >
-              <SourceOption
-                active={source === "wallet"}
-                disabled={acting}
-                label="ארנק"
-                balance={walletBalance}
-                onClick={() => setSource("wallet")}
-              />
-              <SourceOption
-                active={source === "savings"}
-                disabled={acting}
-                label="חיסכון"
-                balance={savingsBalance}
-                onClick={() => setSource("savings")}
-              />
-            </div>
+              <SourceOption value="wallet" label="ארנק" balance={walletBalance} />
+              <SourceOption value="savings" label="חיסכון" balance={savingsBalance} />
+            </ToggleGroup>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setUseCustom(false)}
-                disabled={acting}
-                className={cn(
-                  "inline-flex min-h-9 items-center rounded-full px-3 text-xs font-medium transition-colors",
-                  !useCustom
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:text-foreground",
-                )}
-              >
+            <ToggleGroup
+              type="single"
+              value={useCustom ? "custom" : "cycle"}
+              onValueChange={(v) => {
+                if (v === "cycle" || v === "custom") setUseCustom(v === "custom");
+              }}
+              disabled={acting}
+              aria-label="סכום ההפקדה"
+              className="flex flex-wrap justify-start gap-2"
+            >
+              <ToggleGroupItem value="cycle" className={amountChipClass}>
+                {!useCustom && <CheckCircle2 aria-hidden />}
                 סכום מחזורי {goal.cycle_amount}
-              </button>
-              <button
-                type="button"
-                onClick={() => setUseCustom(true)}
-                disabled={acting}
-                className={cn(
-                  "inline-flex min-h-9 items-center rounded-full px-3 text-xs font-medium transition-colors",
-                  useCustom
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:text-foreground",
-                )}
-              >
+              </ToggleGroupItem>
+              <ToggleGroupItem value="custom" className={amountChipClass}>
+                {useCustom && <CheckCircle2 aria-hidden />}
                 סכום אחר
-              </button>
-            </div>
+              </ToggleGroupItem>
+            </ToggleGroup>
 
             {useCustom && (
               <div className="space-y-1">
@@ -192,7 +190,7 @@ export function GoalCard({
                   min={1}
                   max={Math.max(1, Math.min(sourceBalance, remaining))}
                   dir="ltr"
-                  className="tabular-nums"
+                  className="h-11 tabular-nums"
                   value={customInput}
                   onChange={(e) => setCustomInput(e.target.value)}
                   placeholder={`עד ${Math.min(sourceBalance, remaining)}`}
@@ -203,16 +201,64 @@ export function GoalCard({
             )}
 
             <Button
-              className="min-h-11 w-full transition-transform active:scale-[0.98]"
-              onClick={deposit}
+              size="touch"
+              className="w-full transition-transform active:scale-[0.98]"
+              onClick={() => setConfirmOpen(true)}
               disabled={!canDeposit || acting}
-              aria-label={ctaLabel}
             >
+              {acting && <Loader2 className="animate-spin" aria-hidden />}
               {ctaLabel}
             </Button>
+            {depositError && (
+              <p role="alert" className="text-xs text-destructive">
+                {depositError}
+              </p>
+            )}
+
+            {/* Money moves are confirmed before they happen. */}
+            <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+              <AlertDialogContent dir="rtl">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    להפקיד {amount} מטבעות למטרה &quot;{goal.title}&quot;?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    המטבעות יעברו {sourceWord} למטרה. אחרי ההפקדה יישארו לך {sourceBalance - amount}{" "}
+                    מטבעות ב{source === "wallet" ? "ארנק" : "חיסכון"}.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>ביטול</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => void deposit()}>כן, להפקיד</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </>
         )}
       </CardContent>
     </Card>
+  );
+}
+
+const amountChipClass =
+  "min-h-11 rounded-full bg-muted px-4 text-sm font-medium text-muted-foreground hover:text-foreground data-[state=on]:bg-primary data-[state=on]:text-primary-foreground [&_svg]:size-4";
+
+function SourceOption({
+  value,
+  label,
+  balance,
+}: {
+  value: DepositSource;
+  label: string;
+  balance: number;
+}) {
+  return (
+    <ToggleGroupItem
+      value={value}
+      className="flex h-auto min-h-11 flex-col items-center justify-center gap-0.5 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-transparent hover:text-foreground data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm"
+    >
+      <span className="font-medium">{label}</span>
+      <span className="text-xs tabular-nums opacity-70">זמין {balance}</span>
+    </ToggleGroupItem>
   );
 }

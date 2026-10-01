@@ -40,6 +40,12 @@ export default defineConfig(({ command, mode }) => {
           ]
         : []),
     ],
+    build: {
+      // The >500 kB chunks are all lazy-loaded already: @splinetool/react-spline + its physics
+      // engine (React.lazy in TutorAvatarScene / tutors.$tutorId) and the ElevenLabs tutor route.
+      // Raised so only a genuinely new oversized chunk trips the warning.
+      chunkSizeWarningLimit: 2100,
+    },
     resolve: {
       dedupe: [
         "react",
