@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
+import { AuthLoader } from "@/components/ui/auth-loader";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { AppHeader, type NavItem } from "@/components/app-header";
@@ -30,9 +31,9 @@ function ParentLayout() {
 
   if (isLoading || !isAuthenticated || role !== "parent") {
     return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">טוען...</div>
-      </div>
+      <main className="flex min-h-dvh items-center justify-center bg-background px-4">
+        <AuthLoader title="טוענים את החשבון שלכם..." subtitle="מכינים את לוח הבקרה של המשפחה" />
+      </main>
     );
   }
 

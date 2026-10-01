@@ -1,6 +1,6 @@
 import { AnimatedNumber } from "@/components/animated-number";
 import { TransactionRow, type TransactionRowTx } from "@/components/transaction-row";
-import { ListSkeleton } from "@/components/loading-skeletons";
+import { BalanceHeroSkeleton, ListSkeleton } from "@/components/loading-skeletons";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -73,9 +73,7 @@ function ChildWallet() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Card className="bg-primary/10">
-          <CardContent className="h-24" />
-        </Card>
+        <BalanceHeroSkeleton />
         <ListSkeleton rows={3} />
       </div>
     );

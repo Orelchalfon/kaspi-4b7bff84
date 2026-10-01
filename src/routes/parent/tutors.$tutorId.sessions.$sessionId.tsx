@@ -3,13 +3,10 @@ import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-import { DetailSkeleton } from "@/components/loading-skeletons";
+import { DetailSkeleton, PageHeaderSkeleton } from "@/components/loading-skeletons";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  getTutorSessionTranscript,
-  type TutorTranscriptMessage,
-} from "@/server/tutor-transcript";
+import { getTutorSessionTranscript, type TutorTranscriptMessage } from "@/server/tutor-transcript";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/parent/tutors/$tutorId/sessions/$sessionId")({
@@ -63,10 +60,17 @@ function SessionTranscript() {
     })();
   }, [sessionId, session?.access_token]);
 
-  if (loading) return <DetailSkeleton />;
+  if (loading) {
+    return (
+      <div className="mx-auto w-full max-w-sm space-y-4">
+        <PageHeaderSkeleton />
+        <DetailSkeleton />
+      </div>
+    );
+  }
 
   return (
-    <div className="mx-auto max-w-sm space-y-4">
+    <div className="mx-auto w-full max-w-sm space-y-4">
       <Link
         to="/parent/tutors/$tutorId"
         params={{ tutorId }}

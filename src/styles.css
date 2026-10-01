@@ -68,6 +68,27 @@
   }
 }
 
+/* AuthLoader (components/ui/auth-loader.tsx): gentle scale "breath" + title fade. */
+@keyframes auth-loader-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes auth-loader-fade {
+  0%,
+  100% {
+    opacity: 0.95;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 /* Kaspii — Cluely-inspired blue + cool-slate palette with gold coin accent */
 :root {
   --radius: 0.75rem;

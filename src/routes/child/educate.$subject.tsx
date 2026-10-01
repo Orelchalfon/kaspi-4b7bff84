@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
+import { OrbitalLoader } from "@/components/ui/orbital-loader";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
@@ -168,7 +169,7 @@ function ChildQuizPage() {
   if (phase === "loading") {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <div className="animate-pulse text-sm text-muted-foreground">טוען חידון...</div>
+        <OrbitalLoader message="טוען חידון..." />
       </div>
     );
   }

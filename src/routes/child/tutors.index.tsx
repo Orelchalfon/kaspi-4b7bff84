@@ -39,17 +39,28 @@ function ChildTutors() {
       });
   }, [householdId]);
 
-  if (loading) return <ListSkeleton />;
+  const header = (
+    <header className="space-y-1">
+      <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+        <Bot className="h-6 w-6 text-primary" aria-hidden />
+        חונך AI
+      </h1>
+      <p className="text-sm text-muted-foreground">בחרו חונך והתחילו שיחת קול.</p>
+    </header>
+  );
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        {header}
+        <ListSkeleton rows={3} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
-          <Bot className="h-6 w-6 text-primary" aria-hidden />
-          חונך AI
-        </h1>
-        <p className="text-sm text-muted-foreground">בחרו חונך והתחילו שיחת קול.</p>
-      </header>
+      {header}
 
       {tutors.length === 0 ? (
         <Card>

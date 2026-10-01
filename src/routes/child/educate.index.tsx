@@ -102,19 +102,30 @@ function ChildEducate() {
     return set;
   }, [attempts, today]);
 
-  if (loading) return <ListSkeleton />;
+  const header = (
+    <header className="space-y-1">
+      <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
+        <Sparkles className="h-6 w-6 text-primary" aria-hidden />
+        לימוד
+      </h1>
+      <p className="text-sm text-muted-foreground">
+        חידון אחד מכל נושא ביום. עברת — תקבל תגמול אוטומטי.
+      </p>
+    </header>
+  );
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        {header}
+        <ListSkeleton rows={3} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
-          <Sparkles className="h-6 w-6 text-primary" aria-hidden />
-          לימוד
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          חידון אחד מכל נושא ביום. עברת — תקבל תגמול אוטומטי.
-        </p>
-      </header>
+      {header}
 
       {subjects.length === 0 ? (
         <Card>

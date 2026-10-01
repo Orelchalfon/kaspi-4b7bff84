@@ -62,7 +62,11 @@ function ChildTaskDetail() {
   };
 
   if (loading) {
-    return <DetailSkeleton />;
+    return (
+      <div className="mx-auto w-full max-w-sm">
+        <DetailSkeleton />
+      </div>
+    );
   }
 
   if (!task) {
@@ -70,7 +74,7 @@ function ChildTaskDetail() {
   }
 
   return (
-    <div className="mx-auto max-w-sm">
+    <div className="mx-auto w-full max-w-sm">
       <Card>
         <CardHeader>
           <CardTitle>{task.title}</CardTitle>

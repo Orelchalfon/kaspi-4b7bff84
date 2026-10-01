@@ -1,4 +1,6 @@
 import { useAuth } from "@/hooks/use-auth";
+import { AuthLoader } from "@/components/ui/auth-loader";
+import { OrbitalLoader } from "@/components/ui/orbital-loader";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
@@ -49,7 +51,7 @@ function Index() {
   if (isLoading) {
     return (
       <main className="flex min-h-dvh items-center justify-center bg-background">
-        <div className="animate-pulse text-lg text-muted-foreground">טוען...</div>
+        <OrbitalLoader />
       </main>
     );
   }
@@ -57,7 +59,7 @@ function Index() {
   if (isAuthenticated) {
     return (
       <main className="flex min-h-dvh items-center justify-center bg-background">
-        <div className="animate-pulse text-lg text-muted-foreground">מעביר...</div>
+        <AuthLoader title="מכינים את החשבון שלכם..." subtitle="רגע אחד, מעבירים אתכם למסך שלכם" />
       </main>
     );
   }

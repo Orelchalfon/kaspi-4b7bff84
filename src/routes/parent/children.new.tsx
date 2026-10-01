@@ -1,11 +1,14 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { Eye, EyeOff } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent } from "@/components/ui/card";
+import { PasswordInput } from "@/components/auth/password-input";
+import { PageHeader } from "@/components/page-header";
 import { createChild } from "@/server/create-child";
 import { useAuth } from "@/hooks/use-auth";
 import { AvatarPicker } from "@/components/avatar-picker";
@@ -24,12 +27,12 @@ function NewChild() {
   const [colorKey, setColorKey] = useState(DEFAULT_COLOR_KEY);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setError("");
     setLoading(true);
 
@@ -56,23 +59,21 @@ function NewChild() {
   };
 
   return (
-    <div className="mx-auto max-w-sm">
+    <div className="mx-auto flex max-w-sm flex-col gap-4">
+      <PageHeader
+        title="הוספת ילד"
+        description="צרו חשבון לילד כדי שיוכל להתחבר ולבצע משימות"
+        back={{ to: "/parent/children", label: "חזרה לילדים" }}
+      />
       <Card>
-        <CardHeader>
-          <CardTitle>הוספת ילד</CardTitle>
-          <CardDescription>צרו חשבון לילד כדי שיוכל להתחבר ולבצע משימות</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        <CardContent className="pt-6">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
             {error && (
-              <div
-                role="alert"
-                className="rounded-md bg-destructive/10 p-3 text-sm text-destructive"
-              >
-                {error}
-              </div>
+              <Alert variant="destructive" role="alert">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="name">שם הילד</Label>
               <Input
                 id="name"
@@ -81,20 +82,19 @@ function NewChild() {
                 placeholder="יוסי"
                 required
                 autoComplete="off"
+                className="h-11"
               />
             </div>
-            <div className="space-y-2">
-              <Label>דמות</Label>
-              <AvatarPicker
-                iconKey={iconKey}
-                colorKey={colorKey}
-                onChange={(i, c) => {
-                  setIconKey(i);
-                  setColorKey(c);
-                }}
-              />
-            </div>
-            <div className="space-y-2">
+            {/* The picker labels its own two radio groups ("בחרו דמות" / "צבע"). */}
+            <AvatarPicker
+              iconKey={iconKey}
+              colorKey={colorKey}
+              onChange={(i, c) => {
+                setIconKey(i);
+                setColorKey(c);
+              }}
+            />
+            <div className="flex flex-col gap-2">
               <Label htmlFor="birthdate">תאריך לידה</Label>
               <Input
                 id="birthdate"
@@ -105,10 +105,14 @@ function NewChild() {
                 min="2000-01-01"
                 max={new Date().toISOString().slice(0, 10)}
                 dir="ltr"
+                aria-describedby="birthdate-hint"
+                className="h-11"
               />
-              <p className="text-xs text-muted-foreground">לפי הגיל נתאים את רמת החידונים</p>
+              <p id="birthdate-hint" className="text-xs text-muted-foreground">
+                לפי הגיל נתאים את רמת החידונים
+              </p>
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="email">אימייל לילד</Label>
               <Input
                 id="email"
@@ -120,37 +124,33 @@ function NewChild() {
                 placeholder="child@example.com"
                 required
                 dir="ltr"
+                className="h-11"
               />
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="password">סיסמה לילד</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="new-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="לפחות 6 תווים"
-                  required
-                  minLength={6}
-                  dir="ltr"
-                  className="pe-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? "הסתר סיסמה" : "הצג סיסמה"}
-                  className="absolute end-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              <p className="text-xs text-muted-foreground">הילד ישתמש בפרטים אלה להתחברות</p>
+              <PasswordInput
+                id="password"
+                value={password}
+                onChange={setPassword}
+                autoComplete="new-password"
+                placeholder="לפחות 6 תווים"
+                minLength={6}
+                describedBy="password-hint"
+              />
+              <p id="password-hint" className="text-xs text-muted-foreground">
+                הילד ישתמש בפרטים אלה להתחברות
+              </p>
             </div>
-            <Button type="submit" className="min-h-11 w-full" disabled={loading}>
-              {loading ? "יוצר..." : "צור חשבון ילד"}
-            </Button>
+            <div className="flex flex-col gap-2 pt-2">
+              <Button type="submit" size="touch" className="w-full" disabled={loading}>
+                {loading && <Loader2 className="animate-spin" aria-hidden />}
+                {loading ? "יוצר..." : "צור חשבון ילד"}
+              </Button>
+              <Button asChild variant="ghost" size="touch" className="w-full">
+                <Link to="/parent/children">ביטול</Link>
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>

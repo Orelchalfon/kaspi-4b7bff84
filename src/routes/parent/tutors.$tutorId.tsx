@@ -26,7 +26,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { DetailSkeleton, ListSkeleton } from "@/components/loading-skeletons";
+import { FormSkeleton, ListSkeleton } from "@/components/loading-skeletons";
 import { supabase } from "@/integrations/supabase/client";
 import {
   LANGUAGE_LABELS_HE,
@@ -168,11 +168,17 @@ function TutorDetail() {
     navigate({ to: "/parent/tutors" });
   };
 
-  if (loading) return <DetailSkeleton />;
+  if (loading) {
+    return (
+      <div className="mx-auto w-full max-w-sm space-y-6">
+        <FormSkeleton fields={6} />
+      </div>
+    );
+  }
   if (!tutor) return <div className="text-muted-foreground">החונך לא נמצא</div>;
 
   return (
-    <div className="mx-auto max-w-sm space-y-6">
+    <div className="mx-auto w-full max-w-sm space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>{tutor.name}</CardTitle>

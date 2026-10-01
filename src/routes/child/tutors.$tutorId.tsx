@@ -1,4 +1,5 @@
 import { ConversationProvider, useConversation } from "@elevenlabs/react";
+import { OrbitalLoader } from "@/components/ui/orbital-loader";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, Bot, Loader2, Mic, MicOff, PhoneOff } from "lucide-react";
@@ -85,7 +86,7 @@ function ChildTutorSessionPage() {
   if (phase === "loading") {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <div className="animate-pulse text-sm text-muted-foreground">טוען חונך...</div>
+        <OrbitalLoader message="טוען חונך..." />
       </div>
     );
   }

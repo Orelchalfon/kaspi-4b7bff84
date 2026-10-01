@@ -74,7 +74,7 @@ function NewTutor() {
   };
 
   return (
-    <div className="mx-auto max-w-sm">
+    <div className="mx-auto w-full max-w-sm">
       <Card>
         <CardHeader>
           <CardTitle>חונך חדש</CardTitle>

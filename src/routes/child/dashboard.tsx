@@ -1,6 +1,6 @@
 import { AnimatedNumber } from "@/components/animated-number";
 import { CoinAmount } from "@/components/coin-amount";
-import { DashboardSkeleton } from "@/components/loading-skeletons";
+import { ChildDashboardSkeleton } from "@/components/loading-skeletons";
 import { StatusBadge } from "@/components/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
@@ -49,7 +49,7 @@ function ChildDashboard() {
   }, [childProfileId]);
 
   if (loading) {
-    return <DashboardSkeleton />;
+    return <ChildDashboardSkeleton />;
   }
 
   return (

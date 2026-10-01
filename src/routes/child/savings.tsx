@@ -28,7 +28,7 @@ import {
 import { CoinAmount } from "@/components/coin-amount";
 import { AnimatedNumber } from "@/components/animated-number";
 import { TransactionRow } from "@/components/transaction-row";
-import { ListSkeleton } from "@/components/loading-skeletons";
+import { BalanceHeroSkeleton, ListSkeleton } from "@/components/loading-skeletons";
 import { cn } from "@/lib/utils";
 import {
   computeGoalDeposits,
@@ -235,9 +235,7 @@ function ChildSavings() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Card className="bg-primary/10">
-          <CardContent className="h-40" />
-        </Card>
+        <BalanceHeroSkeleton tall />
         <ListSkeleton rows={3} />
       </div>
     );

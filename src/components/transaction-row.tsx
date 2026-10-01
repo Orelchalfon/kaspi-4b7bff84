@@ -19,6 +19,8 @@ interface TransactionRowProps {
   leading?: ReactNode;
   /** Overrides the describeTx label (e.g. child name in parent views). */
   primaryLabel?: ReactNode;
+  /** Extra context shown before the date (e.g. the child's name in household views). */
+  secondaryLabel?: ReactNode;
   /** Hide the small context icon between leading and label. Defaults to true. */
   showContextIcon?: boolean;
   className?: string;
@@ -44,6 +46,7 @@ export function TransactionRow({
   goalTitle,
   leading,
   primaryLabel,
+  secondaryLabel,
   showContextIcon = true,
   className,
 }: TransactionRowProps) {
@@ -60,6 +63,7 @@ export function TransactionRow({
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">{primaryLabel ?? label}</p>
             <p className="text-xs tabular-nums text-muted-foreground">
+              {secondaryLabel && <>{secondaryLabel} · </>}
               {tx.created_at ? new Date(tx.created_at).toLocaleDateString("he-IL") : "—"}
             </p>
           </div>

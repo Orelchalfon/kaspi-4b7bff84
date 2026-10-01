@@ -1,4 +1,5 @@
 import { AppHeader, type NavItem } from "@/components/app-header";
+import { AuthLoader } from "@/components/ui/auth-loader";
 import { useAuth } from "@/hooks/use-auth";
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { Bot, GraduationCap, Home, PiggyBank, Wallet } from "lucide-react";
@@ -31,9 +32,9 @@ function ChildLayout() {
 
   if (isLoading || !isAuthenticated || role !== "child") {
     return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">טוען...</div>
-      </div>
+      <main className="flex min-h-dvh items-center justify-center bg-background px-4">
+        <AuthLoader title="רגע, נכנסים..." subtitle="מכינים את המסך שלך" />
+      </main>
     );
   }
 
