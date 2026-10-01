@@ -17,7 +17,7 @@
   `Database["public"]["Tables"]["..."]["Row"]` / `Insert` / `Update` and RPC return types
   instead of redeclaring shapes by hand.
 - After any schema change, regenerate types (Supabase MCP `generate_typescript_types` or
-  `supabase gen types typescript --project-id flxhxmrtdqegfsupvvus`) so the codebase
+  `supabase gen types typescript --project-id jlpvjxywfvijntsctvaq`) so the codebase
   compiles against reality.
 
 ## Strictness & correctness

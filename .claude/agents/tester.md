@@ -16,7 +16,7 @@ not "fix" the source and do not weaken the test to make it pass.
 ## Stack & conventions
 - Vitest, node environment, single-fork, 60s timeout. Integration/e2e tests
   live in `tests/**/*.test.ts` and hit the **real** Supabase project
-  (`flxhxmrtdqegfsupvvus`) - not mocked.
+  (`jlpvjxywfvijntsctvaq`) - not mocked.
 - `tests/helpers/supabase.ts` is the shared fixture kit:
   `admin` (service-role client, bypasses RLS), `userClient(accessToken)`
   (anon client as a specific signed-in user, exercises RLS),

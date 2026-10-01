@@ -49,10 +49,10 @@ export const Route = createRootRoute({
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "preconnect",
-        href: "https://flxhxmrtdqegfsupvvus.supabase.co",
+        href: "https://jlpvjxywfvijntsctvaq.supabase.co",
         crossOrigin: "anonymous",
       },
-      { rel: "dns-prefetch", href: "https://flxhxmrtdqegfsupvvus.supabase.co" },
+      { rel: "dns-prefetch", href: "https://jlpvjxywfvijntsctvaq.supabase.co" },
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap",

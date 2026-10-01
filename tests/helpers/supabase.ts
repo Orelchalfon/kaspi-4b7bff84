@@ -3,9 +3,11 @@ import { computeWalletBalance } from "@/lib/transactions";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { expect } from "vitest";
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL!;
-const SERVICE_ROLE = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY!;
-const ANON = process.env.VITE_SUPABASE_PUBLISHABLE_KEY!;
+// Non-VITE_ names on purpose: VITE_* vars can be inlined into the browser bundle, and the
+// service-role key bypasses RLS. tests/setup-env.ts loads these from .env.
+const SUPABASE_URL = process.env.SUPABASE_URL!;
+const SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const ANON = process.env.SUPABASE_PUBLISHABLE_KEY!;
 
 if (!SUPABASE_URL || !SERVICE_ROLE || !ANON) {
   throw new Error(

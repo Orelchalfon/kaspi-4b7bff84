@@ -53,7 +53,7 @@ This repo (`kaspii-web`) is the expected target; detect rather than assume:
   **Not Next.js** — there is no `"use client"`; server-only code lives in `*.server.ts`.
 - **Styling:** Tailwind v4 (CSS-first in `src/styles.css`, no `tailwind.config.js`); shadcn/Radix
   primitives in `src/components/ui/*`. **RTL + Hebrew** throughout.
-- **Backend:** Supabase only (`flxhxmrtdqegfsupvvus`). Money via SECURITY DEFINER RPCs.
+- **Backend:** Supabase only (`jlpvjxywfvijntsctvaq`). Money via SECURITY DEFINER RPCs.
 - **Package manager:** pnpm (only).
 - **Validation commands:**
   - typecheck → `pnpm exec tsc --noEmit` (no `typecheck` script)

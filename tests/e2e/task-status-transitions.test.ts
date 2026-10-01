@@ -172,9 +172,13 @@ describe("Task status transitions persist correctly", () => {
     t = await readTask(taskId);
     expect(t.status).toBe("approved");
     expect(t.reviewed_at).not.toBeNull();
-    // review happened at-or-after submission
+    // Review happened at-or-after submission. The two stamps come from different clocks:
+    // submitted_at is written by the client (new Date() in submitTask), reviewed_at by
+    // the RPC (server now()). Allow for client↔server clock skew so a fast local clock
+    // doesn't fail the test; a real ordering bug would be far outside this window.
+    const CLOCK_SKEW_MS = 10_000;
     expect(new Date(t.reviewed_at!).getTime()).toBeGreaterThanOrEqual(
-      new Date(t.submitted_at!).getTime(),
+      new Date(t.submitted_at!).getTime() - CLOCK_SKEW_MS,
     );
   });
 });

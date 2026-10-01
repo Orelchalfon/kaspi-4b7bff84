@@ -1,6 +1,6 @@
 # Checklist — Database / Supabase review
 
-Supabase is the **only** backend (project `flxhxmrtdqegfsupvvus`), shared with the mobile app.
+Supabase is the **only** backend (project `jlpvjxywfvijntsctvaq`), shared with the mobile app.
 
 ## Single-ledger model — derive, don't duplicate
 

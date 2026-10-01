@@ -40,7 +40,7 @@ essays, no code dumps beyond the essential snippet.
 - Tests: `tests/helpers/supabase.ts` (`admin`, `userClient`,
   `createAdHocUser`, `createChildUser`, `householdOf`, `purgeHousehold`);
   `tests/e2e/*.test.ts` hit the real Supabase project
-  (`flxhxmrtdqegfsupvvus`).
+  (`jlpvjxywfvijntsctvaq`).
 
 ## Output
 1-2 sentence direct answer first, then bullet evidence as path:line - what
