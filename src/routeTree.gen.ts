@@ -21,6 +21,7 @@ import { Route as ChildWalletRouteImport } from './routes/child/wallet'
 import { Route as ChildSavingsRouteImport } from './routes/child/savings'
 import { Route as ChildEducateRouteImport } from './routes/child/educate'
 import { Route as ChildDashboardRouteImport } from './routes/child/dashboard'
+import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthSignupRouteImport } from './routes/_auth/signup'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
@@ -96,6 +97,11 @@ const ChildDashboardRoute = ChildDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => ChildRoute,
+} as any)
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
+  id: '/auth/reset-password',
+  path: '/auth/reset-password',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
@@ -187,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof AuthLoginRoute
   '/signup': typeof AuthSignupRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
   '/child/dashboard': typeof ChildDashboardRoute
   '/child/educate': typeof ChildEducateRouteWithChildren
   '/child/savings': typeof ChildSavingsRoute
@@ -216,6 +223,7 @@ export interface FileRoutesByTo {
   '/login': typeof AuthLoginRoute
   '/signup': typeof AuthSignupRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
   '/child/dashboard': typeof ChildDashboardRoute
   '/child/savings': typeof ChildSavingsRoute
   '/child/wallet': typeof ChildWalletRoute
@@ -245,6 +253,7 @@ export interface FileRoutesById {
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/signup': typeof AuthSignupRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
   '/child/dashboard': typeof ChildDashboardRoute
   '/child/educate': typeof ChildEducateRouteWithChildren
   '/child/savings': typeof ChildSavingsRoute
@@ -276,6 +285,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/auth/callback'
+    | '/auth/reset-password'
     | '/child/dashboard'
     | '/child/educate'
     | '/child/savings'
@@ -305,6 +315,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/auth/callback'
+    | '/auth/reset-password'
     | '/child/dashboard'
     | '/child/savings'
     | '/child/wallet'
@@ -333,6 +344,7 @@ export interface FileRouteTypes {
     | '/_auth/login'
     | '/_auth/signup'
     | '/auth/callback'
+    | '/auth/reset-password'
     | '/child/dashboard'
     | '/child/educate'
     | '/child/savings'
@@ -362,6 +374,7 @@ export interface RootRouteChildren {
   ParentRoute: typeof ParentRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  AuthResetPasswordRoute: typeof AuthResetPasswordRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -449,6 +462,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/child/dashboard'
       preLoaderRoute: typeof ChildDashboardRouteImport
       parentRoute: typeof ChildRoute
+    }
+    '/auth/reset-password': {
+      id: '/auth/reset-password'
+      path: '/auth/reset-password'
+      fullPath: '/auth/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
       id: '/auth/callback'
@@ -671,6 +691,7 @@ const rootRouteChildren: RootRouteChildren = {
   ParentRoute: ParentRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  AuthResetPasswordRoute: AuthResetPasswordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

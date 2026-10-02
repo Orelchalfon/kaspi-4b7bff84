@@ -42,19 +42,29 @@ export function PasswordInput({
         dir="ltr"
         aria-invalid={invalid || undefined}
         aria-describedby={describedBy}
-        className="h-11 pe-12"
+        // The input is LTR (so `ps` = left) while the wrapper is RTL (so the toggle's
+        // `end-0` = left) — both point at the same edge, keeping text clear of the eye.
+        className="h-11 ps-12 transition-[padding,color,box-shadow]"
       />
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
         aria-label={visible ? "הסתר סיסמה" : "הצג סיסמה"}
         aria-pressed={visible}
-        className="absolute end-0 top-0 flex size-11 items-center justify-center rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="absolute end-0 top-0 flex size-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         {visible ? (
-          <EyeOff className="size-4" aria-hidden />
+          <EyeOff
+            key="hide"
+            className="size-4 animate-in fade-in zoom-in-75 duration-150"
+            aria-hidden
+          />
         ) : (
-          <Eye className="size-4" aria-hidden />
+          <Eye
+            key="show"
+            className="size-4 animate-in fade-in zoom-in-75 duration-150"
+            aria-hidden
+          />
         )}
       </button>
     </div>

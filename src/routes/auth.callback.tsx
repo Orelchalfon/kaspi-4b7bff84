@@ -37,7 +37,8 @@ function AuthCallback() {
         await refreshRole(session.user.id);
         if (cancelled) return;
         toast.success("ברוכים הבאים ל-Kaspii!");
-        navigate({ to: "/parent/dashboard" });
+        // "/" sends each role to its own dashboard (this was hard-coded to /parent/dashboard).
+        navigate({ to: "/", replace: true });
       } catch (e) {
         console.error(e);
         if (!cancelled) setError("שגיאה בהשלמת ההרשמה. צרו קשר עם התמיכה.");

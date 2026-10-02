@@ -125,18 +125,25 @@ export function SignUpForm({
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="signup-email">אימייל</Label>
-          <Input
-            id="signup-email"
-            type="email"
-            autoComplete="email"
-            inputMode="email"
-            value={email}
-            onChange={(e) => onEmailChange(e.target.value)}
-            placeholder="parent@example.com"
-            required
-            dir="ltr"
-            className="h-11"
-          />
+          <div className="relative">
+            <Input
+              id="signup-email"
+              type="email"
+              autoComplete="email"
+              inputMode="email"
+              value={email}
+              onChange={(e) => onEmailChange(e.target.value)}
+              placeholder="parent@example.com"
+              required
+              dir="ltr"
+              // Same LTR-input/RTL-wrapper slot as PasswordInput so the two fields' text aligns.
+              className="h-11 ps-12 transition-[padding,color,box-shadow]"
+            />
+            <Mail
+              className="pointer-events-none absolute end-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden
+            />
+          </div>
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="signup-password">סיסמה</Label>

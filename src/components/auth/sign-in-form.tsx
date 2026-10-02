@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useRef, useState, type FormEvent, type RefObject } from "react";
 import { toast } from "sonner";
-import { Check, KeyRound, Loader2 } from "lucide-react";
+import { Check, KeyRound, Loader2, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,7 +40,7 @@ export function SignInForm({ email, onEmailChange, firstFieldRef }: SignInFormPr
     setError("");
     setResetSending(true);
     const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback`,
+      redirectTo: `${window.location.origin}/auth/reset-password`,
     });
     setResetSending(false);
     if (resetErr) {
@@ -92,21 +92,28 @@ export function SignInForm({ email, onEmailChange, firstFieldRef }: SignInFormPr
       <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
         <div className="flex flex-col gap-2">
           <Label htmlFor="signin-email">אימייל</Label>
-          <Input
-            ref={setEmailRefs}
-            id="signin-email"
-            type="email"
-            autoComplete="email"
-            inputMode="email"
-            value={email}
-            onChange={(e) => onEmailChange(e.target.value)}
-            placeholder="parent@example.com"
-            required
-            dir="ltr"
-            aria-invalid={!!error || undefined}
-            aria-describedby={error ? "signin-error" : undefined}
-            className="h-11"
-          />
+          <div className="relative">
+            <Input
+              ref={setEmailRefs}
+              id="signin-email"
+              type="email"
+              autoComplete="email"
+              inputMode="email"
+              value={email}
+              onChange={(e) => onEmailChange(e.target.value)}
+              placeholder="parent@example.com"
+              required
+              dir="ltr"
+              aria-invalid={!!error || undefined}
+              aria-describedby={error ? "signin-error" : undefined}
+              // Same LTR-input/RTL-wrapper slot as PasswordInput so the two fields' text aligns.
+              className="h-11 ps-12 transition-[padding,color,box-shadow]"
+            />
+            <Mail
+              className="pointer-events-none absolute end-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden
+            />
+          </div>
         </div>
 
         <div className="flex flex-col gap-2">
@@ -125,13 +132,13 @@ export function SignInForm({ email, onEmailChange, firstFieldRef }: SignInFormPr
               {error}
             </p>
           )}
-          <div className="flex justify-end">
+          <div className="flex justify-start">
             <Button
               type="button"
               variant="link"
               onClick={handleForgotPassword}
               disabled={resetSending || resetSent}
-              className="h-11 px-2"
+              className="-ms-2 h-11 px-2"
             >
               {resetSent ? (
                 <Check aria-hidden />
