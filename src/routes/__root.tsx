@@ -1,8 +1,8 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
-import { AuthProvider } from "@/hooks/use-auth";
-import { Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider } from "@/hooks/use-auth";
+import { createRootRoute, HeadContent, Link, Outlet, Scripts } from "@tanstack/react-router";
+import { Home } from "lucide-react";
 
 import appCss from "../styles.css?url";
 
@@ -31,13 +31,13 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Kaspii — המשפחה לומדת לחסוך, יחד" },
+      { title: "Kasp — המשפחה לומדת לחסוך, יחד" },
       {
         name: "description",
         content:
           "Kaspii היא סביבת תרגול משפחתית: הורים מגדירים משימות, ילדים צוברים מטבעות ואחוז מכל תגמול הולך אוטומטית לחיסכון.",
       },
-      { property: "og:site_name", content: "Kaspii" },
+      { property: "og:site_name", content: "Kasp" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -64,8 +64,8 @@ export const Route = createRootRoute({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebSite",
-          name: "Kaspii",
-          url: "https://kidcoin.app",
+          name: "Kasp",
+          url: "https://kasp-web.kasp.workers.dev",
           inLanguage: "he",
         }),
       },
@@ -75,7 +75,7 @@ export const Route = createRootRoute({
           "@context": "https://schema.org",
           "@type": "Organization",
           name: "Kaspii",
-          url: "https://kidcoin.app",
+          url: "https://kasp-web.kasp.workers.dev",
         }),
       },
     ],
