@@ -40,6 +40,38 @@ function useDemoLoop(run: boolean, staticDone: boolean): boolean {
   return done;
 }
 
+/**
+ * True after the visitor first scrolls, taps, or presses a key. The demo loop waits for this
+ * so the hero settles into one static frame for first paint: a page that keeps repainting
+ * forever never "finishes" for Speed Index, and mid-fade colors read as contrast failures.
+ */
+function useFirstInteraction(): boolean {
+  const [engaged, setEngaged] = useState(false);
+
+  useEffect(() => {
+    const events = ["scroll", "pointerdown", "keydown", "touchstart"] as const;
+    const onEngage = () => setEngaged(true);
+    events.forEach((e) => window.addEventListener(e, onEngage, { once: true, passive: true }));
+    return () => events.forEach((e) => window.removeEventListener(e, onEngage));
+  }, []);
+
+  return engaged;
+}
+
+/** False while the tab is in the background, so the loop doesn't burn CPU nobody sees. */
+function usePageVisible(): boolean {
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const onChange = () => setVisible(document.visibilityState === "visible");
+    onChange();
+    document.addEventListener("visibilitychange", onChange);
+    return () => document.removeEventListener("visibilitychange", onChange);
+  }, []);
+
+  return visible;
+}
+
 export function Hero() {
   return (
     <section
@@ -109,8 +141,12 @@ function HeroDevice() {
   const reduceMotion = useReducedMotion() ?? false;
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { amount: 0.5 });
-  const run = !reduceMotion && inView;
-  const done = useDemoLoop(run, reduceMotion);
+  const engaged = useFirstInteraction();
+  const pageVisible = usePageVisible();
+  // Until the first interaction the device shows the completed state, same as reduced motion.
+  const isStatic = reduceMotion || !engaged;
+  const run = !isStatic && inView && pageVisible;
+  const done = useDemoLoop(run, isStatic);
   const balance = useCountUp(done ? FINAL_BALANCE : BASE_BALANCE, {
     play: run && done,
     from: BASE_BALANCE,
@@ -122,7 +158,7 @@ function HeroDevice() {
     <div ref={ref} className="relative" aria-hidden>
       <DeviceFrame done={done} balance={balance} />
 
-      {reduceMotion ? (
+      {isStatic ? (
         <div className="absolute -bottom-4 start-2 z-10 md:-bottom-6 md:start-[-2rem]">{toast}</div>
       ) : (
         <AnimatePresence>
@@ -205,7 +241,7 @@ function DeviceFrame({ done, balance }: { done: boolean; balance: number }) {
               </span>
               <span className="text-sm font-medium text-foreground">סידרתי את החדר</span>
             </div>
-            <span className="text-xs font-semibold text-success">+10</span>
+            <span className="text-xs font-semibold text-success-text">+10</span>
           </li>
           <li
             className={cn(
@@ -249,7 +285,7 @@ function DeviceFrame({ done, balance }: { done: boolean; balance: number }) {
             <span
               className={cn(
                 "text-xs font-semibold transition-colors duration-300",
-                done ? "text-success" : "text-muted-foreground",
+                done ? "text-success-text" : "text-muted-foreground",
               )}
             >
               +10

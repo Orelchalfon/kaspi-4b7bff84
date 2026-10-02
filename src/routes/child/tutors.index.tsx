@@ -9,6 +9,7 @@ import { ListSkeleton } from "@/components/loading-skeletons";
 import { PageHeader } from "@/components/page-header";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { prefetchTutorAvatar } from "@/lib/tutor-avatar";
 import { PERSONALITY_LABELS_HE, type TutorPersonality } from "@/lib/tutors";
 
 export const Route = createFileRoute("/child/tutors/")({
@@ -25,6 +26,8 @@ interface TutorRow {
 
 function ChildTutors() {
   const { householdId } = useAuth();
+  // Warm the 3D avatar chunk while the child picks a tutor, so the session page has it cached.
+  useEffect(() => prefetchTutorAvatar(), []);
   const [tutors, setTutors] = useState<TutorRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);

@@ -225,7 +225,7 @@ function ChildDoneIllustration({ active }: { active: boolean }) {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.6 }}
                   transition={{ duration: 0.25, ease: easeOutSoft }}
-                  className="absolute inset-0 flex items-center justify-center gap-0.5 rounded-full bg-success/15 px-2 text-[9px] font-medium text-success"
+                  className="absolute inset-0 flex items-center justify-center gap-0.5 rounded-full bg-success/15 px-2 text-[9px] font-medium text-success-text"
                 >
                   <Check className="h-2.5 w-2.5" aria-hidden />
                   נשלח
@@ -291,7 +291,7 @@ function SplitPayoutIllustration({ active }: { active: boolean }) {
       <m.div
         animate={active ? { scale: [1, 1.05, 1] } : { scale: 1 }}
         transition={{ duration: 0.4, ease: easeOutSoft }}
-        className="col-span-2 mt-1 flex items-center justify-center rounded-md bg-success/10 py-1.5 text-[10px] font-medium text-success"
+        className="col-span-2 mt-1 flex items-center justify-center rounded-md bg-success/10 py-1.5 text-[10px] font-medium text-success-text"
       >
         <Check className="me-1 h-3 w-3" aria-hidden />
         פיצול 10% אוטומטי

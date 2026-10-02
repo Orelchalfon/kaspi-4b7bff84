@@ -73,8 +73,26 @@ ELEVENLABS_API_KEY=<your key from Profile → API Keys>
 ELEVENLABS_AGENT_ID=<agent_... you just copied>
 ```
 
-No `VITE_` prefix — both are read server-only (`process.env.*` in `src/server/tutor-session.ts` / `tutor-transcript.ts`). The browser only ever receives a short-lived signed URL, never the agent ID or API key.
+No `VITE_` prefix — both are read server-only (`process.env.*` in `src/server/tutor-session.ts` / `tutor-transcript.ts`). The browser only ever receives a short-lived WebRTC conversation token (`mintTutorConversationToken`), never the agent ID or API key.
 
 ## 10. Voice IDs for `src/lib/tutors.ts`
 
 Pick 1–2 Hebrew-capable voices from your Voice Library, open each, copy its Voice ID (usually in a "..." menu or the voice's API tab). Send those IDs (with a label, e.g. male/female or a name) to swap into `TUTOR_VOICES` in `src/lib/tutors.ts` — currently placeholder strings.
+
+## 11. Latency tuning (reply speed)
+
+The app side already prefetches the WebRTC token and connects in one round-trip; what's left of the per-turn gap is the agent config. Live config as read via `GET /v1/convai/agents/{id}` on 2026-10-02, and what to change:
+
+| Setting (dashboard)        | Current                    | Recommended                                                                                                                                                   |
+| -------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Voice → TTS model          | `eleven_v3_conversational` | **Biggest lever.** Check whether the Kaspii voices list Hebrew under **Flash v2.5**; if they do, switch (much lower time-to-first-audio). If not, stay on v3. |
+| Voice → Expressive mode    | on                         | **Off.** Expressive generation adds latency per turn and the tutor doesn't use audio tags (`suggested_audio_tags` is empty).                                  |
+| Advanced → Turn eagerness  | `normal`                   | **`eager`** — answers sooner after the child stops talking. Try it with a real child; go back to `normal` if the tutor cuts kids off mid-thought.             |
+| LLM                        | `gemini-2.5-flash`, temp 0 | Fine. If replies still feel slow, try `gemini-2.5-flash-lite`. Avoid "thinking"/large models.                                                                 |
+| Optimize streaming latency | 3                          | Fine (4 is max; it can mispronounce numbers).                                                                                                                 |
+| Speculative turn           | on                         | Keep on.                                                                                                                                                      |
+| Conversation → File input  | enabled                    | Turn off — the tutor never receives files.                                                                                                                    |
+
+The per-tutor first message (`buildTutorFirstMessage` in `src/lib/tutors.ts`) is spoken before the child can talk, so keep it to one short sentence.
+
+To measure, open DevTools on a tutor session: the console logs `[tutor session] connected Nms after click` and `first agent message Nms after click`.

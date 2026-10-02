@@ -58,13 +58,13 @@ export function Footer() {
         <nav aria-label="קישורי תחתית">
           <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
             <li>
-              <span className="cursor-default opacity-60">מדיניות פרטיות</span>
+              <span className="cursor-default">מדיניות פרטיות</span>
             </li>
             <li>
-              <span className="cursor-default opacity-60">תנאי שימוש</span>
+              <span className="cursor-default">תנאי שימוש</span>
             </li>
             <li>
-              <span className="cursor-default opacity-60">יצירת קשר</span>
+              <span className="cursor-default">יצירת קשר</span>
             </li>
           </ul>
         </nav>

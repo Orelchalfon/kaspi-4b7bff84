@@ -15,13 +15,21 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { type TutorPersonality } from "@/lib/tutors";
 import { cn } from "@/lib/utils";
-import { mintTutorSignedUrl } from "@/server/tutor-session";
+import { loadSpline, onIdle, prefersSaveData, TUTOR_AVATAR_SCENE } from "@/lib/tutor-avatar";
+import { mintTutorConversationToken } from "@/server/tutor-session";
 
-// Heavy WebGL dependency - only this route needs it, so it's split out of
-// the main bundle rather than eagerly imported.
-const Spline = lazy(() => import("@splinetool/react-spline"));
+// Heavy WebGL dependency - split out of the main bundle, prefetched from the
+// tutors list (`prefetchTutorAvatar`) and mounted only while the page is idle.
+const Spline = lazy(loadSpline);
 
-const TUTOR_AVATAR_SCENE = "https://prod.spline.design/LDGLw9lCDGGf-YiO/scene.splinecode";
+// The SDK waits 3 s before connecting on Android by default (a Bluetooth audio-routing
+// workaround). 500 ms keeps a margin for that; raise it if Android + Bluetooth earbuds
+// start the call with no audio.
+const CONNECTION_DELAY = { default: 0, android: 500, ios: 0 };
+
+// Conversation tokens are short-lived and single-use; a prefetched one older than this
+// is discarded and a fresh one minted on click.
+const TOKEN_MAX_AGE_MS = 5 * 60 * 1000;
 
 // A blocked network request or unsupported WebGL context is a realistic
 // failure mode for a third-party CDN asset - fall back to the plain icon
@@ -40,6 +48,14 @@ class SplineErrorBoundary extends Component<
   render() {
     return this.state.hasError ? this.props.fallback : this.props.children;
   }
+}
+
+function AvatarFallback() {
+  return (
+    <div className="flex h-full w-full items-center justify-center">
+      <Bot className="h-12 w-12" aria-hidden />
+    </div>
+  );
 }
 
 export const Route = createFileRoute("/child/tutors/$tutorId")({
@@ -63,6 +79,13 @@ interface TranscriptMessage {
 }
 
 type MicIssue = "denied" | "missing" | "unsupported";
+
+type MintedToken = Awaited<ReturnType<typeof mintTutorConversationToken>>;
+
+interface PrefetchedToken {
+  promise: Promise<MintedToken | null>;
+  mintedAt: number;
+}
 
 const MIC_ISSUE_COPY: Record<MicIssue, { title: string; body: string }> = {
   denied: {
@@ -171,8 +194,50 @@ function TutorSession({
   // signal (`onAgentTyping`) rather than inferring it from message roles.
   const [isThinking, setIsThinking] = useState(false);
   const [micIssue, setMicIssue] = useState<MicIssue | null>(null);
+  // Whether the decorative 3D avatar may mount. Set only while idle, so its download and
+  // WebGL compile never overlap connecting or a live call (main-thread audio work).
+  const [avatarEnabled, setAvatarEnabled] = useState(false);
   const sessionIdRef = useRef<string | null>(null);
   const transcriptRef = useRef<TranscriptMessage[]>([]);
+  const prefetchedTokenRef = useRef<PrefetchedToken | null>(null);
+  const startedAtRef = useRef<number | null>(null);
+  const accessToken = session?.access_token;
+
+  const mintToken = (token: string) =>
+    mintTutorConversationToken({
+      data: { tutorId: tutor.id },
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+  // Mint the conversation token while the child is still reading the page, so the click
+  // goes straight to the WebRTC handshake instead of waiting on our server + ElevenLabs.
+  useEffect(() => {
+    if (phase !== "idle" || !accessToken || prefetchedTokenRef.current) return;
+    prefetchedTokenRef.current = {
+      promise: mintToken(accessToken).catch((err: unknown) => {
+        console.warn("[tutor session] token prefetch failed, will retry on click", err);
+        return null;
+      }),
+      mintedAt: Date.now(),
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mintToken only closes over tutor.id
+  }, [phase, accessToken, tutor.id]);
+
+  useEffect(() => {
+    if (phase !== "idle" || avatarEnabled || prefersSaveData()) return;
+    return onIdle(() => setAvatarEnabled(true));
+  }, [phase, avatarEnabled]);
+
+  /** Hands out the prefetched token once (single-use), or mints a fresh one. */
+  const takeToken = async (token: string): Promise<MintedToken> => {
+    const prefetched = prefetchedTokenRef.current;
+    prefetchedTokenRef.current = null;
+    if (prefetched && Date.now() - prefetched.mintedAt < TOKEN_MAX_AGE_MS) {
+      const result = await prefetched.promise;
+      if (result) return result;
+    }
+    return mintToken(token);
+  };
 
   useEffect(() => {
     transcriptRef.current = transcript;
@@ -195,6 +260,11 @@ function TutorSession({
   const conversation = useConversation({
     onConnect: async ({ conversationId }) => {
       setPhase("active");
+      if (startedAtRef.current !== null) {
+        console.info(
+          `[tutor session] connected ${Math.round(performance.now() - startedAtRef.current)}ms after click`,
+        );
+      }
       const sid = sessionIdRef.current;
       if (sid) {
         await supabase
@@ -211,6 +281,12 @@ function TutorSession({
       await finishSession("completed");
     },
     onMessage: ({ message, role }) => {
+      if (role === "agent" && startedAtRef.current !== null) {
+        console.info(
+          `[tutor session] first agent message ${Math.round(performance.now() - startedAtRef.current)}ms after click`,
+        );
+        startedAtRef.current = null;
+      }
       setTranscript((prev) => [
         ...prev,
         { role: role === "agent" ? "assistant" : "user", content: message },
@@ -229,10 +305,11 @@ function TutorSession({
   });
 
   const startCall = async () => {
-    if (!session?.access_token) {
+    if (!accessToken) {
       toast.error("יש להתחבר מחדש");
       return;
     }
+    startedAtRef.current = performance.now();
     setMicIssue(null);
     setPhase("connecting");
     const issue = await checkMicrophone();
@@ -242,8 +319,10 @@ function TutorSession({
       return;
     }
     setTranscript([]);
-    try {
-      const { data: created, error } = await supabase
+    sessionIdRef.current = null;
+    // The session row and the token don't depend on each other - one round-trip, not two.
+    const [insertResult, tokenResult] = await Promise.allSettled([
+      supabase
         .from("tutor_sessions")
         .insert({
           household_id: householdId,
@@ -252,21 +331,33 @@ function TutorSession({
           status: "active",
         })
         .select("id")
-        .single();
-      if (error || !created) throw error ?? new Error("Failed to create session");
-      sessionIdRef.current = created.id;
+        .single(),
+      takeToken(accessToken),
+    ]);
 
-      const result = await mintTutorSignedUrl({
-        data: { tutorId: tutor.id },
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+    const created = insertResult.status === "fulfilled" ? insertResult.value.data : null;
+    if (created) sessionIdRef.current = created.id;
 
-      conversation.startSession({ signedUrl: result.signedUrl, overrides: result.overrides });
-    } catch (err) {
-      console.error("[start tutor session]", err);
+    if (!created || tokenResult.status === "rejected") {
+      console.error(
+        "[start tutor session]",
+        insertResult.status === "rejected" ? insertResult.reason : insertResult.value.error,
+        tokenResult.status === "rejected" ? tokenResult.reason : null,
+      );
+      // A row that was created but can never connect shouldn't linger as "active".
+      if (created) await finishSession("failed");
+      sessionIdRef.current = null;
       toast.error("לא הצלחנו להתחיל את השיחה. נסו שוב.");
       setPhase("idle");
+      return;
     }
+
+    conversation.startSession({
+      conversationToken: tokenResult.value.conversationToken,
+      connectionType: "webrtc",
+      overrides: tokenResult.value.overrides,
+      connectionDelay: CONNECTION_DELAY,
+    });
   };
 
   const isSpeaking = conversation.isSpeaking;
@@ -357,33 +448,31 @@ function TutorSession({
                 ease: "easeInOut",
               }}
             >
-              <SplineErrorBoundary
-                fallback={
-                  <div className="flex h-full w-full items-center justify-center">
-                    <Bot className="h-12 w-12" aria-hidden />
-                  </div>
-                }
-              >
-                <Suspense
-                  fallback={
-                    <div className="flex h-full w-full items-center justify-center">
-                      <OrbitalLoader size="sm" />
-                    </div>
-                  }
-                >
-                  <Spline
-                    scene={TUTOR_AVATAR_SCENE}
-                    style={{
-                      width: "170%",
-                      height: "170%",
-                      position: "absolute",
-                      top: "50%",
-                      left: "50%",
-                      transform: "translate(-50%, -50%)",
-                    }}
-                  />
-                </Suspense>
-              </SplineErrorBoundary>
+              {avatarEnabled ? (
+                <SplineErrorBoundary fallback={<AvatarFallback />}>
+                  <Suspense
+                    fallback={
+                      <div className="flex h-full w-full items-center justify-center">
+                        <OrbitalLoader size="sm" />
+                      </div>
+                    }
+                  >
+                    <Spline
+                      scene={TUTOR_AVATAR_SCENE}
+                      style={{
+                        width: "170%",
+                        height: "170%",
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                      }}
+                    />
+                  </Suspense>
+                </SplineErrorBoundary>
+              ) : (
+                <AvatarFallback />
+              )}
             </motion.div>
             <span className="sr-only" role="status" aria-live="polite">
               {statusText}

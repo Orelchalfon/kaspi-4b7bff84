@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+/* Self-hosted variable Rubik: each subset is unicode-range gated, so a Hebrew page only
+   downloads the Hebrew (+ Latin for digits/brand) files. No render-blocking third-party CSS. */
+@import "@fontsource-variable/rubik/wght.css";
 
 @variant dark (&:is(.dark *));
 
@@ -28,6 +31,7 @@
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
+  --color-success-text: var(--success-text);
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
@@ -101,7 +105,8 @@
   --card-foreground: oklch(0.22 0.03 264);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.22 0.03 264);
-  --primary: oklch(0.62 0.19 258); /* #3C83F6 Cluely blue */
+  /* Darkened from 0.62 (3.6:1) so white text on primary passes WCAG AA (4.8:1). */
+  --primary: oklch(0.55 0.2 258);
   --primary-foreground: oklch(0.99 0.01 258);
   --secondary: oklch(0.96 0.006 264); /* #EEEFF1 cool light */
   --secondary-foreground: oklch(0.35 0.04 264);
@@ -113,11 +118,13 @@
   --destructive-foreground: oklch(0.99 0.005 25);
   --success: oklch(0.66 0.15 154); /* #2CB463 Cluely green */
   --success-foreground: oklch(0.99 0.005 154);
+  /* Small success-colored text on light surfaces (5.4:1); --success itself is only 2.9:1. */
+  --success-text: oklch(0.5 0.13 154);
   --warning: oklch(0.8 0.15 80);
   --warning-foreground: oklch(0.26 0.07 70);
   --border: oklch(0.92 0.006 264); /* #E2E3E9 */
   --input: oklch(0.92 0.006 264);
-  --ring: oklch(0.62 0.19 258);
+  --ring: oklch(0.55 0.2 258);
   --coin: oklch(0.8 0.15 85);
   --coin-foreground: oklch(0.28 0.08 85);
   --ks-navy-deep: oklch(0.3 0.035 264); /* #263043 */
@@ -135,12 +142,12 @@
   --viz-gifts: oklch(0.5 0.14 300); /* #714ca6 violet */
   --sidebar: oklch(0.985 0.004 264);
   --sidebar-foreground: oklch(0.22 0.03 264);
-  --sidebar-primary: oklch(0.62 0.19 258);
+  --sidebar-primary: oklch(0.55 0.2 258);
   --sidebar-primary-foreground: oklch(0.99 0.01 258);
   --sidebar-accent: oklch(0.95 0.018 264);
   --sidebar-accent-foreground: oklch(0.35 0.04 264);
   --sidebar-border: oklch(0.92 0.006 264);
-  --sidebar-ring: oklch(0.62 0.19 258);
+  --sidebar-ring: oklch(0.55 0.2 258);
 }
 
 .dark {
@@ -162,6 +169,7 @@
   --destructive-foreground: oklch(0.96 0.005 22);
   --success: oklch(0.7 0.15 154);
   --success-foreground: oklch(0.16 0.03 154);
+  --success-text: oklch(0.7 0.15 154);
   --warning: oklch(0.8 0.15 80);
   --warning-foreground: oklch(0.18 0.05 70);
   --border: oklch(1 0 0 / 12%);
@@ -197,7 +205,7 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: "Rubik", "Heebo", system-ui, sans-serif;
+    font-family: "Rubik Variable", "Rubik", "Heebo", system-ui, sans-serif;
   }
 
   button:not(:disabled),

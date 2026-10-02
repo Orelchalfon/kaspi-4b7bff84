@@ -1,3 +1,7 @@
+# Cloudflare merges every matching rule, so Cache-Control lives ONLY on specific paths.
+# Putting it on /* as well stacks "max-age=0, must-revalidate" onto the immutable assets.
+# Unlisted static files fall back to the platform default (revalidate every request).
+
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
@@ -10,7 +14,10 @@
 /*.svg
   Cache-Control: public, max-age=2592000
 
-/kaspii_logo.png
+/*.png
+  Cache-Control: public, max-age=2592000
+
+/og-image.jpg
   Cache-Control: public, max-age=2592000
 
 /robots.txt
@@ -20,6 +27,5 @@
   Cache-Control: public, max-age=3600
 
 /*
-  Cache-Control: public, max-age=0, must-revalidate
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin

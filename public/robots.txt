@@ -5,5 +5,3 @@ Disallow: /child/
 Disallow: /auth/
 Disallow: /login
 Disallow: /signup
-
-Sitemap: https://kidcoin.app/sitemap.xml
