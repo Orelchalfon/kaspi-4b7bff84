@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ListSkeleton } from "@/components/loading-skeletons";
+import { LoadError } from "@/components/load-error";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { PERSONALITY_LABELS_HE, type TutorPersonality } from "@/lib/tutors";
@@ -28,16 +29,24 @@ function TutorsList() {
   const { householdId } = useAuth();
   const [tutors, setTutors] = useState<TutorRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [showInactive, setShowInactive] = useState(false);
 
   const load = useCallback(async () => {
     if (!householdId) return;
-    const { data } = await supabase
+    setLoading(true);
+    const { data, error } = await supabase
       .from("tutors")
       .select("id, name, subject, topic, personality, active")
       .eq("household_id", householdId)
       .order("created_at", { ascending: false });
-    setTutors((data ?? []) as TutorRow[]);
+    if (error) {
+      console.error("[parent/tutors] load failed", error);
+      setLoadFailed(true);
+    } else {
+      setLoadFailed(false);
+      setTutors((data ?? []) as TutorRow[]);
+    }
     setLoading(false);
   }, [householdId]);
 
@@ -55,6 +64,18 @@ function TutorsList() {
           <h1 className="text-2xl font-bold">חונכים</h1>
         </div>
         <ListSkeleton rows={3} />
+      </div>
+    );
+  }
+
+  if (loadFailed) {
+    return (
+      <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-bold">חונכים</h1>
+        <LoadError
+          message="אופס, לא הצלחנו לטעון את רשימת החונכים. בדקו את האינטרנט ונסו שוב."
+          onRetry={() => void load()}
+        />
       </div>
     );
   }

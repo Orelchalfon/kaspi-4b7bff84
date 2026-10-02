@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { ArrowLeft, Loader2, Pencil, UserPlus, Users } from "lucide-react";
 import { ListSkeleton } from "@/components/loading-skeletons";
+import { LoadError } from "@/components/load-error";
 import { ChildAvatar } from "@/components/child-avatar";
 import { AvatarPicker } from "@/components/avatar-picker";
 import { BAND_LABELS_HE, DEFAULT_BAND, ageInYears, bandForBirthdate } from "@/lib/quiz-bank";
@@ -39,22 +40,34 @@ function ChildrenList() {
   const { householdId } = useAuth();
   const [children, setChildren] = useState<ChildRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [editing, setEditing] = useState<ChildRow | null>(null);
 
   const load = useCallback(async () => {
     if (!householdId) return;
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("child_profiles")
       .select("id, display_name, user_id, birthdate, avatar")
       .eq("household_id", householdId)
       .order("display_name", { ascending: true });
-    setChildren(data || []);
+    if (error) {
+      console.error("[parent/children] load failed", error);
+      setLoadFailed(true);
+    } else {
+      setLoadFailed(false);
+      setChildren(data || []);
+    }
     setLoading(false);
   }, [householdId]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  const retry = () => {
+    setLoading(true);
+    void load();
+  };
 
   if (loading) {
     return (
@@ -63,6 +76,18 @@ function ChildrenList() {
           <h1 className="text-2xl font-bold">ילדים</h1>
         </div>
         <ListSkeleton rows={3} />
+      </div>
+    );
+  }
+
+  if (loadFailed) {
+    return (
+      <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-bold">ילדים</h1>
+        <LoadError
+          message="אופס, לא הצלחנו לטעון את רשימת הילדים. בדקו את האינטרנט ונסו שוב."
+          onRetry={retry}
+        />
       </div>
     );
   }

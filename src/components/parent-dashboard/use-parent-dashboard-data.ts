@@ -19,6 +19,7 @@ import type {
  * it by `type`), open tasks and settings; tracks the selected child; and owns the
  * approve (approve_task_and_pay RPC) / reject flows, which reload everything on success.
  * `settingsVersion` bumps on every load so the page can re-key the settings cards.
+ * A failed load sets `loadFailed` (the page shows a retry) instead of empty data.
  */
 export function useParentDashboardData() {
   const { householdId } = useAuth();
@@ -28,6 +29,7 @@ export function useParentDashboardData() {
   const [taskTitles, setTaskTitles] = useState<Record<string, string>>({});
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [acting, setActing] = useState<TaskAction>(null);
   const [settings, setSettings] = useState<DashboardSettings>({
     savingsPct: 0,
@@ -39,35 +41,43 @@ export function useParentDashboardData() {
   const loadAll = useCallback(async () => {
     if (!householdId) return;
     const hhId = householdId;
-    const [{ data: cData }, { data: txData }, { data: tData }, { data: sData }] = await Promise.all(
-      [
-        supabase
-          .from("child_profiles")
-          .select("id, display_name, avatar")
-          .eq("household_id", hhId)
-          .order("display_name", { ascending: true }),
-        supabase
-          .from("transactions")
-          .select("id, child_id, amount, reference_task_id, goal_id, created_at, type")
-          .eq("household_id", hhId)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("tasks")
-          .select("id, title, reward_amount, status, child_id, created_at")
-          .eq("household_id", hhId)
-          .in("status", ["assigned", "submitted"])
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("household_settings")
-          .select("savings_percentage, quiz_subjects, quiz_reward_amount")
-          .eq("household_id", hhId)
-          .maybeSingle(),
-      ],
-    );
+    const [cRes, txRes, tRes, sRes] = await Promise.all([
+      supabase
+        .from("child_profiles")
+        .select("id, display_name, avatar")
+        .eq("household_id", hhId)
+        .order("display_name", { ascending: true }),
+      supabase
+        .from("transactions")
+        .select("id, child_id, amount, reference_task_id, goal_id, created_at, type")
+        .eq("household_id", hhId)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("tasks")
+        .select("id, title, reward_amount, status, child_id, created_at")
+        .eq("household_id", hhId)
+        .in("status", ["assigned", "submitted"])
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("household_settings")
+        .select("savings_percentage, quiz_subjects, quiz_reward_amount")
+        .eq("household_id", hhId)
+        .maybeSingle(),
+    ]);
+    if (cRes.error || txRes.error || tRes.error || sRes.error) {
+      console.error(
+        "[parent/dashboard] load failed",
+        cRes.error ?? txRes.error ?? tRes.error ?? sRes.error,
+      );
+      setLoadFailed(true);
+      return;
+    }
+    setLoadFailed(false);
 
-    const childList = cData || [];
-    const txList = (txData || []) as TxRow[];
-    const taskList = (tData || []) as TaskRow[];
+    const sData = sRes.data;
+    const childList = cRes.data || [];
+    const txList = (txRes.data || []) as TxRow[];
+    const taskList = (tRes.data || []) as TaskRow[];
     setChildren(childList);
     setTransactions(txList);
     setTasks(taskList);
@@ -97,11 +107,15 @@ export function useParentDashboardData() {
     setSelectedChildId((prev) => prev ?? childList[0]?.id ?? null);
   }, [householdId]);
 
-  useEffect(() => {
+  const reload = useCallback(() => {
     if (!householdId) return;
     setLoading(true);
     loadAll().finally(() => setLoading(false));
   }, [householdId, loadAll]);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
 
   const balances = useMemo(() => {
     const m: Record<string, number> = {};
@@ -183,6 +197,7 @@ export function useParentDashboardData() {
     setSelectedChildId,
     selectedChild,
     loading,
+    loadFailed,
     acting,
     settings,
     settingsVersion,
@@ -193,6 +208,8 @@ export function useParentDashboardData() {
     childTasks,
     handleApprove,
     handleReject,
+    /** Full reload with the loading state (first load / retry after an error). */
+    reload,
     /** Silent reload after a mutation elsewhere on the page (e.g. manual adjustment). */
     refresh: loadAll,
   };

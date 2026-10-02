@@ -1,4 +1,5 @@
 import { CoinAmount } from "@/components/coin-amount";
+import { LoadError } from "@/components/load-error";
 import { ParentDashboardSkeleton } from "@/components/loading-skeletons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,6 +27,7 @@ function ParentDashboard() {
     setSelectedChildId,
     selectedChild,
     loading,
+    loadFailed,
     acting,
     settings,
     settingsVersion,
@@ -36,12 +38,25 @@ function ParentDashboard() {
     childTasks,
     handleApprove,
     handleReject,
+    reload,
     refresh,
   } = useParentDashboardData();
   const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
 
   if (loading) {
     return <ParentDashboardSkeleton />;
+  }
+
+  if (loadFailed) {
+    return (
+      <div className="flex flex-col gap-6">
+        <h1 className="text-2xl font-bold">לוח בקרה</h1>
+        <LoadError
+          message="אופס, לא הצלחנו לטעון את לוח הבקרה. בדקו את האינטרנט ונסו שוב."
+          onRetry={reload}
+        />
+      </div>
+    );
   }
 
   return (

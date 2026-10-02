@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, useEffect, type FormEvent } from "react";
+import { useCallback, useState, useEffect, type FormEvent } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FormSkeleton } from "@/components/loading-skeletons";
+import { LoadError } from "@/components/load-error";
 import { PageHeader } from "@/components/page-header";
 
 export const Route = createFileRoute("/parent/tasks/new")({
@@ -38,6 +39,7 @@ function NewTask() {
   // Distinguishes "still loading" from "household really has no children", so the
   // empty state doesn't flash before the query returns.
   const [childrenLoaded, setChildrenLoaded] = useState(false);
+  const [childrenFailed, setChildrenFailed] = useState(false);
   const [childId, setChildId] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -46,19 +48,28 @@ function NewTask() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  const loadChildren = useCallback(async () => {
     if (!householdId) return;
-    supabase
+    setChildrenLoaded(false);
+    const { data, error: loadError } = await supabase
       .from("child_profiles")
       .select("id, display_name")
       .eq("household_id", householdId)
-      .order("display_name", { ascending: true })
-      .then(({ data }) => {
-        setChildren(data || []);
-        if (data && data.length > 0) setChildId(data[0].id);
-        setChildrenLoaded(true);
-      });
+      .order("display_name", { ascending: true });
+    if (loadError) {
+      console.error("[tasks.new] children load failed:", loadError);
+      setChildrenFailed(true);
+    } else {
+      setChildrenFailed(false);
+      setChildren(data || []);
+      if (data && data.length > 0) setChildId(data[0].id);
+    }
+    setChildrenLoaded(true);
   }, [householdId]);
+
+  useEffect(() => {
+    void loadChildren();
+  }, [loadChildren]);
 
   const validate = (): { errors: FieldErrors; rewardAmount: number } => {
     const errors: FieldErrors = {};
@@ -115,6 +126,18 @@ function NewTask() {
       <div className="mx-auto flex w-full max-w-sm flex-col gap-4">
         {header}
         <FormSkeleton fields={4} />
+      </div>
+    );
+  }
+
+  if (childrenFailed) {
+    return (
+      <div className="mx-auto flex w-full max-w-sm flex-col gap-4">
+        {header}
+        <LoadError
+          message="אופס, לא הצלחנו לטעון את רשימת הילדים. בדקו את האינטרנט ונסו שוב."
+          onRetry={() => void loadChildren()}
+        />
       </div>
     );
   }

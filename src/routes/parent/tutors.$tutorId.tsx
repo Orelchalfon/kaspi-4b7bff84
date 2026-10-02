@@ -39,6 +39,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { FormSkeleton, ListSkeleton, PageHeaderSkeleton } from "@/components/loading-skeletons";
+import { LoadError } from "@/components/load-error";
 import { PageHeader } from "@/components/page-header";
 import { StaggerItem, StaggerList } from "@/components/ui/stagger-list";
 import { supabase } from "@/integrations/supabase/client";
@@ -108,6 +109,7 @@ function TutorDetail() {
   const [saved, setSaved] = useState<TutorRow | null>(null);
   const [tutor, setTutor] = useState<TutorRow | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
@@ -115,29 +117,42 @@ function TutorDetail() {
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [childNames, setChildNames] = useState<Record<string, string>>({});
   const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [sessionsFailed, setSessionsFailed] = useState(false);
   const [loadingMoreSessions, setLoadingMoreSessions] = useState(false);
   const [hasMoreSessions, setHasMoreSessions] = useState(false);
 
   const load = useCallback(async () => {
-    const { data } = await supabase
+    setLoading(true);
+    const { data, error: loadError } = await supabase
       .from("tutors")
       .select("id, name, subject, topic, personality, voice_id, language, active")
       .eq("id", tutorId)
       .maybeSingle();
-    setSaved((data as TutorRow) ?? null);
-    setTutor((data as TutorRow) ?? null);
+    if (loadError) {
+      console.error("[tutors.$tutorId] load failed:", loadError);
+      setLoadFailed(true);
+    } else {
+      setLoadFailed(false);
+      setSaved((data as TutorRow) ?? null);
+      setTutor((data as TutorRow) ?? null);
+    }
     setLoading(false);
   }, [tutorId]);
 
+  /** A page of sessions, or `null` if the query failed. */
   const fetchSessions = useCallback(
-    async (offset: number) => {
+    async (offset: number): Promise<SessionRow[] | null> => {
       // One extra row tells us whether another page exists.
-      const { data: sData } = await supabase
+      const { data: sData, error: sError } = await supabase
         .from("tutor_sessions")
         .select("id, child_id, started_at, ended_at, status")
         .eq("tutor_id", tutorId)
         .order("started_at", { ascending: false })
         .range(offset, offset + SESSIONS_PAGE);
+      if (sError) {
+        console.error("[tutors.$tutorId] sessions load failed:", sError);
+        return null;
+      }
       const rows = (sData ?? []) as SessionRow[];
       const childIds = Array.from(new Set(rows.map((r) => r.child_id)));
       if (childIds.length > 0) {
@@ -158,14 +173,20 @@ function TutorDetail() {
 
   const loadSessions = useCallback(async () => {
     setSessionsLoading(true);
-    setSessions(await fetchSessions(0));
+    const rows = await fetchSessions(0);
+    setSessionsFailed(rows === null);
+    if (rows) setSessions(rows);
     setSessionsLoading(false);
   }, [fetchSessions]);
 
   const loadMoreSessions = async () => {
     setLoadingMoreSessions(true);
     const more = await fetchSessions(sessions.length);
-    setSessions((prev) => [...prev, ...more]);
+    if (more) {
+      setSessions((prev) => [...prev, ...more]);
+    } else {
+      toast.error("לא הצלחנו לטעון שיחות נוספות. נסו שוב.");
+    }
     setLoadingMoreSessions(false);
   };
 
@@ -230,6 +251,21 @@ function TutorDetail() {
       <div className="mx-auto flex w-full max-w-sm flex-col gap-6">
         <PageHeaderSkeleton />
         <FormSkeleton fields={6} />
+      </div>
+    );
+  }
+
+  if (loadFailed) {
+    return (
+      <div className="mx-auto flex w-full max-w-sm flex-col gap-4">
+        <PageHeader title="חונך" back={BACK} />
+        <LoadError
+          message="אופס, לא הצלחנו לטעון את פרטי החונך. בדקו את האינטרנט ונסו שוב."
+          onRetry={() => {
+            void load();
+            void loadSessions();
+          }}
+        />
       </div>
     );
   }
@@ -384,6 +420,11 @@ function TutorDetail() {
         </h2>
         {sessionsLoading ? (
           <ListSkeleton rows={2} />
+        ) : sessionsFailed ? (
+          <LoadError
+            message="לא הצלחנו לטעון את השיחות הקודמות."
+            onRetry={() => void loadSessions()}
+          />
         ) : sessions.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center gap-2 py-8 text-center text-muted-foreground">
