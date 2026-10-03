@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2, Pencil, Repeat } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -20,7 +20,14 @@ import { Label } from "@/components/ui/label";
 import { CoinAmount } from "@/components/coin-amount";
 import { AnimatedNumber } from "@/components/animated-number";
 import { cn } from "@/lib/utils";
-import { periodLabel, type DepositSource, type GoalRow } from "@/components/savings/types";
+import {
+  periodLabel,
+  sourceFromLabel,
+  type DepositSource,
+  type GoalRow,
+} from "@/components/savings/types";
+import { SourcePicker } from "@/components/savings/source-picker";
+import { EditGoalDialog } from "@/components/savings/edit-goal-dialog";
 
 export function GoalCard({
   goal,
@@ -35,12 +42,13 @@ export function GoalCard({
   savingsBalance: number;
   onChanged: () => Promise<void>;
 }) {
-  const [source, setSource] = useState<DepositSource>("wallet");
+  const [source, setSource] = useState<DepositSource>(goal.auto_source);
   const [useCustom, setUseCustom] = useState(false);
   const [customInput, setCustomInput] = useState("");
   const [acting, setActing] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [depositError, setDepositError] = useState("");
+  const [editOpen, setEditOpen] = useState(false);
 
   const remaining = Math.max(0, goal.target_amount - deposited);
   const isCompleted = goal.status === "completed";
@@ -113,9 +121,31 @@ export function GoalCard({
               </span>
             )}
             <h3 className="font-semibold">{goal.title}</h3>
+            {!isCompleted && (
+              <Button
+                variant="ghost"
+                size="icon-touch"
+                className="-my-2 text-muted-foreground hover:text-foreground"
+                onClick={() => setEditOpen(true)}
+                disabled={acting}
+                aria-label={`עריכת המטרה ${goal.title}`}
+              >
+                <Pencil aria-hidden />
+              </Button>
+            )}
           </div>
           <CoinAmount value={goal.target_amount} />
         </div>
+
+        {!isCompleted && (
+          <EditGoalDialog
+            goal={goal}
+            deposited={deposited}
+            open={editOpen}
+            onOpenChange={setEditOpen}
+            onSaved={onChanged}
+          />
+        )}
 
         <div
           className="h-2 w-full overflow-hidden rounded-full bg-primary/15"
@@ -136,47 +166,48 @@ export function GoalCard({
             <AnimatedNumber value={deposited} className="font-semibold text-foreground" /> מתוך{" "}
             {goal.target_amount}
           </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs">
-            {goal.cycle_amount} כל {periodLabel[goal.cycle_period]}
-          </span>
+          {!goal.auto_deposit && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs">
+              {goal.cycle_amount} כל {periodLabel[goal.cycle_period]}
+            </span>
+          )}
         </div>
 
-        {!isCompleted && (
-          <>
-            {/* Radix ToggleGroup: real radio semantics + arrow-key roving focus. */}
-            <ToggleGroup
-              type="single"
-              value={source}
-              onValueChange={(v) => {
-                if (v === "wallet" || v === "savings") setSource(v);
-              }}
-              disabled={acting}
-              aria-label="מקור ההפקדה"
-              className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1"
-            >
-              <SourceOption value="wallet" label="ארנק" balance={walletBalance} />
-              <SourceOption value="savings" label="חיסכון" balance={savingsBalance} />
-            </ToggleGroup>
+        {goal.auto_deposit && !isCompleted && <AutoDepositChip goal={goal} />}
 
-            <ToggleGroup
-              type="single"
-              value={useCustom ? "custom" : "cycle"}
-              onValueChange={(v) => {
-                if (v === "cycle" || v === "custom") setUseCustom(v === "custom");
-              }}
+        {!isCompleted && (
+          <section aria-label="הפקדה למטרה" className="space-y-4 border-t pt-4">
+            <SourcePicker
+              value={source}
+              onChange={setSource}
+              walletBalance={walletBalance}
+              savingsBalance={savingsBalance}
+              needed={amount}
               disabled={acting}
-              aria-label="סכום ההפקדה"
-              className="flex flex-wrap justify-start gap-2"
-            >
-              <ToggleGroupItem value="cycle" className={amountChipClass}>
-                {!useCustom && <CheckCircle2 aria-hidden />}
-                סכום מחזורי {goal.cycle_amount}
-              </ToggleGroupItem>
-              <ToggleGroupItem value="custom" className={amountChipClass}>
-                {useCustom && <CheckCircle2 aria-hidden />}
-                סכום אחר
-              </ToggleGroupItem>
-            </ToggleGroup>
+            />
+
+            <div className="space-y-2">
+              <p className="text-sm font-medium">כמה להפקיד?</p>
+              <ToggleGroup
+                type="single"
+                value={useCustom ? "custom" : "cycle"}
+                onValueChange={(v) => {
+                  if (v === "cycle" || v === "custom") setUseCustom(v === "custom");
+                }}
+                disabled={acting}
+                aria-label="כמה להפקיד?"
+                className="flex flex-wrap justify-start gap-2"
+              >
+                <ToggleGroupItem value="cycle" className={amountChipClass}>
+                  {!useCustom && <CheckCircle2 aria-hidden />}
+                  סכום מחזורי {goal.cycle_amount}
+                </ToggleGroupItem>
+                <ToggleGroupItem value="custom" className={amountChipClass}>
+                  {useCustom && <CheckCircle2 aria-hidden />}
+                  סכום אחר
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
 
             {useCustom && (
               <div className="space-y-1">
@@ -233,7 +264,7 @@ export function GoalCard({
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-          </>
+          </section>
         )}
       </CardContent>
     </Card>
@@ -243,22 +274,30 @@ export function GoalCard({
 const amountChipClass =
   "min-h-11 rounded-full bg-muted px-4 text-sm font-medium text-muted-foreground hover:text-foreground data-[state=on]:bg-primary data-[state=on]:text-primary-foreground [&_svg]:size-4";
 
-function SourceOption({
-  value,
-  label,
-  balance,
-}: {
-  value: DepositSource;
-  label: string;
-  balance: number;
-}) {
+function AutoDepositChip({ goal }: { goal: GoalRow }) {
+  const waiting = goal.last_auto_status === "insufficient";
+  const next = goal.next_auto_deposit_on
+    ? nextDateFormat.format(new Date(`${goal.next_auto_deposit_on}T12:00:00`))
+    : null;
   return (
-    <ToggleGroupItem
-      value={value}
-      className="flex h-auto min-h-11 flex-col items-center justify-center gap-0.5 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-transparent hover:text-foreground data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm"
+    <p
+      className={cn(
+        "flex flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-lg px-3 py-2 text-xs",
+        waiting ? "bg-warning/20 text-warning-foreground" : "bg-primary/10 text-foreground",
+      )}
     >
-      <span className="font-medium">{label}</span>
-      <span className="text-xs tabular-nums opacity-70">זמין {balance}</span>
-    </ToggleGroupItem>
+      <Repeat className="size-3.5 shrink-0" aria-hidden />
+      <span className="font-semibold">אוטומטי:</span>
+      <span>
+        {goal.cycle_amount} כל {periodLabel[goal.cycle_period]} {sourceFromLabel[goal.auto_source]}
+      </span>
+      {waiting ? (
+        <span className="font-medium">· ממתין ליתרה — ננסה שוב מחר</span>
+      ) : (
+        next && <span className="text-muted-foreground">· הבא ב־{next}</span>
+      )}
+    </p>
   );
 }
+
+const nextDateFormat = new Intl.DateTimeFormat("he-IL", { day: "numeric", month: "numeric" });

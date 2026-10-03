@@ -50,7 +50,7 @@ export function Footer() {
             <Coins className="h-4 w-4" aria-hidden />
           </span>
           <span className="text-sm font-semibold text-foreground">
-            <bdi>Kaspii</bdi>
+            <bdi>Kasp</bdi>
           </span>
           <span className="text-xs text-muted-foreground">© OCD&#123;ev&#125; 2026</span>
         </div>

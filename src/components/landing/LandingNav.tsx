@@ -85,13 +85,13 @@ export function LandingNav() {
         <Link
           to="/"
           className="flex items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          aria-label="Kaspii — דף הבית"
+          aria-label="Kasp — דף הבית"
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <Coins className="h-5 w-5" aria-hidden />
           </span>
           <span className="text-base font-semibold tracking-tight text-foreground">
-            <bdi>Kaspii</bdi>
+            <bdi>Kasp</bdi>
           </span>
         </Link>
 

@@ -51,6 +51,8 @@ export type Database = {
       };
       goals: {
         Row: {
+          auto_deposit: boolean;
+          auto_source: string;
           child_id: string;
           created_at: string;
           created_by: string;
@@ -58,12 +60,17 @@ export type Database = {
           cycle_period: string;
           household_id: string;
           id: string;
+          last_auto_at: string | null;
+          last_auto_status: string | null;
+          next_auto_deposit_on: string | null;
           status: string;
           target_amount: number;
           title: string;
           updated_at: string;
         };
         Insert: {
+          auto_deposit?: boolean;
+          auto_source?: string;
           child_id: string;
           created_at?: string;
           created_by: string;
@@ -71,12 +78,17 @@ export type Database = {
           cycle_period: string;
           household_id: string;
           id?: string;
+          last_auto_at?: string | null;
+          last_auto_status?: string | null;
+          next_auto_deposit_on?: string | null;
           status?: string;
           target_amount: number;
           title: string;
           updated_at?: string;
         };
         Update: {
+          auto_deposit?: boolean;
+          auto_source?: string;
           child_id?: string;
           created_at?: string;
           created_by?: string;
@@ -84,6 +96,9 @@ export type Database = {
           cycle_period?: string;
           household_id?: string;
           id?: string;
+          last_auto_at?: string | null;
+          last_auto_status?: string | null;
+          next_auto_deposit_on?: string | null;
           status?: string;
           target_amount?: number;
           title?: string;
@@ -507,10 +522,15 @@ export type Database = {
         Returns: Json;
       };
       deposit_to_savings: { Args: { _amount: number }; Returns: Json };
+      goal_next_cycle_date: {
+        Args: { _from: string; _period: string };
+        Returns: string;
+      };
       manual_adjustment: {
         Args: { _amount: number; _child_id: string };
         Returns: Json;
       };
+      run_goal_auto_deposits: { Args: never; Returns: number };
       set_child_avatar: {
         Args: { _avatar: string; _child_id: string };
         Returns: Json;

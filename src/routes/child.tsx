@@ -41,7 +41,7 @@ function ChildLayout() {
   return (
     <div className="min-h-dvh bg-background">
       <AppHeader
-        brand={{ name: "Kaspii", to: "/child/dashboard" }}
+        brand={{ name: "Kasp", to: "/child/dashboard" }}
         navItems={CHILD_NAV}
         onSignOut={signOut}
       />

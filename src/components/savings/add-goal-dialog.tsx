@@ -1,5 +1,4 @@
 import { useState, type FormEvent } from "react";
-import { z } from "zod";
 import { toast } from "sonner";
 import { Loader2, Plus } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -23,26 +22,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { CyclePeriod } from "@/components/savings/types";
-
-const goalSchema = z
-  .object({
-    title: z.string().trim().min(1, "כותרת חובה").max(60, "עד 60 תווים"),
-    target_amount: z.coerce
-      .number({ invalid_type_error: "חייב להיות מספר" })
-      .int("חייב להיות מספר שלם")
-      .positive("חייב להיות חיובי")
-      .max(100000, "עד 100,000"),
-    cycle_amount: z.coerce
-      .number({ invalid_type_error: "חייב להיות מספר" })
-      .int("חייב להיות מספר שלם")
-      .positive("חייב להיות חיובי"),
-    cycle_period: z.enum(["day", "week", "month"]),
-  })
-  .refine((d) => d.cycle_amount <= d.target_amount, {
-    message: "סכום מחזורי לא יכול להיות גדול מהיעד",
-    path: ["cycle_amount"],
-  });
+import type { CyclePeriod, DepositSource } from "@/components/savings/types";
+import { AutoDepositFields } from "@/components/savings/auto-deposit-fields";
+import {
+  goalSchema,
+  zodIssuesToErrors,
+  type GoalFormErrors,
+} from "@/components/savings/goal-schema";
 
 interface AddGoalDialogProps {
   /** Controlled so the page's empty state can open it too. */
@@ -59,9 +45,9 @@ export function AddGoalDialog({ open, onOpenChange, onCreated }: AddGoalDialogPr
   const [targetInput, setTargetInput] = useState("");
   const [cycleInput, setCycleInput] = useState("");
   const [periodInput, setPeriodInput] = useState<CyclePeriod>("week");
-  const [formErrors, setFormErrors] = useState<
-    Partial<Record<keyof z.infer<typeof goalSchema>, string>>
-  >({});
+  const [autoInput, setAutoInput] = useState(false);
+  const [autoSourceInput, setAutoSourceInput] = useState<DepositSource>("wallet");
+  const [formErrors, setFormErrors] = useState<GoalFormErrors>({});
   const [submitting, setSubmitting] = useState(false);
 
   function resetForm() {
@@ -69,6 +55,8 @@ export function AddGoalDialog({ open, onOpenChange, onCreated }: AddGoalDialogPr
     setTargetInput("");
     setCycleInput("");
     setPeriodInput("week");
+    setAutoInput(false);
+    setAutoSourceInput("wallet");
     setFormErrors({});
   }
 
@@ -81,14 +69,11 @@ export function AddGoalDialog({ open, onOpenChange, onCreated }: AddGoalDialogPr
       target_amount: targetInput,
       cycle_amount: cycleInput,
       cycle_period: periodInput,
+      auto_deposit: autoInput,
+      auto_source: autoSourceInput,
     });
     if (!parsed.success) {
-      const errs: Record<string, string> = {};
-      for (const issue of parsed.error.issues) {
-        const key = issue.path[0]?.toString() ?? "";
-        if (key && !errs[key]) errs[key] = issue.message;
-      }
-      setFormErrors(errs);
+      setFormErrors(zodIssuesToErrors(parsed.error.issues));
       return;
     }
 
@@ -101,6 +86,8 @@ export function AddGoalDialog({ open, onOpenChange, onCreated }: AddGoalDialogPr
       target_amount: parsed.data.target_amount,
       cycle_amount: parsed.data.cycle_amount,
       cycle_period: parsed.data.cycle_period,
+      auto_deposit: parsed.data.auto_deposit,
+      auto_source: parsed.data.auto_source,
       created_by: user.id,
     });
     setSubmitting(false);
@@ -131,7 +118,7 @@ export function AddGoalDialog({ open, onOpenChange, onCreated }: AddGoalDialogPr
           הוסף מטרה
         </Button>
       </DialogTrigger>
-      <DialogContent dir="rtl">
+      <DialogContent dir="rtl" className="max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>מטרה חדשה</DialogTitle>
           <DialogDescription>הגדירו יעד חיסכון וסכום קבוע להפקדה.</DialogDescription>
@@ -216,6 +203,17 @@ export function AddGoalDialog({ open, onOpenChange, onCreated }: AddGoalDialogPr
               </Select>
             </div>
           </div>
+
+          <AutoDepositFields
+            idPrefix="goal"
+            enabled={autoInput}
+            onEnabledChange={setAutoInput}
+            source={autoSourceInput}
+            onSourceChange={setAutoSourceInput}
+            cycleAmount={cycleInput}
+            period={periodInput}
+            disabled={submitting}
+          />
 
           <DialogFooter>
             <Button type="submit" size="touch" disabled={submitting} className="w-full">

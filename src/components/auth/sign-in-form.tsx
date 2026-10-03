@@ -86,7 +86,7 @@ export function SignInForm({ email, onEmailChange, firstFieldRef }: SignInFormPr
     <div className="flex flex-col gap-6">
       <div className="text-center">
         <h1 className="text-2xl font-bold text-foreground">התחברות</h1>
-        <p className="mt-1 text-sm text-muted-foreground">הכנסו לחשבון Kaspii שלכם</p>
+        <p className="mt-1 text-sm text-muted-foreground">הכנסו לחשבון Kasp שלכם</p>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>

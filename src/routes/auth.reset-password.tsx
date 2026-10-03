@@ -12,7 +12,7 @@ import { PasswordInput } from "@/components/auth/password-input";
 
 export const Route = createFileRoute("/auth/reset-password")({
   head: () => ({
-    meta: [{ title: "איפוס סיסמה — Kaspii" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "איפוס סיסמה — Kasp" }, { name: "robots", content: "noindex" }],
   }),
   component: ResetPasswordPage,
 });

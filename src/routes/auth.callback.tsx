@@ -36,7 +36,7 @@ function AuthCallback() {
         // during auth.signUp. We just need to load the role into context.
         await refreshRole(session.user.id);
         if (cancelled) return;
-        toast.success("ברוכים הבאים ל-Kaspii!");
+        toast.success("ברוכים הבאים ל-Kasp!");
         // "/" sends each role to its own dashboard (this was hard-coded to /parent/dashboard).
         navigate({ to: "/", replace: true });
       } catch (e) {

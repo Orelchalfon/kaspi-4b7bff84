@@ -1,12 +1,18 @@
-import { useState, type FormEvent, type RefObject } from "react";
+import { useEffect, useState, type FormEvent, type RefObject } from "react";
 import { toast } from "sonner";
-import { Loader2, LogIn, Mail } from "lucide-react";
+import { Loader2, LogIn, Mail, RotateCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/auth/password-input";
+
+// Supabase rate-limits confirmation emails per address (~60 s), so the resend button waits
+// out the same window instead of letting the user hit the limit error.
+const RESEND_COOLDOWN_S = 60;
+
+const confirmRedirectTo = () => `${window.location.origin}/auth/callback`;
 
 interface SignUpFormProps {
   /** Shared with the sign-in form so the address survives a mode switch. */
@@ -29,6 +35,36 @@ export function SignUpForm({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = window.setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => window.clearTimeout(id);
+  }, [cooldown]);
+
+  const handleResend = async () => {
+    if (resending || cooldown > 0) return;
+    setResending(true);
+    const { error: resendError } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: confirmRedirectTo() },
+    });
+    setResending(false);
+    if (resendError) {
+      const rateLimited =
+        resendError.status === 429 || resendError.message.toLowerCase().includes("rate");
+      toast.error(
+        rateLimited ? "שלחנו מייל ממש עכשיו. נסו שוב בעוד דקה." : "לא הצלחנו לשלוח שוב. נסו שוב.",
+      );
+      if (rateLimited) setCooldown(RESEND_COOLDOWN_S);
+      return;
+    }
+    toast.success("שלחנו שוב את מייל האימות");
+    setCooldown(RESEND_COOLDOWN_S);
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -40,7 +76,7 @@ export function SignUpForm({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: confirmRedirectTo(),
         data: { household_name: householdName },
       },
     });
@@ -62,6 +98,7 @@ export function SignUpForm({
     toast.success("נשלח מייל אימות לכתובת שהזנת");
     setPassword("");
     setEmailSent(true);
+    setCooldown(RESEND_COOLDOWN_S);
     setLoading(false);
   };
 
@@ -80,6 +117,16 @@ export function SignUpForm({
           . לחצו על הקישור כדי להפעיל את החשבון.
         </p>
         <p className="text-sm text-muted-foreground">לא רואים את המייל? בדקו בתיקיית הספאם.</p>
+        <Button
+          type="button"
+          size="touch"
+          className="w-full"
+          onClick={handleResend}
+          disabled={resending || cooldown > 0}
+        >
+          {resending ? <Loader2 className="animate-spin" aria-hidden /> : <RotateCw aria-hidden />}
+          {resending ? "שולח..." : cooldown > 0 ? `שלח שוב (${cooldown})` : "שלח שוב"}
+        </Button>
         <Button
           type="button"
           variant="outline"

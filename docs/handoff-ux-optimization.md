@@ -1,6 +1,6 @@
 # Handoff — UX/UI optimization (kaspii-web)
 
-**Last updated:** 2026-10-02 · **Branch:** `main` · **Tree:** clean at `6916b0b`
+**Last updated:** 2026-10-02 · **Branch:** `main` · **Tree:** uncommitted on top of `2e63a76`
 **Start the next session with:** "Read `docs/handoff-ux-optimization.md` and continue from *Next up*."
 
 `CLAUDE.md` is current and is the source of truth for architecture and the reusable UI building blocks
@@ -11,7 +11,7 @@ confirmations). Read it first; this file only tracks *status* and *open decision
 
 ## Next up (in order)
 
-### 1. ~~Finish S6 — load errors on 5 parent pages~~ ✅ done 2026-10-02 (uncommitted)
+### 1. ~~Finish S6 — load errors on 5 parent pages~~ ✅ done 2026-10-02 (`2e63a76`)
 
 Shared `src/components/load-error.tsx` (`<LoadError message onRetry />`) now used on the parent
 dashboard (hook exposes `loadFailed` + `reload`), `children.index`, `tutors.index`, `tutors.$tutorId`
@@ -20,11 +20,11 @@ dashboard (hook exposes `loadFailed` + `reload`), `children.index`, `tutors.inde
 error screen (same as `useSavingsData`). Optional follow-up: migrate the ~8 inline copies (child pages,
 transactions, session transcript, task details) to `LoadError`.
 
-### 2. Signup "שלח שוב" (resend) — needs the user's yes
+### 2. ~~Signup "שלח שוב" (resend)~~ ✅ done 2026-10-02
 
-`src/components/auth/sign-up-form.tsx` "בדקו את המייל" screen has no way to resend the confirmation
-email. Proposed: a button calling `supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo } })`
-with a cooldown (e.g. 60s) + toast.
+"בדקו את המייל" screen in `src/components/auth/sign-up-form.tsx` has a "שלח שוב" button →
+`supabase.auth.resend({ type: "signup" })`, 60 s countdown (starts right after signup), rate-limit
+(429) toast. **Untested with a real inbox** — try once after the redirect allow-list is set.
 
 ### 3. Task-timestamp trigger migration — waiting on the user
 
@@ -72,8 +72,8 @@ create or replace trigger tasks_status_timestamps
 - **Mobile app on the old project:** `../mobile` docs (and maybe its `.env`) still reference
   `flxhxmrtdqegfsupvvus`; live project is `jlpvjxywfvijntsctvaq`. If mobile still points at the old
   project, web and mobile write to two databases.
-- **Brand:** latest commit renamed to "Kasp". `CLAUDE.md` / earlier copy may still say "Kaspii" — check
-  consistency (nav brands in `parent.tsx` / `child.tsx`, `LandingNav`, auth pages, toasts, `<title>`s).
+- ~~**Brand:**~~ ✅ all UI copy/titles/meta now say "Kasp" (2026-10-02). Only a CSS comment and
+  docs still say Kaspii.
 - Not answered (left as-is): collapse/move dashboard settings cards; "נקה" (clear) child birthdate;
   footer Privacy/Terms/Contact (waiting for pages to exist).
 
@@ -85,7 +85,7 @@ Landing mobile menu stays a dropdown (not Sheet) · eyebrow pills/tiles not conv
 
 ## Out of scope (still open)
 
-`kidcoin.app` URLs in canonical/OG/JSON-LD · Heebo declared in `styles.css` but never loaded ·
+~~`kidcoin.app` URLs~~ (✅ fixed 2026-10-02 → `kasp-web.kasp.workers.dev`, incl. sitemap route + robots.txt) · Heebo declared in `styles.css` but never loaded ·
 avatar catalog raw palette colors (`src/lib/avatars.ts`) · dark mode tokens exist but nothing enables
 them · `children-stack.tsx` physical `translateX` + hover-only fan.
 Phase 4 (perf): parent dashboard + child savings load **all** transactions to derive balances; could

@@ -37,7 +37,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "Kaspii היא סביבת תרגול משפחתית: הורים מגדירים משימות, ילדים צוברים מטבעות ואחוז מכל תגמול הולך אוטומטית לחיסכון.",
+          "Kasp היא סביבת תרגול משפחתית: הורים מגדירים משימות, ילדים צוברים מטבעות ואחוז מכל תגמול הולך אוטומטית לחיסכון.",
       },
       { property: "og:site_name", content: "Kasp" },
       { property: "og:type", content: "website" },
@@ -78,7 +78,7 @@ export const Route = createRootRoute({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Organization",
-          name: "Kaspii",
+          name: "Kasp",
           url: "https://kasp-web.kasp.workers.dev",
         }),
       },

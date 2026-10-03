@@ -31,7 +31,9 @@ export function useSavingsData() {
     const [gRes, tRes, sRes] = await Promise.all([
       supabase
         .from("goals")
-        .select("id, title, target_amount, cycle_amount, cycle_period, status")
+        .select(
+          "id, title, target_amount, cycle_amount, cycle_period, status, auto_deposit, auto_source, next_auto_deposit_on, last_auto_status",
+        )
         .eq("child_id", childProfileId)
         .order("created_at", { ascending: false }),
       supabase

@@ -120,7 +120,7 @@ export function Hero() {
           </div>
 
           <p className="mt-6 max-w-md text-sm text-muted-foreground/80">
-            <bdi>Kaspii</bdi> היא סביבת תרגול משפחתית — המטבעות וירטואליים, ההרגל אמיתי.
+            <bdi>Kasp</bdi> היא סביבת תרגול משפחתית — המטבעות וירטואליים, ההרגל אמיתי.
           </p>
         </div>
 

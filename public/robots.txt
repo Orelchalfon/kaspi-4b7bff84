@@ -5,3 +5,5 @@ Disallow: /child/
 Disallow: /auth/
 Disallow: /login
 Disallow: /signup
+
+Sitemap: https://kasp-web.kasp.workers.dev/sitemap.xml

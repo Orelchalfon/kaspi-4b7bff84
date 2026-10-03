@@ -83,14 +83,14 @@ export function AuthSwitch({ mode, onModeChange }: AuthSwitchProps) {
     <div className="flex w-full max-w-4xl flex-col items-center gap-6">
       <Link
         to="/"
-        aria-label="Kaspii — חזרה לדף הבית"
+        aria-label="Kasp — חזרה לדף הבית"
         className="flex min-h-11 items-center gap-2 rounded-lg px-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
           <Coins className="size-5" aria-hidden />
         </span>
         <span className="text-lg font-bold text-foreground">
-          <bdi>Kaspii</bdi>
+          <bdi>Kasp</bdi>
         </span>
       </Link>
 
@@ -139,7 +139,7 @@ export function AuthSwitch({ mode, onModeChange }: AuthSwitchProps) {
               inert={isSignUp}
               className={cn(SLIDE, isSignUp && "translate-x-[calc(var(--auth-dir)*20%)]")}
               icon={UserPlus}
-              title="חדשים ב-Kaspii?"
+              title="חדשים ב-Kasp?"
               body="פתחו חשבון הורה והתחילו לבנות יחד הרגלי חיסכון במשפחה."
               actionLabel="הרשמה"
               onAction={() => onModeChange("signup")}
