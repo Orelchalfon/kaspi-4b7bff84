@@ -53,7 +53,7 @@ const SOURCES: {
 }[] = [
   { key: "tasks", label: "משימות", swatch: "bg-viz-tasks", icon: CheckCircle2 },
   { key: "quizzes", label: "חידונים", swatch: "bg-viz-quizzes", icon: BookOpen },
-  { key: "gifts", label: "מתנות מההורים", swatch: "bg-viz-gifts", icon: Gift },
+  { key: "gifts", label: "מתנות", swatch: "bg-viz-gifts", icon: Gift },
 ];
 
 /** [start, end) of the month `offset` months before the current one, in local time. */

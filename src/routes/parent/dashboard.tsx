@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ChildrenStack } from "@/components/children-stack";
 import { ChildTransactions } from "@/components/parent-dashboard/child-transactions";
 import { ManualAdjustmentDialog } from "@/components/parent-dashboard/manual-adjustment-dialog";
+import { PendingGifts } from "@/components/parent-dashboard/pending-gifts";
 import { PendingTasks } from "@/components/parent-dashboard/pending-tasks";
 import { QuizSettingsCard } from "@/components/parent-dashboard/quiz-settings-card";
 import { SavingsPercentCard } from "@/components/parent-dashboard/savings-percent-card";
@@ -36,8 +37,11 @@ function ParentDashboard() {
     pendingByChild,
     childTransactions,
     childTasks,
+    childGifts,
     handleApprove,
     handleReject,
+    handleApproveGift,
+    handleRejectGift,
     reload,
     refresh,
   } = useParentDashboardData();
@@ -148,6 +152,13 @@ function ParentDashboard() {
               </span>
             </div>
           </div>
+          <PendingGifts
+            childGifts={childGifts}
+            acting={acting}
+            savingsPct={settings.savingsPct}
+            handleApprove={handleApproveGift}
+            handleReject={handleRejectGift}
+          />
           <PendingTasks
             childTasks={childTasks}
             acting={acting}

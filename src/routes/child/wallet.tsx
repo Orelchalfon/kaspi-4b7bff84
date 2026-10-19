@@ -40,7 +40,7 @@ function ChildWallet() {
     setLoadFailed(false);
     const { data: txData, error: txError } = await supabase
       .from("transactions")
-      .select("id, amount, type, reference_task_id, goal_id, created_at")
+      .select("id, amount, type, reference_task_id, reference_gift_id, goal_id, created_at")
       .eq("child_id", childProfileId!)
       .order("created_at", { ascending: false });
     if (txError) {

@@ -15,6 +15,8 @@ interface TransactionRowProps {
   tx: TransactionRowTx;
   taskTitle?: string;
   goalTitle?: string;
+  /** Gift sender's name (parent views only). */
+  giftSender?: string;
   /** Overrides the default direction circle (e.g. a ChildAvatar in parent views). */
   leading?: ReactNode;
   /** Overrides the describeTx label (e.g. child name in parent views). */
@@ -44,6 +46,7 @@ export function TransactionRow({
   tx,
   taskTitle,
   goalTitle,
+  giftSender,
   leading,
   primaryLabel,
   secondaryLabel,
@@ -51,7 +54,7 @@ export function TransactionRow({
   className,
 }: TransactionRowProps) {
   const positive = tx.amount > 0;
-  const { Icon, label } = describeTx(tx, taskTitle, goalTitle);
+  const { Icon, label } = describeTx(tx, taskTitle, goalTitle, giftSender);
   return (
     <Card className={className}>
       <CardContent className="flex items-center justify-between gap-3 py-3">
