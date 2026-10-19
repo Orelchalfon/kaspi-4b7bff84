@@ -2,6 +2,7 @@ import {
   BookOpen,
   CheckCircle2,
   Coins,
+  Gift,
   Pencil,
   PiggyBank,
   Target,
@@ -50,6 +51,8 @@ export interface DescribeTxInput {
   type: string;
   reference_task_id?: string | null;
   goal_id?: string | null;
+  /** Set on QR-code gift rows (manual_adjustment + its savings split). */
+  reference_gift_id?: string | null;
 }
 
 export interface TxDescription {
@@ -61,13 +64,19 @@ export function describeTx(
   tx: DescribeTxInput,
   taskTitle: string | undefined,
   goalTitle: string | undefined,
+  /** Gift sender's name — parent views only; children never receive it. */
+  giftSender?: string,
 ): TxDescription {
   switch (tx.type) {
     case "task_reward":
       return { Icon: CheckCircle2, label: taskTitle ?? "תגמול ממשימה" };
     case "manual_adjustment":
+      if (tx.reference_gift_id) {
+        return { Icon: Gift, label: giftSender ? `מתנה מ${giftSender}` : "מתנה" };
+      }
       return { Icon: Pencil, label: "התאמה ידנית" };
     case "wallet_debit":
+      if (tx.reference_gift_id) return { Icon: PiggyBank, label: "חיסכון אוטומטי ממתנה" };
       if (tx.goal_id) {
         return { Icon: Target, label: goalTitle ? `הפקדה: ${goalTitle}` : "הפקדה למטרה" };
       }
@@ -79,6 +88,7 @@ export function describeTx(
       }
       return { Icon: PiggyBank, label: "העברה לחיסכון" };
     case "savings_credit":
+      if (tx.reference_gift_id) return { Icon: PiggyBank, label: "חיסכון אוטומטי ממתנה" };
       if (tx.goal_id) {
         return { Icon: Target, label: goalTitle ? `הפקדה: ${goalTitle}` : "הפקדה למטרה" };
       }

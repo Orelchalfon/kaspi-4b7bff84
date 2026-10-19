@@ -34,6 +34,7 @@ interface TxRow {
   amount: number;
   type: string;
   reference_task_id: string | null;
+  reference_gift_id: string | null;
   goal_id: string | null;
   created_at: string | null;
 }
@@ -44,6 +45,7 @@ function ParentTransactions() {
   const [transactions, setTransactions] = useState<TxRow[]>([]);
   const [taskTitles, setTaskTitles] = useState<Record<string, string>>({});
   const [goalTitles, setGoalTitles] = useState<Record<string, string>>({});
+  const [giftSenders, setGiftSenders] = useState<Record<string, string>>({});
   const [filter, setFilter] = useState<string>(ALL);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -52,18 +54,27 @@ function ParentTransactions() {
   // Guards against a slow response for an old filter overwriting a newer one.
   const requestId = useRef(0);
 
-  // Resolve titles for the task/goal ids on a page so describeTx can label rows.
+  // Resolve titles for the task/goal ids (and gift senders) on a page so describeTx can
+  // label rows.
   const fetchTitles = useCallback(async (rows: TxRow[]) => {
     const taskIds = [...new Set(rows.map((r) => r.reference_task_id).filter(Boolean))] as string[];
     const goalIds = [...new Set(rows.map((r) => r.goal_id).filter(Boolean))] as string[];
-    const [tasksRes, goalsRes] = await Promise.all([
+    const giftIds = [...new Set(rows.map((r) => r.reference_gift_id).filter(Boolean))] as string[];
+    const [tasksRes, goalsRes, giftsRes] = await Promise.all([
       taskIds.length
         ? supabase.from("tasks").select("id, title").in("id", taskIds)
         : Promise.resolve({ data: [] as { id: string; title: string }[] }),
       goalIds.length
         ? supabase.from("goals").select("id, title").in("id", goalIds)
         : Promise.resolve({ data: [] as { id: string; title: string }[] }),
+      giftIds.length
+        ? supabase.from("gifts").select("id, sender_name").in("id", giftIds)
+        : Promise.resolve({ data: [] as { id: string; sender_name: string }[] }),
     ]);
+    setGiftSenders((m) => ({
+      ...m,
+      ...Object.fromEntries((giftsRes.data ?? []).map((g) => [g.id, g.sender_name])),
+    }));
     setTaskTitles((m) => ({
       ...m,
       ...Object.fromEntries((tasksRes.data ?? []).map((t) => [t.id, t.title])),
@@ -79,7 +90,9 @@ function ParentTransactions() {
     async (offset: number, childFilter: string) => {
       let query = supabase
         .from("transactions")
-        .select("id, child_id, amount, type, reference_task_id, goal_id, created_at")
+        .select(
+          "id, child_id, amount, type, reference_task_id, reference_gift_id, goal_id, created_at",
+        )
         .eq("household_id", householdId!)
         .order("created_at", { ascending: false })
         .range(offset, offset + PAGE_SIZE);
@@ -284,6 +297,9 @@ function ParentTransactions() {
                           tx.reference_task_id ? taskTitles[tx.reference_task_id] : undefined
                         }
                         goalTitle={tx.goal_id ? goalTitles[tx.goal_id] : undefined}
+                        giftSender={
+                          tx.reference_gift_id ? giftSenders[tx.reference_gift_id] : undefined
+                        }
                         leading={
                           <span aria-hidden>
                             <ChildAvatar

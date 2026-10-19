@@ -16,7 +16,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ArrowLeft, Loader2, Pencil, UserPlus, Users } from "lucide-react";
+import { ArrowLeft, Loader2, Pencil, QrCode, UserPlus, Users } from "lucide-react";
+import { ChildGiftQrDialog } from "@/components/gifts/child-gift-qr-dialog";
 import { ListSkeleton } from "@/components/loading-skeletons";
 import { LoadError } from "@/components/load-error";
 import { ChildAvatar } from "@/components/child-avatar";
@@ -42,6 +43,7 @@ function ChildrenList() {
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
   const [editing, setEditing] = useState<ChildRow | null>(null);
+  const [qrChild, setQrChild] = useState<ChildRow | null>(null);
 
   const load = useCallback(async () => {
     if (!householdId) return;
@@ -137,14 +139,24 @@ function ChildrenList() {
                       </span>
                     </span>
                   </span>
-                  <Button
-                    variant="ghost"
-                    size="icon-touch"
-                    aria-label={`עריכת ${child.display_name}`}
-                    onClick={() => setEditing(child)}
-                  >
-                    <Pencil aria-hidden />
-                  </Button>
+                  <span className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon-touch"
+                      aria-label={`קוד מתנה של ${child.display_name}`}
+                      onClick={() => setQrChild(child)}
+                    >
+                      <QrCode aria-hidden />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-touch"
+                      aria-label={`עריכת ${child.display_name}`}
+                      onClick={() => setEditing(child)}
+                    >
+                      <Pencil aria-hidden />
+                    </Button>
+                  </span>
                 </CardContent>
               </Card>
             </li>
@@ -158,6 +170,13 @@ function ChildrenList() {
           if (!o) setEditing(null);
         }}
         onSaved={load}
+      />
+
+      <ChildGiftQrDialog
+        child={qrChild}
+        onOpenChange={(o) => {
+          if (!o) setQrChild(null);
+        }}
       />
     </div>
   );
