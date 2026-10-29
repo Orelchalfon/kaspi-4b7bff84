@@ -11,7 +11,7 @@ export function FeatureRows() {
           id="savings"
           eyebrow="חיסכון"
           headline="חיסכון אוטומטי, בלי לחשוב על זה."
-          body="קובעים אחוז פעם אחת בהגדרות המשפחה. כל אישור משימה מפצל את התגמול אוטומטית — חלק לארנק, חלק לקופת החיסכון. אין מה לזכור, אין מה להעביר ידנית."
+          body="קובעים אחוז פעם אחת בהגדרות המשפחה. בכל אישור משימה התגמול מתפצל לבד: חלק לארנק וחלק לקופת החיסכון. אין מה לזכור ואין מה להעביר ידנית."
           illustration={<SavingsIllustration />}
           reversed={false}
         />
@@ -19,15 +19,15 @@ export function FeatureRows() {
           id="goals"
           eyebrow="מטרות"
           headline="מטרה לכל ילד, בקצב שלו."
-          body="יוצרים מטרה (אופניים? משחק?), בוחרים סכום מחזורי — יום, שבוע או חודש — והילד מפקיד מהארנק או מהחיסכון בקצב שלו. ההרגל נבנה דרך החזרה הקטנה."
+          body="יוצרים מטרה (אופניים? משחק?), בוחרים סכום קבוע ליום, לשבוע או לחודש, והילד מפקיד מהארנק או מהחיסכון בקצב שלו. ההרגל נבנה מהצעדים הקטנים."
           illustration={<GoalsIllustration />}
           reversed={true}
         />
         <FeatureRow
           id="educate"
           eyebrow="לימוד"
-          headline="תגמול גם על לימוד, לא רק על מטלות."
-          body="ההורה בוחר נושאים — אנגלית, חשבון, תורה, כספים — והילד עונה על חידון של 5 שאלות. עברת? המטבעות עוברים אוטומטית לארנק, עם אותו פיצול חיסכון. נושא אחד, פעם ביום."
+          headline="לומדים, וגם מרוויחים."
+          body="ההורה בוחר נושאים: אנגלית, חשבון, תורה וכספים, וגם קובע כמה מטבעות מקבלים. הילד עונה על חידון של 5 שאלות שמותאמות לגיל ולכיתה שלו, ומי שעובר מקבל מטבעות לארנק, עם אותו פיצול לחיסכון. נושא אחד ביום."
           illustration={<EducateIllustration />}
           reversed={false}
         />
@@ -148,13 +148,13 @@ function GoalsIllustration() {
   return (
     <div className="relative">
       <div className="relative isolate rounded-3xl border border-foreground/5 bg-card p-5 shadow-[0_1px_2px_rgba(20,30,60,0.04),0_18px_40px_-24px_rgba(20,30,60,0.15)]">
-        <GoalCard title="אופניים חדשים" deposited={120} target={200} cycle="‎20 נקודות כל שבוע" />
+        <GoalCard title="אופניים חדשים" deposited={120} target={200} cycle="‎20 מטבעות כל שבוע" />
         <div className="mt-3">
           <GoalCard
             title="משחק חדש"
             deposited={45}
             target={60}
-            cycle="‎5 נקודות כל יום"
+            cycle="‎5 מטבעות כל יום"
             secondary
           />
         </div>
@@ -197,7 +197,9 @@ function GoalCard({
           className="text-xs font-medium text-muted-foreground"
           style={{ fontFeatureSettings: '"tnum"' }}
         >
-          {deposited} / {target}
+          <bdi dir="ltr">
+            {deposited} / {target}
+          </bdi>
         </span>
       </div>
 
@@ -232,7 +234,9 @@ function EducateIllustration() {
           </div>
         </div>
 
-        <p className="mt-5 text-base leading-snug font-semibold text-foreground">כמה זה ‎5 + 7?</p>
+        <p className="mt-5 text-base leading-snug font-semibold text-foreground">
+          כמה זה <bdi dir="ltr">5 + 7</bdi>?
+        </p>
 
         <div className="mt-3 grid grid-cols-1 gap-2">
           <QuizChoice label="11" />
@@ -244,7 +248,7 @@ function EducateIllustration() {
         <div className="mt-4 flex items-center justify-between rounded-xl border border-foreground/5 bg-background/60 px-3 py-2">
           <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Check className="h-3.5 w-3.5 text-success" aria-hidden />
-            עברת — נצבר אוטומטית
+            עברת! המטבעות נוספו אוטומטית
           </span>
           <span
             className="text-sm font-semibold text-primary"

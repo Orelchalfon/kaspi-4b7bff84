@@ -30,19 +30,19 @@ export function AiTutor() {
                 id="ai-tutor-headline"
                 className="mt-2 text-3xl font-semibold tracking-tight text-foreground md:text-4xl"
               >
-                חונך ש<span className="text-primary">מדבר איתו</span> — לא רק כותב לו.
+                חונך ש<span className="text-primary">מדבר איתו</span>, לא רק כותב לו.
               </h2>
 
               <p className="mt-4 max-w-lg text-base leading-relaxed text-muted-foreground md:text-lg">
-                ההורה בוחר נושא, תת-נושא ואישיות — והילד מנהל שיחת קול חיה עם החונך, ממש כמו שיחת
-                טלפון. זו לא הודעת טקסט וזה לא החידון של "לימוד": זו שיחה מודרכת שמלמדת צעד-צעד,
-                בעברית, בקצב של הילד.
+                ההורה בוחר נושא, תת-נושא ואישיות, והילד מנהל שיחת קול חיה עם החונך, כמו שיחת טלפון.
+                זו לא הודעת טקסט וגם לא חידון: זו שיחה מודרכת שמלמדת צעד אחר צעד, בעברית ובקצב של
+                הילד.
               </p>
 
               <ul className="mt-5 space-y-2.5">
                 <li className="flex items-start gap-2 text-sm text-foreground">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" aria-hidden />
-                  <span>שיחת קול אמיתית בזמן אמת — לא צ'אט טקסט.</span>
+                  <span>שיחת קול בזמן אמת, לא צ'אט טקסט.</span>
                 </li>
                 <li className="flex items-start gap-2 text-sm text-foreground">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" aria-hidden />
@@ -53,8 +53,8 @@ export function AiTutor() {
                 <li className="flex items-start gap-2 text-sm text-foreground">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" aria-hidden />
                   <span>
-                    כללי בטיחות קבועים: לא שואל פרטים אישיים, לא נכנס לתוכן לא הולם, ומפנה להורה אם
-                    צריך.
+                    כללי בטיחות קבועים: החונך לא שואל פרטים אישיים, לא נכנס לתוכן לא הולם ומפנה
+                    להורה בעת הצורך.
                   </span>
                 </li>
               </ul>

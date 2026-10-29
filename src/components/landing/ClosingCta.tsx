@@ -26,7 +26,7 @@ export function ClosingCta() {
               מוכנים להתחיל את השגרה החדשה?
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
-              הרשמה לוקחת פחות מדקה, ולא דורשת פרטי תשלום.
+              ההרשמה לוקחת פחות מדקה ואין צורך בפרטי תשלום.
             </p>
 
             <m.div {...ctaInteractions} className="mt-8 inline-block">

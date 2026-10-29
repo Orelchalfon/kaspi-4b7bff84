@@ -93,12 +93,12 @@ export function Hero() {
             id="hero-headline"
             className="mt-5 text-[2.5rem] leading-[1.05] font-bold tracking-tight text-foreground md:text-6xl"
           >
-            המשפחה לומדת לחסוך — <span className="text-primary">יחד.</span>
+            המשפחה לומדת לחסוך, <span className="text-primary">יחד.</span>
           </h1>
 
           <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
-            הורים מגדירים משימות. ילדים צוברים מטבעות. אחוז מכל תגמול הולך אוטומטית לחיסכון — בלי
-            לזכור, בלי להתווכח.
+            ההורים מגדירים משימות, הילדים צוברים מטבעות, ואחוז מכל תגמול עובר לבד לחיסכון. בלי
+            תזכורות, בלי ויכוחים.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -120,7 +120,7 @@ export function Hero() {
           </div>
 
           <p className="mt-6 max-w-md text-sm text-muted-foreground/80">
-            <bdi>Kasp</bdi> היא סביבת תרגול משפחתית — המטבעות וירטואליים, ההרגל אמיתי.
+            <bdi>Kasp</bdi> היא סביבת תרגול משפחתית. המטבעות וירטואליים, ההרגל אמיתי.
           </p>
         </div>
 
