@@ -21,11 +21,9 @@ import {
  *  - INSERT  → error (RLS violation / 42501 / new row violates policy)
  *  - UPDATE  → no rows affected (zero-row update, no error)
  *
- * NOTE: approve_task_and_pay is SECURITY DEFINER and currently performs NO
- * caller authorization (any authenticated user who knows a submitted task's id
- * can trigger payment). That is a known gap in the DB function, not something
- * RLS can catch — tracked separately; no cross-household RPC assertion here
- * until the function validates the caller.
+ * approve_task_and_pay is SECURITY DEFINER, so RLS can't guard it; its own
+ * household-parent caller check (added 2026-10-19) is covered by
+ * approve-task-authorization.test.ts.
  */
 
 let parentA: AdHocUser;
