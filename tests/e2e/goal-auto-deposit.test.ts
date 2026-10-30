@@ -131,9 +131,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  // Purge first: goals.created_by blocks deleting the users while their goals exist.
+  if (householdId) await purgeHousehold(householdId);
   if (child?.userId) await deleteUser(child.userId);
   if (parent?.userId) await deleteUser(parent.userId);
-  if (householdId) await purgeHousehold(householdId);
 });
 
 describe("goal auto deposit", () => {

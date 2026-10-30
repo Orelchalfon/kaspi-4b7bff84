@@ -57,14 +57,12 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  for (const u of [childA, childB]) {
-    if (u?.userId) await deleteUser(u.userId);
-  }
-  for (const u of [parentA, parentB]) {
-    if (u?.userId) await deleteUser(u.userId);
-  }
+  // Purge first: tutors.created_by blocks deleting the parents while their tutors exist.
   if (householdA) await purgeHousehold(householdA);
   if (householdB) await purgeHousehold(householdB);
+  for (const u of [childA, childB, parentA, parentB]) {
+    if (u?.userId) await deleteUser(u.userId);
+  }
 });
 
 describe("tutors: RLS", () => {

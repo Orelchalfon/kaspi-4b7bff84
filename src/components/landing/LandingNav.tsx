@@ -8,7 +8,6 @@ import {
 } from "framer-motion";
 import {
   Bot,
-  Coins,
   GraduationCap,
   ListChecks,
   LogIn,
@@ -19,6 +18,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { KaspMark } from "@/components/brand/kasp-mark";
 import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { cn } from "@/lib/utils";
 
@@ -88,7 +88,7 @@ export function LandingNav() {
           aria-label="Kasp — דף הבית"
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Coins className="h-5 w-5" aria-hidden />
+            <KaspMark className="h-5 w-5" />
           </span>
           <span className="text-base font-semibold tracking-tight text-foreground">
             <bdi>Kasp</bdi>

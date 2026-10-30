@@ -12,9 +12,20 @@ export interface TxRow {
   child_id: string;
   amount: number;
   reference_task_id: string | null;
+  reference_gift_id: string | null;
   goal_id: string | null;
   created_at: string | null;
   type: string;
+}
+/** A pending QR-code gift awaiting the parent's approval (gifts table). */
+export interface GiftRow {
+  id: string;
+  child_id: string;
+  sender_name: string;
+  sender_email: string | null;
+  reason: string;
+  amount: number;
+  created_at: string;
 }
 export interface TaskRow {
   id: string;

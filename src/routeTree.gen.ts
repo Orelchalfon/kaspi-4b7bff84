@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ParentTransactionsRouteImport } from './routes/parent/transactions'
 import { Route as ParentDashboardRouteImport } from './routes/parent/dashboard'
 import { Route as ParentChildrenRouteImport } from './routes/parent/children'
+import { Route as GiveTokenRouteImport } from './routes/give.$token'
 import { Route as ChildWalletRouteImport } from './routes/child/wallet'
 import { Route as ChildSavingsRouteImport } from './routes/child/savings'
 import { Route as ChildEducateRouteImport } from './routes/child/educate'
@@ -77,6 +78,11 @@ const ParentChildrenRoute = ParentChildrenRouteImport.update({
   id: '/children',
   path: '/children',
   getParentRoute: () => ParentRoute,
+} as any)
+const GiveTokenRoute = GiveTokenRouteImport.update({
+  id: '/give/$token',
+  path: '/give/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ChildWalletRoute = ChildWalletRouteImport.update({
   id: '/wallet',
@@ -198,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/child/educate': typeof ChildEducateRouteWithChildren
   '/child/savings': typeof ChildSavingsRoute
   '/child/wallet': typeof ChildWalletRoute
+  '/give/$token': typeof GiveTokenRoute
   '/parent/children': typeof ParentChildrenRouteWithChildren
   '/parent/dashboard': typeof ParentDashboardRoute
   '/parent/transactions': typeof ParentTransactionsRoute
@@ -227,6 +234,7 @@ export interface FileRoutesByTo {
   '/child/dashboard': typeof ChildDashboardRoute
   '/child/savings': typeof ChildSavingsRoute
   '/child/wallet': typeof ChildWalletRoute
+  '/give/$token': typeof GiveTokenRoute
   '/parent/dashboard': typeof ParentDashboardRoute
   '/parent/transactions': typeof ParentTransactionsRoute
   '/child/educate/$subject': typeof ChildEducateSubjectRoute
@@ -258,6 +266,7 @@ export interface FileRoutesById {
   '/child/educate': typeof ChildEducateRouteWithChildren
   '/child/savings': typeof ChildSavingsRoute
   '/child/wallet': typeof ChildWalletRoute
+  '/give/$token': typeof GiveTokenRoute
   '/parent/children': typeof ParentChildrenRouteWithChildren
   '/parent/dashboard': typeof ParentDashboardRoute
   '/parent/transactions': typeof ParentTransactionsRoute
@@ -290,6 +299,7 @@ export interface FileRouteTypes {
     | '/child/educate'
     | '/child/savings'
     | '/child/wallet'
+    | '/give/$token'
     | '/parent/children'
     | '/parent/dashboard'
     | '/parent/transactions'
@@ -319,6 +329,7 @@ export interface FileRouteTypes {
     | '/child/dashboard'
     | '/child/savings'
     | '/child/wallet'
+    | '/give/$token'
     | '/parent/dashboard'
     | '/parent/transactions'
     | '/child/educate/$subject'
@@ -349,6 +360,7 @@ export interface FileRouteTypes {
     | '/child/educate'
     | '/child/savings'
     | '/child/wallet'
+    | '/give/$token'
     | '/parent/children'
     | '/parent/dashboard'
     | '/parent/transactions'
@@ -375,6 +387,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
+  GiveTokenRoute: typeof GiveTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -434,6 +447,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/parent/children'
       preLoaderRoute: typeof ParentChildrenRouteImport
       parentRoute: typeof ParentRoute
+    }
+    '/give/$token': {
+      id: '/give/$token'
+      path: '/give/$token'
+      fullPath: '/give/$token'
+      preLoaderRoute: typeof GiveTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/child/wallet': {
       id: '/child/wallet'
@@ -692,6 +712,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
+  GiveTokenRoute: GiveTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

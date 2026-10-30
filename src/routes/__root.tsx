@@ -44,6 +44,7 @@ export const Route = createRootRoute({
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "icon", href: "/favicon-32.png", type: "image/png", sizes: "32x32" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
       // Preloaded so Hebrew text paints in Rubik on first render instead of swapping late.
@@ -80,6 +81,7 @@ export const Route = createRootRoute({
           "@type": "Organization",
           name: "Kasp",
           url: "https://kasp-web.kasp.workers.dev",
+          logo: "https://kasp-web.kasp.workers.dev/apple-touch-icon.png",
         }),
       },
     ],

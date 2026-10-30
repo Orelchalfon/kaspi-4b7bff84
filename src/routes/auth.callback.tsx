@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { AlertCircle, Coins, LogIn, UserPlus } from "lucide-react";
 import { AuthLoader } from "@/components/ui/auth-loader";
+import { takeGiveReturn } from "@/lib/gifts";
 
 export const Route = createFileRoute("/auth/callback")({
   component: AuthCallback,
@@ -37,6 +38,12 @@ function AuthCallback() {
         await refreshRole(session.user.id);
         if (cancelled) return;
         toast.success("ברוכים הבאים ל-Kasp!");
+        // Signed up from a gift QR code: finish the gift first.
+        const giveToken = takeGiveReturn();
+        if (giveToken) {
+          navigate({ to: "/give/$token", params: { token: giveToken }, replace: true });
+          return;
+        }
         // "/" sends each role to its own dashboard (this was hard-coded to /parent/dashboard).
         navigate({ to: "/", replace: true });
       } catch (e) {
