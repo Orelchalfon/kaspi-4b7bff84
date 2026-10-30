@@ -9,6 +9,7 @@ import {
   UserPlus,
   type LucideIcon,
 } from "lucide-react";
+import { KaspMark } from "@/components/brand/kasp-mark";
 import { Button } from "@/components/ui/button";
 import { SignInForm } from "@/components/auth/sign-in-form";
 import { SignUpForm } from "@/components/auth/sign-up-form";
@@ -87,7 +88,7 @@ export function AuthSwitch({ mode, onModeChange }: AuthSwitchProps) {
         className="flex min-h-11 items-center gap-2 rounded-lg px-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <Coins className="size-5" aria-hidden />
+          <KaspMark className="size-5" />
         </span>
         <span className="text-lg font-bold text-foreground">
           <bdi>Kasp</bdi>

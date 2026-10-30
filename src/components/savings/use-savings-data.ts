@@ -38,7 +38,7 @@ export function useSavingsData() {
         .order("created_at", { ascending: false }),
       supabase
         .from("transactions")
-        .select("id, amount, type, goal_id, reference_task_id, created_at")
+        .select("id, amount, type, goal_id, reference_task_id, reference_gift_id, created_at")
         .eq("child_id", childProfileId)
         .order("created_at", { ascending: false }),
       supabase

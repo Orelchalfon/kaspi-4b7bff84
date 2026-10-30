@@ -25,6 +25,7 @@ export interface TxRow {
   type: string;
   goal_id: string | null;
   reference_task_id: string | null;
+  reference_gift_id: string | null;
   created_at: string | null;
 }
 

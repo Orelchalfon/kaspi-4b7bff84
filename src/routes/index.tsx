@@ -8,24 +8,24 @@ import { LandingPage } from "@/components/landing/LandingPage";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Kasp — המשפחה לומדת לחסוך, יחד" },
+      { title: "Kasp: חינוך פיננסי לילדים, מתחיל בבית" },
       {
         name: "description",
         content:
-          "Kasp היא סביבת תרגול משפחתית: הורים מגדירים משימות, ילדים צוברים מטבעות, ואחוז מכל תגמול הולך אוטומטית לחיסכון.",
+          "Kasp עוזרת להורים ללמד ילדים לחסוך. מגדירים משימות, הילדים צוברים מטבעות, ואחוז מכל תגמול עובר אוטומטית לחיסכון. ההרשמה חינם.",
       },
-      { property: "og:title", content: "Kasp — המשפחה לומדת לחסוך, יחד" },
+      { property: "og:title", content: "Kasp: חינוך פיננסי לילדים, מתחיל בבית" },
       {
         property: "og:description",
-        content: "הורים מגדירים משימות. ילדים צוברים מטבעות. אחוז מכל תגמול הולך אוטומטית לחיסכון.",
+        content: "ההורים מגדירים משימות, הילדים צוברים מטבעות, ואחוז מכל תגמול עובר לבד לחיסכון.",
       },
       { property: "og:url", content: "https://kasp-web.kasp.workers.dev/" },
       { property: "og:image", content: "https://kasp-web.kasp.workers.dev/og-image.jpg" },
       { property: "og:image:alt", content: "Kasp" },
-      { name: "twitter:title", content: "Kasp — המשפחה לומדת לחסוך, יחד" },
+      { name: "twitter:title", content: "Kasp: חינוך פיננסי לילדים, מתחיל בבית" },
       {
         name: "twitter:description",
-        content: "הורים מגדירים משימות. ילדים צוברים מטבעות. אחוז מכל תגמול הולך אוטומטית לחיסכון.",
+        content: "ההורים מגדירים משימות, הילדים צוברים מטבעות, ואחוז מכל תגמול עובר לבד לחיסכון.",
       },
       { name: "twitter:image", content: "https://kasp-web.kasp.workers.dev/og-image.jpg" },
     ],

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/auth/password-input";
+import { takeGiveReturn } from "@/lib/gifts";
 
 interface SignInFormProps {
   /** Shared with the sign-up form so the address survives a mode switch. */
@@ -78,7 +79,13 @@ export function SignInForm({ email, onEmailChange, firstFieldRef }: SignInFormPr
     }
 
     toast.success("התחברת בהצלחה");
-    // Let index page handle role-based redirect once auth state propagates
+    // Came from a gift QR code: go back to it. Otherwise let the index page handle the
+    // role-based redirect once auth state propagates.
+    const giveToken = takeGiveReturn();
+    if (giveToken) {
+      navigate({ to: "/give/$token", params: { token: giveToken } });
+      return;
+    }
     navigate({ to: "/" });
   };
 

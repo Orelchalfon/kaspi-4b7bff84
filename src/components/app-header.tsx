@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, LazyMotion, domAnimation, m, useReducedMotion } from "framer-motion";
-import { Coins, LogOut, type LucideIcon } from "lucide-react";
+import { LogOut, type LucideIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { KaspMark } from "@/components/brand/kasp-mark";
 import { Button } from "@/components/ui/button";
 import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { Separator } from "@/components/ui/separator";
@@ -75,7 +76,7 @@ export function AppHeader({ brand, navItems, onSignOut }: AppHeaderProps) {
             className="flex shrink-0 items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <span className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Coins className="size-5" aria-hidden />
+              <KaspMark className="size-5" />
             </span>
             <span className="text-base font-semibold tracking-tight text-foreground">
               <bdi>{brand.name}</bdi>

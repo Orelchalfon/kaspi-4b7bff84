@@ -4,10 +4,49 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1";
+    PostgrestVersion: "14.18";
   };
   public: {
     Tables: {
+      child_gift_links: {
+        Row: {
+          child_id: string;
+          created_at: string;
+          household_id: string;
+          rotated_at: string | null;
+          token: string;
+        };
+        Insert: {
+          child_id: string;
+          created_at?: string;
+          household_id: string;
+          rotated_at?: string | null;
+          token?: string;
+        };
+        Update: {
+          child_id?: string;
+          created_at?: string;
+          household_id?: string;
+          rotated_at?: string | null;
+          token?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "child_gift_links_child_id_fkey";
+            columns: ["child_id"];
+            isOneToOne: true;
+            referencedRelation: "child_profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "child_gift_links_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       child_profiles: {
         Row: {
           avatar: string | null;
@@ -42,6 +81,69 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "child_profiles_household_id_fkey";
+            columns: ["household_id"];
+            isOneToOne: false;
+            referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      gifts: {
+        Row: {
+          amount: number;
+          child_id: string;
+          client_request_id: string;
+          created_at: string;
+          household_id: string;
+          id: string;
+          reason: string;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          sender_email: string | null;
+          sender_name: string;
+          sender_user_id: string | null;
+          status: string;
+        };
+        Insert: {
+          amount: number;
+          child_id: string;
+          client_request_id: string;
+          created_at?: string;
+          household_id: string;
+          id?: string;
+          reason: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          sender_email?: string | null;
+          sender_name: string;
+          sender_user_id?: string | null;
+          status?: string;
+        };
+        Update: {
+          amount?: number;
+          child_id?: string;
+          client_request_id?: string;
+          created_at?: string;
+          household_id?: string;
+          id?: string;
+          reason?: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          sender_email?: string | null;
+          sender_name?: string;
+          sender_user_id?: string | null;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "gifts_child_id_fkey";
+            columns: ["child_id"];
+            isOneToOne: false;
+            referencedRelation: "child_profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "gifts_household_id_fkey";
             columns: ["household_id"];
             isOneToOne: false;
             referencedRelation: "households";
@@ -290,6 +392,7 @@ export type Database = {
           goal_id: string | null;
           household_id: string;
           id: string;
+          reference_gift_id: string | null;
           reference_quiz_attempt_id: string | null;
           reference_task_id: string | null;
           type: string;
@@ -301,6 +404,7 @@ export type Database = {
           goal_id?: string | null;
           household_id: string;
           id?: string;
+          reference_gift_id?: string | null;
           reference_quiz_attempt_id?: string | null;
           reference_task_id?: string | null;
           type: string;
@@ -312,6 +416,7 @@ export type Database = {
           goal_id?: string | null;
           household_id?: string;
           id?: string;
+          reference_gift_id?: string | null;
           reference_quiz_attempt_id?: string | null;
           reference_task_id?: string | null;
           type?: string;
@@ -336,6 +441,13 @@ export type Database = {
             columns: ["household_id"];
             isOneToOne: false;
             referencedRelation: "households";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "transactions_reference_gift_id_fkey";
+            columns: ["reference_gift_id"];
+            isOneToOne: false;
+            referencedRelation: "gifts";
             referencedColumns: ["id"];
           },
           {
@@ -508,7 +620,12 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      approve_gift_and_pay: { Args: { _gift_id: string }; Returns: Json };
       approve_task_and_pay: { Args: { p_task_id: string }; Returns: boolean };
+      child_gift_token: {
+        Args: { _child_id: string; _rotate?: boolean };
+        Returns: Json;
+      };
       complete_quiz_and_pay: {
         Args: { _correct: number; _subject: string; _total: number };
         Returns: Json;
@@ -522,6 +639,7 @@ export type Database = {
         Returns: Json;
       };
       deposit_to_savings: { Args: { _amount: number }; Returns: Json };
+      get_gift_target: { Args: { _token: string }; Returns: Json };
       goal_next_cycle_date: {
         Args: { _from: string; _period: string };
         Returns: string;
@@ -530,6 +648,7 @@ export type Database = {
         Args: { _amount: number; _child_id: string };
         Returns: Json;
       };
+      reject_gift: { Args: { _gift_id: string }; Returns: Json };
       run_goal_auto_deposits: { Args: never; Returns: number };
       set_child_avatar: {
         Args: { _avatar: string; _child_id: string };
@@ -537,6 +656,16 @@ export type Database = {
       };
       set_child_birthdate: {
         Args: { _birthdate: string; _child_id: string };
+        Returns: Json;
+      };
+      submit_gift: {
+        Args: {
+          _amount: number;
+          _reason: string;
+          _request_id: string;
+          _sender_name: string;
+          _token: string;
+        };
         Returns: Json;
       };
     };

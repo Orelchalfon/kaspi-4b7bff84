@@ -65,9 +65,17 @@ export async function createAdHocUser(prefix: string): Promise<AdHocUser> {
   };
 }
 
-/** Delete an auth user by id (cascades through user_roles via FKs/cleanup logic). */
+/**
+ * Delete an auth user by id (cascades through user_roles/child_profiles/tasks). Throws on
+ * failure so a leaked test user fails the run instead of piling up on the live project.
+ * `tutors.created_by` and `goals.created_by` reference auth.users without ON DELETE, so
+ * `purgeHousehold` first when the user created either.
+ */
 export async function deleteUser(userId: string): Promise<void> {
-  await admin.auth.admin.deleteUser(userId).catch(() => {});
+  const { error } = await admin.auth.admin.deleteUser(userId);
+  if (error && error.status !== 404) {
+    throw new Error(`deleteUser ${userId} failed: ${error.message}`);
+  }
 }
 
 /** Hard-delete a household and everything that references it (service role). */
